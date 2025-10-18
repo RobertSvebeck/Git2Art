@@ -2,6 +2,14 @@
 
 ## High Priority
 
+### Visual Improvements
+- [ ] **Increase contrast** in compositions (darker darks, lighter lights)
+- [ ] **Add complementary color accents** - Use opposite colors on color wheel for pop
+- [ ] **Implement color wheel theory** - Triadic, split-complementary, tetradic schemes
+- [ ] Add contrast adjustment parameter (low/medium/high)
+- [ ] Experiment with complementary color highlights on main elements
+- [ ] Use analogous + complementary (dominant harmony with accent pops)
+
 ### Flask Web Application
 - [ ] Create basic Flask app structure
 - [ ] Add file upload or GitHub URL input
@@ -27,13 +35,21 @@
 ## Medium Priority
 
 ### Art Enhancements
+- [ ] **Default to canvas aspect ratios** instead of square (e.g., 16:10, 3:2, 4:3)
+- [ ] Common canvas sizes: 1920x1200, 1800x1200, 1600x1200
+- [ ] Portrait and landscape orientation options
+- [ ] Preset canvas sizes (social media, print standards, display)
 - [ ] Add art style presets (minimalist, maximalist, classic)
 - [ ] Create "dark mode" palette variants
 - [ ] Add seasonal/themed color schemes
-- [ ] Implement multiple aspect ratios (16:9, 4:3, square)
 - [ ] Add texture overlay options (canvas, paper, watercolor)
 
 ### Features
+- [ ] **Smart filename generation** - Name images after git repo name (e.g., `Git2Art_1600x1600.png`)
+- [ ] Include repo name, size, timestamp in filename
+- [ ] Option to include commit hash in filename for versioning
+- [ ] Sanitize special characters in repo names for filenames
+- [ ] Auto-create output directory if it doesn't exist
 - [ ] Animation: Show repository evolution over time
 - [ ] Compare mode: Visual diff between two commits
 - [ ] Gallery mode: Generate art for all branches

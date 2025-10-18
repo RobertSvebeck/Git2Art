@@ -114,7 +114,7 @@ class RepositoryPalette:
 
     @staticmethod
     def expand_palette(palette_dict, seed):
-        """Expand palette with harmonious variations"""
+        """Expand palette with harmonious variations and complementary accents"""
         expanded = []
         base_colors = palette_dict['base']
         accent_colors = palette_dict['accents']
@@ -122,19 +122,122 @@ class RepositoryPalette:
         # Add all base colors
         expanded.extend(base_colors)
 
-        # Add tints and shades for each base color
+        # Add tints, shades, and complementary colors for each base color
         random.seed(seed)
         for color in base_colors:
             r, g, b = color
             h, s, v = colorsys.rgb_to_hsv(r/255, g/255, b/255)
 
-            # Lighter tint
-            tint = RepositoryPalette._hsv_to_rgb(h, s * 0.6, min(1.0, v * 1.15))
+            # INCREASED CONTRAST: Much lighter tints
+            tint = RepositoryPalette._hsv_to_rgb(h, s * 0.4, min(1.0, v * 1.3))
             expanded.append(tint)
 
-            # Darker shade
-            shade = RepositoryPalette._hsv_to_rgb(h, min(1.0, s * 1.05), v * 0.75)
+            # INCREASED CONTRAST: Much darker shades
+            shade = RepositoryPalette._hsv_to_rgb(h, min(1.0, s * 1.2), v * 0.5)
             expanded.append(shade)
+
+            # Add complementary color (opposite on color wheel)
+            complementary_h = (h + 0.5) % 1.0
+            complementary = RepositoryPalette._hsv_to_rgb(complementary_h, s * 0.9, v * 0.95)
+            expanded.append(complementary)
+
+        # Add accents
+        expanded.extend(accent_colors)
+
+        return expanded
+
+    @staticmethod
+    def get_complementary_color(color):
+        """Get complementary color (opposite on color wheel)"""
+        r, g, b = color
+        h, s, v = colorsys.rgb_to_hsv(r/255, g/255, b/255)
+        comp_h = (h + 0.5) % 1.0
+        return RepositoryPalette._hsv_to_rgb(comp_h, s, v)
+
+    @staticmethod
+    def get_triadic_colors(color):
+        """Get triadic colors (120 degrees apart on color wheel)"""
+        r, g, b = color
+        h, s, v = colorsys.rgb_to_hsv(r/255, g/255, b/255)
+
+        triadic1_h = (h + 0.333) % 1.0
+        triadic2_h = (h + 0.667) % 1.0
+
+        return [
+            RepositoryPalette._hsv_to_rgb(triadic1_h, s, v),
+            RepositoryPalette._hsv_to_rgb(triadic2_h, s, v)
+        ]
+
+    @staticmethod
+    def get_split_complementary_colors(color):
+        """Get split-complementary colors (complement +/- 30 degrees)"""
+        r, g, b = color
+        h, s, v = colorsys.rgb_to_hsv(r/255, g/255, b/255)
+
+        comp_h = (h + 0.5) % 1.0
+        split1_h = (comp_h - 0.083) % 1.0  # -30 degrees
+        split2_h = (comp_h + 0.083) % 1.0  # +30 degrees
+
+        return [
+            RepositoryPalette._hsv_to_rgb(split1_h, s, v),
+            RepositoryPalette._hsv_to_rgb(split2_h, s, v)
+        ]
+
+    @staticmethod
+    def get_tetradic_colors(color):
+        """Get tetradic colors (rectangle on color wheel)"""
+        r, g, b = color
+        h, s, v = colorsys.rgb_to_hsv(r/255, g/255, b/255)
+
+        # Rectangle: base, +60, +180, +240 degrees
+        tet1_h = (h + 0.167) % 1.0  # +60 degrees
+        tet2_h = (h + 0.5) % 1.0    # +180 degrees (complement)
+        tet3_h = (h + 0.667) % 1.0  # +240 degrees
+
+        return [
+            RepositoryPalette._hsv_to_rgb(tet1_h, s, v),
+            RepositoryPalette._hsv_to_rgb(tet2_h, s, v),
+            RepositoryPalette._hsv_to_rgb(tet3_h, s, v)
+        ]
+
+    @staticmethod
+    def expand_palette_with_theory(palette_dict, seed):
+        """Expand palette using advanced color wheel theory"""
+        expanded = []
+        base_colors = palette_dict['base']
+        accent_colors = palette_dict['accents']
+
+        random.seed(seed)
+
+        # Add base colors
+        expanded.extend(base_colors)
+
+        # For each base color, add color theory variations
+        for i, color in enumerate(base_colors):
+            r, g, b = color
+            h, s, v = colorsys.rgb_to_hsv(r/255, g/255, b/255)
+
+            # INCREASED CONTRAST variations
+            very_light = RepositoryPalette._hsv_to_rgb(h, s * 0.3, min(1.0, v * 1.4))
+            very_dark = RepositoryPalette._hsv_to_rgb(h, min(1.0, s * 1.3), v * 0.4)
+            expanded.extend([very_light, very_dark])
+
+            # Use different color theory for each base color
+            if i % 3 == 0:
+                # Complementary
+                expanded.append(RepositoryPalette.get_complementary_color(color))
+            elif i % 3 == 1:
+                # Triadic
+                expanded.extend(RepositoryPalette.get_triadic_colors(color))
+            else:
+                # Split-complementary
+                expanded.extend(RepositoryPalette.get_split_complementary_colors(color))
+
+        # Add tetradic colors for visual pop
+        if len(base_colors) > 0:
+            primary = base_colors[0]
+            tetradic = RepositoryPalette.get_tetradic_colors(primary)
+            expanded.extend(tetradic)
 
         # Add accents
         expanded.extend(accent_colors)
@@ -312,11 +415,50 @@ class OrganicShapes:
 
 
 class GitArtGenerator:
-    def __init__(self, repo_path='.', width=1200, height=1200):
+    # Common canvas aspect ratios
+    ASPECT_RATIOS = {
+        'square': (1, 1),
+        '16:10': (16, 10),
+        '16:9': (16, 9),
+        '3:2': (3, 2),
+        '4:3': (4, 3),
+        '5:4': (5, 4),
+        'portrait_3:4': (3, 4),
+        'portrait_2:3': (2, 3),
+    }
+
+    # Common canvas sizes
+    CANVAS_SIZES = {
+        'medium': (1200, 1200),
+        'large': (1600, 1200),   # 4:3 landscape
+        'xlarge': (1920, 1200),  # 16:10 landscape
+        'social': (1800, 1200),  # 3:2 landscape
+        'hd': (1920, 1080),      # 16:9 landscape
+        'portrait': (1200, 1600), # 3:4 portrait
+    }
+
+    def __init__(self, repo_path='.', width=1600, height=1200, aspect_ratio='4:3'):
+        """
+        Initialize art generator
+
+        Args:
+            repo_path: Path to git repository
+            width: Canvas width (ignored if aspect_ratio is specified)
+            height: Canvas height (ignored if aspect_ratio is specified)
+            aspect_ratio: Aspect ratio name from ASPECT_RATIOS (default: '4:3')
+        """
         self.repo = git.Repo(repo_path)
-        self.width = width
-        self.height = height
         self.repo_path = Path(repo_path)
+
+        # Apply aspect ratio if specified
+        if aspect_ratio and aspect_ratio in self.ASPECT_RATIOS:
+            ratio_w, ratio_h = self.ASPECT_RATIOS[aspect_ratio]
+            # Use width as the base dimension
+            self.width = width
+            self.height = int(width * ratio_h / ratio_w)
+        else:
+            self.width = width
+            self.height = height
 
     def get_repo_fingerprint(self):
         """Generate repository fingerprint"""
@@ -369,12 +511,12 @@ class GitArtGenerator:
         return path.suffix in skip_extensions or path.name in skip_names
 
     def generate_art(self, output_path='repo_art.png'):
-        """Generate harmonious generative art"""
+        """Generate harmonious generative art with color wheel theory"""
         fingerprint = self.get_repo_fingerprint()
 
-        # Get harmonious palette
+        # Get harmonious palette with advanced color theory
         palette_name, palette_dict = RepositoryPalette.select_palette_by_repo(fingerprint)
-        all_colors = RepositoryPalette.expand_palette(palette_dict, fingerprint['total_lines'])
+        all_colors = RepositoryPalette.expand_palette_with_theory(palette_dict, fingerprint['total_lines'])
 
         # Create background
         img = self._create_background(fingerprint, palette_dict)
@@ -962,17 +1104,49 @@ class GitArtGenerator:
 def main():
     """Main function"""
     import argparse
+    import re
+    from datetime import datetime
 
     parser = argparse.ArgumentParser(
         description='Generate harmonious generative art from a git repository'
     )
     parser.add_argument('--repo', default='.', help='Path to git repository')
-    parser.add_argument('--output', default='repo_art.png', help='Output image path')
-    parser.add_argument('--size', type=int, default=1200, help='Image size (square)')
+    parser.add_argument('--output', default=None, help='Output image path (auto-generated if not specified)')
+    parser.add_argument('--size', type=int, default=1600, help='Canvas width in pixels')
+    parser.add_argument('--aspect', default='4:3',
+                       choices=list(GitArtGenerator.ASPECT_RATIOS.keys()),
+                       help='Canvas aspect ratio (default: 4:3)')
 
     args = parser.parse_args()
 
-    generator = GitArtGenerator(args.repo, width=args.size, height=args.size)
+    # Smart filename generation
+    if args.output is None:
+        # Get repo name from path
+        repo = git.Repo(args.repo)
+        repo_name = Path(args.repo).resolve().name
+
+        # Sanitize repo name for filename
+        sanitized_name = re.sub(r'[^\w\-]', '_', repo_name)
+
+        # Get commit hash (short)
+        try:
+            commit_hash = repo.head.commit.hexsha[:7]
+        except:
+            commit_hash = "nocommit"
+
+        # Get timestamp
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+
+        # Calculate actual dimensions
+        generator_temp = GitArtGenerator(args.repo, width=args.size, aspect_ratio=args.aspect)
+        width = generator_temp.width
+        height = generator_temp.height
+
+        # Build filename
+        args.output = f"{sanitized_name}_{width}x{height}_{commit_hash}.png"
+        print(f"📝 Auto-generated filename: {args.output}")
+
+    generator = GitArtGenerator(args.repo, width=args.size, aspect_ratio=args.aspect)
     generator.generate_art(args.output)
 
 
