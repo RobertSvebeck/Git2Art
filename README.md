@@ -49,3 +49,4 @@ python git2art.py --repo /path/to/repo --output my_art.png --size 2400
 - Flask web app for easy visualization
 - More art styles and algorithms
 - Animation showing repository evolution over time
+- Gallery of repository artworks
