@@ -1134,7 +1134,7 @@ def main():
         except:
             commit_hash = "nocommit"
 
-        # Get timestamp
+        # Get timestamp for uniqueness
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
 
         # Calculate actual dimensions
@@ -1142,8 +1142,9 @@ def main():
         width = generator_temp.width
         height = generator_temp.height
 
-        # Build filename
-        args.output = f"{sanitized_name}_{width}x{height}_{commit_hash}.png"
+        # Build filename with timestamp for uniqueness
+        # Format: RepoName_WIDTHxHEIGHT_TIMESTAMP_commithash.png
+        args.output = f"{sanitized_name}_{width}x{height}_{timestamp}_{commit_hash}.png"
         print(f"📝 Auto-generated filename: {args.output}")
 
     generator = GitArtGenerator(args.repo, width=args.size, aspect_ratio=args.aspect)
