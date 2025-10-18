@@ -13,10 +13,13 @@ Git2Art creates deterministic abstract art from your codebase:
 
 ## Features
 
-- Analyzes file types, line counts, and code structure
-- Visualizes commit history as spiraling patterns
-- Maps code complexity to colors and shapes
-- Generates high-resolution abstract art (default 1200x1200)
+- 🎨 **Art Theory-Based**: Uses color harmony (complementary, triadic, analogous)
+- 📐 **Professional Composition**: Golden ratio, rule of thirds, Fibonacci spirals
+- 📊 **Visual Hierarchy**: File importance mapped to size and opacity
+- 🎭 **Semantic Shapes**: Different shapes for different file types
+- 🌊 **Flow & Unity**: Connecting curves and harmonious gradients
+- 🔄 **100% Deterministic**: Same code always generates identical art
+- 🖼️ **High Resolution**: Default 1200x1200, customizable size
 
 ## Installation
 
@@ -38,13 +41,25 @@ python git2art.py --repo /path/to/repo --output my_art.png --size 2400
 
 ## How It Works
 
-1. **Fingerprints** the repository by analyzing all tracked files
-2. **Maps** code metrics to visual parameters:
-   - File content → Colors (via hash)
-   - Line count → Size of elements
-   - File type → Shape (circle, square, triangle)
-   - Commit history → Spiral pattern
-3. **Generates** deterministic abstract art based on the fingerprint
+1. **Analyzes** your repository:
+   - Scans all tracked files
+   - Counts lines of code
+   - Hashes file content for determinism
+   - Maps file types and relationships
+
+2. **Applies Art Theory**:
+   - **Color Harmony**: Selects complementary, triadic, or analogous palette
+   - **Composition**: Places elements using golden ratio and rule of thirds
+   - **Visual Hierarchy**: Sizes elements by code importance
+   - **Flow**: Connects elements with subtle Bézier curves
+
+3. **Generates Beautiful Art**:
+   - Multi-center gradient background
+   - Shape variation by file type (circles, hexagons, triangles)
+   - Depth and texture with subtle blur
+   - High-quality PNG output
+
+See [ART_THEORY.md](ART_THEORY.md) for detailed explanation of principles used.
 
 ## Coming Soon
 

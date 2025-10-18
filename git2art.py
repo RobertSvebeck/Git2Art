@@ -1,31 +1,325 @@
 #!/usr/bin/env python3
 """
-Git2Art: Turn your git repository into abstract art
-Small changes = small visual changes, big changes = big visual changes
+Git2Art: Repository-Driven Generative Art
+Creates harmonious, organic art with color palettes derived from repository characteristics
+Inspired by "Painting with Code" - IDEO
 """
 
 import git
 import hashlib
 import numpy as np
-from PIL import Image, ImageDraw
-import os
+from PIL import Image, ImageDraw, ImageFilter
+import colorsys
 from pathlib import Path
 from collections import defaultdict
+import math
+import random
+
+
+class RepositoryPalette:
+    """Generate harmonious color palettes based on repository characteristics"""
+
+    # Curated professional color schemes - harmonious and balanced
+    PALETTES = {
+        # Python projects - Cool blues and teals
+        'python': {
+            'base': [(52, 152, 219), (41, 128, 185), (26, 188, 156)],  # Sky blue, Ocean, Teal
+            'accents': [(236, 240, 241), (44, 62, 80)],  # Ice, Navy
+            'bg_light': (245, 248, 250),
+            'bg_dark': (52, 73, 94)
+        },
+        # JavaScript/Web - Warm yellows and oranges
+        'javascript': {
+            'base': [(241, 196, 15), (230, 126, 34), (211, 84, 0)],  # Yellow, Orange, Deep orange
+            'accents': [(254, 250, 224), (123, 63, 0)],  # Cream, Brown
+            'bg_light': (255, 252, 244),
+            'bg_dark': (100, 56, 14)
+        },
+        # Data/Science - Natural greens
+        'data': {
+            'base': [(46, 204, 113), (39, 174, 96), (22, 160, 133)],  # Emerald, Green, Teal
+            'accents': [(232, 248, 245), (27, 79, 69)],  # Mint, Forest
+            'bg_light': (240, 252, 245),
+            'bg_dark': (35, 67, 56)
+        },
+        # Creative/Design - Purples and pinks
+        'creative': {
+            'base': [(155, 89, 182), (142, 68, 173), (231, 76, 60)],  # Amethyst, Purple, Red
+            'accents': [(244, 236, 247), (74, 35, 90)],  # Lavender, Deep purple
+            'bg_light': (250, 244, 252),
+            'bg_dark': (63, 31, 77)
+        },
+        # Sunset - Warm gradient
+        'sunset': {
+            'base': [(255, 107, 107), (255, 159, 64), (255, 205, 86)],  # Coral, Peach, Gold
+            'accents': [(255, 244, 230), (92, 47, 43)],  # Cream, Deep brown
+            'bg_light': (255, 250, 245),
+            'bg_dark': (92, 53, 48)
+        },
+        # Ocean - Deep blues and aqua
+        'ocean': {
+            'base': [(54, 162, 235), (72, 219, 251), (29, 209, 161)],  # Azure, Cyan, Aqua
+            'accents': [(230, 246, 253), (18, 65, 95)],  # Ice, Deep sea
+            'bg_light': (242, 249, 253),
+            'bg_dark': (23, 72, 99)
+        },
+        # Forest - Earth tones
+        'forest': {
+            'base': [(76, 133, 87), (108, 166, 108), (163, 196, 117)],  # Forest, Sage, Lime
+            'accents': [(242, 244, 238), (35, 58, 38)],  # Cream, Dark forest
+            'bg_light': (246, 248, 243),
+            'bg_dark': (41, 61, 43)
+        },
+        # Mono - Elegant grays
+        'mono': {
+            'base': [(69, 85, 96), (120, 135, 145), (178, 190, 195)],  # Charcoal, Slate, Silver
+            'accents': [(245, 247, 248), (33, 42, 48)],  # Pearl, Black
+            'bg_light': (250, 251, 252),
+            'bg_dark': (38, 47, 53)
+        }
+    }
+
+    @staticmethod
+    def select_palette_by_repo(fingerprint):
+        """Select color palette based on repository characteristics"""
+        file_types = fingerprint['file_types']
+        total_lines = fingerprint['total_lines']
+        num_files = len(fingerprint['files'])
+
+        # Determine project type
+        has_py = '.py' in file_types
+        has_js = any(ext in file_types for ext in ['.js', '.jsx', '.ts', '.tsx', '.vue'])
+        has_md = '.md' in file_types
+        has_data = any(ext in file_types for ext in ['.csv', '.json', '.xml'])
+
+        # Smart selection
+        if has_py and has_data:
+            palette_name = 'data'
+        elif has_py and total_lines > 300:
+            palette_name = 'python'
+        elif has_js:
+            palette_name = 'javascript'
+        elif has_md and num_files <= 5:
+            palette_name = 'mono'
+        elif total_lines > 800:
+            palette_name = 'ocean'
+        elif num_files > 8:
+            palette_name = 'creative'
+        else:
+            # Deterministic based on total lines
+            hash_val = total_lines % len(RepositoryPalette.PALETTES)
+            palette_name = list(RepositoryPalette.PALETTES.keys())[hash_val]
+
+        return palette_name, RepositoryPalette.PALETTES[palette_name]
+
+    @staticmethod
+    def expand_palette(palette_dict, seed):
+        """Expand palette with harmonious variations"""
+        expanded = []
+        base_colors = palette_dict['base']
+        accent_colors = palette_dict['accents']
+
+        # Add all base colors
+        expanded.extend(base_colors)
+
+        # Add tints and shades for each base color
+        random.seed(seed)
+        for color in base_colors:
+            r, g, b = color
+            h, s, v = colorsys.rgb_to_hsv(r/255, g/255, b/255)
+
+            # Lighter tint
+            tint = RepositoryPalette._hsv_to_rgb(h, s * 0.6, min(1.0, v * 1.15))
+            expanded.append(tint)
+
+            # Darker shade
+            shade = RepositoryPalette._hsv_to_rgb(h, min(1.0, s * 1.05), v * 0.75)
+            expanded.append(shade)
+
+        # Add accents
+        expanded.extend(accent_colors)
+
+        return expanded
+
+    @staticmethod
+    def _hsv_to_rgb(h, s, v):
+        """Convert HSV to RGB (0-255)"""
+        r, g, b = colorsys.hsv_to_rgb(h, s, v)
+        return (int(r * 255), int(g * 255), int(b * 255))
+
+
+class OrganicShapes:
+    """Generate flowing, organic shapes with advanced effects"""
+
+    @staticmethod
+    def flowing_line(start, end, curviness=0.3, segments=50):
+        """Generate flowing bezier curve"""
+        x1, y1 = start
+        x2, y2 = end
+        points = []
+
+        mid_x = (x1 + x2) / 2
+        mid_y = (y1 + y2) / 2
+
+        dx = x2 - x1
+        dy = y2 - y1
+        perp_x = -dy
+        perp_y = dx
+        length = math.sqrt(perp_x**2 + perp_y**2)
+
+        if length > 0:
+            perp_x /= length
+            perp_y /= length
+
+        dist = math.sqrt((x2-x1)**2 + (y2-y1)**2)
+        offset = dist * curviness
+        ctrl1_x = mid_x + perp_x * offset
+        ctrl1_y = mid_y + perp_y * offset
+
+        for i in range(segments + 1):
+            t = i / segments
+            x = (1-t)**3 * x1 + 3*(1-t)**2*t * ctrl1_x + 3*(1-t)*t**2 * mid_x + t**3 * x2
+            y = (1-t)**3 * y1 + 3*(1-t)**2*t * ctrl1_y + 3*(1-t)*t**2 * mid_y + t**3 * y2
+            points.append((x, y))
+
+        return points
+
+    @staticmethod
+    def spiral_pattern(center, start_radius, end_radius, turns, segments=200):
+        """Generate spiral pattern"""
+        cx, cy = center
+        points = []
+
+        for i in range(segments + 1):
+            t = i / segments
+            angle = t * turns * 2 * math.pi
+            radius = start_radius + (end_radius - start_radius) * t
+            x = cx + radius * math.cos(angle)
+            y = cy + radius * math.sin(angle)
+            points.append((x, y))
+
+        return points
+
+    @staticmethod
+    def circle_loop(center, radius, segments=100):
+        """Generate circular loop"""
+        cx, cy = center
+        points = []
+
+        for i in range(segments + 1):
+            angle = (i / segments) * 2 * math.pi
+            x = cx + radius * math.cos(angle)
+            y = cy + radius * math.sin(angle)
+            points.append((x, y))
+
+        return points
+
+    @staticmethod
+    def rotating_pattern(center, radius, count, rotation_offset, size_range):
+        """Generate rotating elements around a center"""
+        cx, cy = center
+        elements = []
+
+        for i in range(count):
+            angle = (i / count) * 2 * math.pi + rotation_offset
+            x = cx + radius * math.cos(angle)
+            y = cy + radius * math.sin(angle)
+            size = random.uniform(size_range[0], size_range[1])
+            elements.append((x, y, size, angle))
+
+        return elements
+
+    @staticmethod
+    def particle_burst(center, count, min_radius, max_radius, seed):
+        """Generate particle burst"""
+        cx, cy = center
+        particles = []
+        random.seed(seed)
+
+        for i in range(count):
+            angle = random.uniform(0, 2 * math.pi)
+            radius = random.uniform(min_radius, max_radius)
+            x = cx + radius * math.cos(angle)
+            y = cy + radius * math.sin(angle)
+            size = random.uniform(2, 10)
+            particles.append((x, y, size))
+
+        return particles
+
+    @staticmethod
+    def wave_pattern(y_base, width, amplitude, frequency, phase, segments=200):
+        """Generate wave pattern"""
+        points = []
+        for i in range(segments + 1):
+            x = (i / segments) * width
+            y = y_base + amplitude * math.sin(frequency * x / 100 + phase)
+            points.append((x, y))
+        return points
+
+    @staticmethod
+    def cornu_inspired_curve(start, end, curvature_factor, segments=150):
+        """Generate Cornu-inspired (Euler spiral) curve with smooth curvature change"""
+        x1, y1 = start
+        x2, y2 = end
+        points = []
+
+        dx = x2 - x1
+        dy = y2 - y1
+        length = math.sqrt(dx**2 + dy**2)
+
+        for i in range(segments + 1):
+            t = i / segments
+
+            # Smooth curvature increase (like Euler spiral/Cornu curve)
+            # Curvature increases linearly with arc length
+            theta = curvature_factor * t * t  # Quadratic for smooth transition
+
+            # Position along the curve
+            s = t * length
+            x = x1 + dx * t + dy * math.sin(theta) * 0.3
+            y = y1 + dy * t - dx * math.sin(theta) * 0.3
+
+            points.append((x, y))
+
+        return points
+
+    @staticmethod
+    def generate_texture_lines(center, radius, count, seed):
+        """Generate many small texture lines for rich detail (IDEO style)"""
+        cx, cy = center
+        lines = []
+        random.seed(seed)
+
+        for i in range(count):
+            # Random position around center
+            angle = random.uniform(0, 2 * math.pi)
+            dist = random.uniform(0, radius)
+            x = cx + dist * math.cos(angle)
+            y = cy + dist * math.sin(angle)
+
+            # Small random line
+            line_angle = random.uniform(0, 2 * math.pi)
+            line_length = random.uniform(2, 15)
+            x2 = x + line_length * math.cos(line_angle)
+            y2 = y + line_length * math.sin(line_angle)
+
+            opacity = random.randint(10, 80)
+            thickness = random.uniform(0.5, 2)
+
+            lines.append(((x, y), (x2, y2), opacity, thickness))
+
+        return lines
 
 
 class GitArtGenerator:
     def __init__(self, repo_path='.', width=1200, height=1200):
-        """Initialize the art generator with a git repository"""
         self.repo = git.Repo(repo_path)
         self.width = width
         self.height = height
         self.repo_path = Path(repo_path)
 
     def get_repo_fingerprint(self):
-        """
-        Generate a deterministic fingerprint of the current repo state.
-        This ensures same code = same art, small changes = small art changes.
-        """
+        """Generate repository fingerprint"""
         fingerprint_data = {
             'files': {},
             'total_lines': 0,
@@ -34,38 +328,26 @@ class GitArtGenerator:
             'authors': set()
         }
 
-        # Get current HEAD commit
         try:
             head_commit = self.repo.head.commit
             fingerprint_data['commit_count'] = len(list(self.repo.iter_commits()))
             fingerprint_data['authors'] = {c.author.name for c in self.repo.iter_commits()}
         except:
-            # Empty repo or no commits yet
             pass
 
-        # Analyze all tracked files
         try:
             for item in self.repo.tree().traverse():
-                if item.type == 'blob':  # It's a file
+                if item.type == 'blob':
                     file_path = item.path
-
-                    # Skip binary files and common non-code files
                     if self._should_skip_file(file_path):
                         continue
-
-                    # Get file content and analyze
                     try:
                         content = item.data_stream.read().decode('utf-8', errors='ignore')
                         lines = content.split('\n')
                         line_count = len(lines)
-
-                        # Get file extension
                         ext = Path(file_path).suffix or 'no_ext'
                         fingerprint_data['file_types'][ext] += line_count
-
-                        # Create hash of file content
                         content_hash = hashlib.md5(content.encode()).hexdigest()
-
                         fingerprint_data['files'][file_path] = {
                             'lines': line_count,
                             'hash': content_hash,
@@ -75,152 +357,616 @@ class GitArtGenerator:
                     except:
                         continue
         except:
-            # No tracked files yet
             pass
 
         return fingerprint_data
 
     def _should_skip_file(self, file_path):
-        """Determine if a file should be skipped"""
         skip_extensions = {'.png', '.jpg', '.jpeg', '.gif', '.ico', '.svg',
                           '.pdf', '.zip', '.tar', '.gz', '.bin', '.exe'}
         skip_names = {'package-lock.json', 'yarn.lock', '.gitattributes'}
-
         path = Path(file_path)
         return path.suffix in skip_extensions or path.name in skip_names
 
     def generate_art(self, output_path='repo_art.png'):
-        """Generate abstract art based on repository fingerprint"""
+        """Generate harmonious generative art"""
         fingerprint = self.get_repo_fingerprint()
 
-        # Create image
-        img = Image.new('RGB', (self.width, self.height), color='white')
-        draw = ImageDraw.Draw(img)
+        # Get harmonious palette
+        palette_name, palette_dict = RepositoryPalette.select_palette_by_repo(fingerprint)
+        all_colors = RepositoryPalette.expand_palette(palette_dict, fingerprint['total_lines'])
 
-        # Generate background gradient based on total lines and complexity
-        img = self._create_background(fingerprint)
+        # Create background
+        img = self._create_background(fingerprint, palette_dict)
         draw = ImageDraw.Draw(img, 'RGBA')
 
-        # Draw elements based on files
-        self._draw_file_elements(draw, fingerprint)
+        # Add layers of elements (IDEO-inspired: hundreds of layers)
+        self._add_filled_color_areas(draw, fingerprint, all_colors)  # NEW: Bold filled areas
+        self._add_background_flows(draw, fingerprint, all_colors)
+        self._add_cornu_curves(draw, fingerprint, all_colors)
+        self._add_bold_color_blocks(draw, fingerprint, all_colors)  # NEW: Abstract color blocks
+        self._add_spirals(draw, fingerprint, all_colors)
+        self._add_circular_loops(draw, fingerprint, all_colors)
+        self._draw_main_elements(draw, fingerprint, all_colors)
+        self._add_rich_texture(draw, fingerprint, all_colors)
+        self._add_rotating_elements(draw, fingerprint, all_colors)
+        self._add_connections(draw, fingerprint, all_colors)
+        self._add_particles(draw, fingerprint, all_colors)
+        self._add_waves_with_fade(draw, fingerprint, all_colors)
 
-        # Draw commit history spiral
-        self._draw_commit_spiral(draw, fingerprint)
-
-        # Save the art
-        img.save(output_path)
-        print(f"Art generated: {output_path}")
-        print(f"Based on: {len(fingerprint['files'])} files, "
-              f"{fingerprint['total_lines']} lines of code, "
+        img.save(output_path, quality=95)
+        print(f"🎨 Art generated: {output_path}")
+        print(f"📊 {len(fingerprint['files'])} files, "
+              f"{fingerprint['total_lines']} lines, "
               f"{fingerprint['commit_count']} commits")
+        print(f"🌈 Palette: '{palette_name}' ({len(all_colors)} harmonious colors)")
 
         return output_path
 
-    def _create_background(self, fingerprint):
-        """Create a gradient background based on repo metrics"""
+    def _create_background(self, fingerprint, palette_dict):
+        """Create dynamic, interesting background with color variations"""
         img = Image.new('RGB', (self.width, self.height))
         pixels = img.load()
 
-        # Use total lines to determine color scheme
-        total_lines = fingerprint['total_lines']
-        seed = total_lines % 360  # Hue rotation
+        base_colors = palette_dict['base']
+        bg_light = palette_dict['bg_light']
+        bg_dark = palette_dict['bg_dark']
+
+        # Create multiple gradient centers for dynamic effect
+        seed = fingerprint['total_lines']
+        random.seed(seed)
+
+        num_centers = 3 + (fingerprint['commit_count'] % 3)
+        centers = []
+
+        for i in range(num_centers):
+            cx = random.randint(int(self.width * 0.2), int(self.width * 0.8))
+            cy = random.randint(int(self.height * 0.2), int(self.height * 0.8))
+            color_idx = i % len(base_colors)
+            # Use lighter versions of base colors for background
+            r, g, b = base_colors[color_idx]
+            # Lighten the colors significantly for background
+            light_color = (
+                min(255, int(r + (255 - r) * 0.6)),
+                min(255, int(g + (255 - g) * 0.6)),
+                min(255, int(b + (255 - b) * 0.6))
+            )
+            centers.append((cx, cy, light_color))
 
         for y in range(self.height):
             for x in range(self.width):
-                # Create gradient
-                r = int((seed + x / self.width * 100) % 256)
-                g = int((150 + y / self.height * 100) % 256)
-                b = int((200 - (x + y) / (self.width + self.height) * 100) % 256)
-                pixels[x, y] = (r, g, b)
+                # Calculate influence from each center
+                influences = []
+                colors_at_point = []
+
+                for cx, cy, color in centers:
+                    dist = math.sqrt((x - cx)**2 + (y - cy)**2)
+                    max_dist = math.sqrt(self.width**2 + self.height**2)
+                    influence = max(0, 1 - (dist / max_dist) ** 0.8)
+                    influences.append(influence)
+                    colors_at_point.append(color)
+
+                # Add corner influence for overall gradient
+                corner_ratio = (x + y) / (self.width + self.height)
+                corner_influence = 0.3
+
+                total_influence = sum(influences) + corner_influence
+                r, g, b = 0, 0, 0
+
+                # Blend center colors
+                for i, influence in enumerate(influences):
+                    weight = influence / total_influence
+                    cr, cg, cb = colors_at_point[i]
+                    r += cr * weight
+                    g += cg * weight
+                    b += cb * weight
+
+                # Add corner gradient
+                corner_weight = corner_influence / total_influence
+                r += bg_light[0] * (1 - corner_ratio) * corner_weight + bg_dark[0] * corner_ratio * corner_weight
+                g += bg_light[1] * (1 - corner_ratio) * corner_weight + bg_dark[1] * corner_ratio * corner_weight
+                b += bg_light[2] * (1 - corner_ratio) * corner_weight + bg_dark[2] * corner_ratio * corner_weight
+
+                pixels[x, y] = (int(r), int(g), int(b))
 
         return img
 
-    def _draw_file_elements(self, draw, fingerprint):
-        """Draw geometric elements representing each file"""
-        files = fingerprint['files']
+    def _add_filled_color_areas(self, draw, fingerprint, colors):
+        """Add large filled color areas for bold visual impact"""
+        seed = fingerprint['total_lines']
+        random.seed(seed)
 
+        num_areas = 3 + (fingerprint['commit_count'] % 5)
+
+        for i in range(num_areas):
+            # Large organic filled shapes
+            cx = random.randint(0, self.width)
+            cy = random.randint(0, self.height)
+
+            # Make HUGE shapes
+            size = random.randint(int(self.width * 0.2), int(self.width * 0.5))
+
+            # Generate organic blob shape
+            segments = random.randint(6, 12)
+            points = []
+            for j in range(segments):
+                angle = (j / segments) * 2 * math.pi
+                variation = random.uniform(0.7, 1.3)
+                radius = size * variation
+                px = cx + radius * math.cos(angle)
+                py = cy + radius * math.sin(angle)
+                points.append((px, py))
+
+            # Mix colors - use multiple colors from palette
+            color1 = colors[i % len(colors)]
+            color2 = colors[(i + 3) % len(colors)]
+
+            # Blend colors
+            r = (color1[0] + color2[0]) // 2
+            g = (color1[1] + color2[1]) // 2
+            b = (color1[2] + color2[2]) // 2
+            blended = (r, g, b)
+
+            opacity = random.randint(40, 100)
+
+            draw.polygon(points, fill=blended + (opacity,))
+
+    def _add_bold_color_blocks(self, draw, fingerprint, colors):
+        """Add bold rectangular color blocks mixing multiple colors"""
+        seed = fingerprint['total_lines']
+        random.seed(seed)
+
+        num_blocks = 4 + (len(fingerprint['files']) % 6)
+
+        for i in range(num_blocks):
+            # Large rectangles at various angles
+            x = random.randint(-self.width // 4, self.width)
+            y = random.randint(-self.height // 4, self.height)
+
+            width = random.randint(int(self.width * 0.15), int(self.width * 0.40))
+            height = random.randint(int(self.height * 0.10), int(self.height * 0.30))
+
+            # Rotate rectangle
+            angle = random.uniform(0, math.pi)
+
+            # Create rotated rectangle points
+            corners = [
+                (x, y),
+                (x + width * math.cos(angle), y + width * math.sin(angle)),
+                (x + width * math.cos(angle) - height * math.sin(angle),
+                 y + width * math.sin(angle) + height * math.cos(angle)),
+                (x - height * math.sin(angle), y + height * math.cos(angle))
+            ]
+
+            # Bold mixed colors
+            color1 = colors[i % len(colors)]
+            color2 = colors[(i + 2) % len(colors)]
+            color3 = colors[(i + 5) % len(colors)]
+
+            # Mix three colors
+            r = (color1[0] + color2[0] + color3[0]) // 3
+            g = (color1[1] + color2[1] + color3[1]) // 3
+            b = (color1[2] + color2[2] + color3[2]) // 3
+            mixed = (r, g, b)
+
+            opacity = random.randint(50, 120)
+
+            draw.polygon(corners, fill=mixed + (opacity,))
+
+    def _add_background_flows(self, draw, fingerprint, colors):
+        """Add flowing background lines - BOLD and THICK"""
+        seed = fingerprint['total_lines']
+        random.seed(seed)
+
+        num_flows = 8 + (fingerprint['commit_count'] % 10)
+
+        for i in range(num_flows):
+            x1 = random.randint(-self.width // 2, self.width + self.width // 2)
+            y1 = random.randint(-self.height // 2, self.height + self.height // 2)
+            x2 = random.randint(-self.width // 2, self.width + self.width // 2)
+            y2 = random.randint(-self.height // 2, self.height + self.height // 2)
+
+            points = OrganicShapes.flowing_line(
+                (x1, y1), (x2, y2),
+                curviness=random.uniform(0.3, 0.6),
+                segments=100
+            )
+
+            color = colors[i % len(colors)]
+
+            # SUPER THICK lines - up to 30% of canvas width!
+            if random.random() < 0.3:
+                # Occasionally MASSIVE strokes
+                stroke_width = random.randint(int(self.width * 0.15), int(self.width * 0.30))
+            else:
+                # Still very thick
+                stroke_width = random.randint(int(self.width * 0.05), int(self.width * 0.15))
+
+            for j in range(len(points) - 1):
+                draw.line([points[j], points[j+1]],
+                         fill=color + (random.randint(60, 120),),  # Varied opacity
+                         width=stroke_width)
+
+    def _add_cornu_curves(self, draw, fingerprint, colors):
+        """Add Cornu/Euler spiral curves - IDEO Tsunami style with hundreds of curves"""
+        seed = fingerprint['total_lines']
+        random.seed(seed)
+
+        # Generate many curves (50-100) like the Tsunami artwork
+        num_curves = 50 + (fingerprint['commit_count'] * 5)
+
+        for i in range(num_curves):
+            x1 = random.randint(-self.width // 4, self.width + self.width // 4)
+            y1 = random.randint(-self.height // 4, self.height + self.height // 4)
+            x2 = random.randint(-self.width // 4, self.width + self.width // 4)
+            y2 = random.randint(-self.height // 4, self.height + self.height // 4)
+
+            curvature = random.uniform(2, 8)
+
+            points = OrganicShapes.cornu_inspired_curve((x1, y1), (x2, y2), curvature, segments=120)
+
+            # Select color from palette
+            color = colors[i % len(colors)]
+
+            # BOLD stroke widths - much thicker!
+            if random.random() < 0.4:
+                stroke_width = random.randint(int(self.width * 0.01), int(self.width * 0.08))  # Thick
+            elif random.random() < 0.7:
+                stroke_width = random.randint(int(self.width * 0.08), int(self.width * 0.20))  # Very thick
+            else:
+                stroke_width = random.randint(int(self.width * 0.20), int(self.width * 0.30))  # MASSIVE
+
+            # Vary opacity
+            opacity = random.randint(40, 150)
+
+            # Draw the curve
+            for j in range(len(points) - 1):
+                draw.line([points[j], points[j+1]],
+                         fill=color + (opacity,),
+                         width=int(stroke_width))
+
+    def _add_rich_texture(self, draw, fingerprint, colors):
+        """Add thousands of micro-lines for rich texture - IDEO 'All Seeing Eye' style"""
+        seed = fingerprint['total_lines']
+
+        # Add texture around main elements
+        files = list(fingerprint['files'].items())
         if not files:
             return
 
-        # Create a deterministic layout
-        num_files = len(files)
-        grid_size = int(np.sqrt(num_files)) + 1
-        cell_width = self.width // grid_size
-        cell_height = self.height // grid_size
+        # Generate texture for top 3 files (millions of lines would be slow, so thousands)
+        for idx, (file_path, file_data) in enumerate(files[:3]):
+            golden_angle = 137.508
+            angle = (idx * golden_angle) * (math.pi / 180)
+            radius_pos = 60 + idx * (min(self.width, self.height) / (2.2 * len(files)))
 
-        for idx, (file_path, file_data) in enumerate(sorted(files.items())):
-            # Position based on file name hash
-            grid_x = idx % grid_size
-            grid_y = idx // grid_size
+            cx, cy = self.width / 2, self.height / 2
+            x = cx + radius_pos * math.cos(angle)
+            y = cy + radius_pos * math.sin(angle)
 
-            x = grid_x * cell_width + cell_width // 2
-            y = grid_y * cell_height + cell_height // 2
+            hash_val = int(file_data['hash'][:8], 16)
 
-            # Size based on line count
-            size = min(cell_width, cell_height) * (file_data['lines'] / max(f['lines'] for f in files.values()))
-            size = max(10, min(size, cell_width * 0.8))
+            # Generate thousands of tiny lines (IDEO: millions, but we'll do thousands for performance)
+            texture_radius = 80 + idx * 30
+            num_lines = 500 + (file_data['lines'] * 5)  # More lines for larger files
 
-            # Color based on file type and content hash
-            color = self._hash_to_color(file_data['hash'])
+            texture_lines = OrganicShapes.generate_texture_lines((x, y), texture_radius, num_lines, hash_val)
 
-            # Shape based on extension
-            shape_type = hash(file_data['extension']) % 3
+            color = colors[hash_val % len(colors)]
 
-            if shape_type == 0:  # Circle
-                draw.ellipse([x - size/2, y - size/2, x + size/2, y + size/2],
-                           fill=color + (180,), outline=color)
-            elif shape_type == 1:  # Rectangle
-                draw.rectangle([x - size/2, y - size/2, x + size/2, y + size/2],
-                             fill=color + (180,), outline=color)
-            else:  # Triangle
-                points = [
-                    (x, y - size/2),
-                    (x - size/2, y + size/2),
-                    (x + size/2, y + size/2)
-                ]
-                draw.polygon(points, fill=color + (180,), outline=color)
+            for (x1, y1), (x2, y2), opacity, thickness in texture_lines:
+                draw.line([(x1, y1), (x2, y2)],
+                         fill=color + (opacity,),
+                         width=int(thickness))
 
-    def _draw_commit_spiral(self, draw, fingerprint):
-        """Draw a spiral pattern based on commit history"""
-        commit_count = fingerprint['commit_count']
-
-        if commit_count == 0:
+    def _draw_main_elements(self, draw, fingerprint, colors):
+        """Draw main file elements"""
+        files = fingerprint['files']
+        if not files:
             return
 
-        # Draw spiral from center
-        cx, cy = self.width // 2, self.height // 2
-        angle = 0
-        radius = 10
+        sorted_files = sorted(files.items(), key=lambda x: x[1]['lines'], reverse=True)
 
-        for i in range(min(commit_count, 100)):  # Limit to 100 for performance
-            x = cx + radius * np.cos(angle)
-            y = cy + radius * np.sin(angle)
+        for idx, (file_path, file_data) in enumerate(sorted_files):
+            golden_angle = 137.508
+            angle = (idx * golden_angle) * (math.pi / 180)
+            radius = 60 + idx * (min(self.width, self.height) / (2.2 * len(files)))
 
-            # Color changes with spiral
-            color = self._hash_to_color(str(i))
-            size = 5 + (i % 10)
+            cx, cy = self.width / 2, self.height / 2
+            x = cx + radius * math.cos(angle)
+            y = cy + radius * math.sin(angle)
 
-            draw.ellipse([x - size, y - size, x + size, y + size],
-                        fill=color + (150,))
+            max_lines = max(f['lines'] for f in files.values())
+            min_lines = min(f['lines'] for f in files.values())
 
-            angle += 0.5
-            radius += 2
+            if max_lines > min_lines:
+                normalized_size = (file_data['lines'] - min_lines) / (max_lines - min_lines)
+            else:
+                normalized_size = 0.5
 
-    def _hash_to_color(self, text):
-        """Convert a hash to a deterministic RGB color"""
-        hash_val = int(hashlib.md5(text.encode()).hexdigest()[:6], 16)
-        r = (hash_val >> 16) & 0xFF
-        g = (hash_val >> 8) & 0xFF
-        b = hash_val & 0xFF
-        return (r, g, b)
+            size = 60 + normalized_size * 180  # Much larger objects
+
+            hash_val = int(file_data['hash'][:8], 16)
+            color = colors[hash_val % len(colors)]
+
+            self._draw_blob(draw, x, y, size, color, file_data['hash'])
+
+    def _draw_blob(self, draw, x, y, size, color, seed_hash):
+        """Draw organic blob with gradient shading and hue variations"""
+        points = []
+        segments = 18
+
+        hash_seed = int(seed_hash[:8], 16)
+        random.seed(hash_seed)
+
+        for i in range(segments):
+            angle = (i / segments) * 2 * math.pi
+            variation = 1 + 0.12 * math.sin(angle * 3) + random.uniform(-0.08, 0.08)
+            radius = (size / 2) * variation
+            px = x + radius * math.cos(angle)
+            py = y + radius * math.sin(angle)
+            points.append((px, py))
+
+        # Convert to HSV for hue variations
+        r, g, b = color
+        h, s, v = colorsys.rgb_to_hsv(r/255, g/255, b/255)
+
+        # Draw multiple layers with gradient effect (radial gradient simulation)
+        num_layers = 8
+        for layer in range(num_layers, 0, -1):
+            layer_points = []
+            layer_ratio = layer / num_layers
+
+            for i in range(segments):
+                angle = (i / segments) * 2 * math.pi
+                variation = 1 + 0.12 * math.sin(angle * 3) + random.uniform(-0.08, 0.08)
+                radius = (size / 2) * variation * layer_ratio
+                px = x + radius * math.cos(angle)
+                py = y + radius * math.sin(angle)
+                layer_points.append((px, py))
+
+            # Vary hue slightly for each layer
+            layer_h = (h + (layer / num_layers) * 0.05) % 1.0  # Slight hue shift
+            layer_v = min(1.0, v + (1 - layer_ratio) * 0.2)  # Lighter towards center
+            layer_s = s * (0.7 + layer_ratio * 0.3)  # More saturated outward
+
+            layer_color = self._hsv_to_rgb(layer_h, layer_s, layer_v)
+            layer_opacity = int(150 + layer_ratio * 80)
+
+            if len(layer_points) > 2:
+                draw.polygon(layer_points, fill=layer_color + (layer_opacity,))
+
+        # Add outer glow/shadow
+        shadow_points = []
+        for i in range(segments):
+            angle = (i / segments) * 2 * math.pi
+            variation = 1 + 0.12 * math.sin(angle * 3) + random.uniform(-0.08, 0.08)
+            radius = (size / 2) * variation * 1.15  # Slightly larger
+            px = x + radius * math.cos(angle)
+            py = y + radius * math.sin(angle)
+            shadow_points.append((px, py))
+
+        darker = (max(0, r - 40), max(0, g - 40), max(0, b - 40))
+        draw.polygon(shadow_points, fill=darker + (60,))  # Shadow/glow
+
+    def _hsv_to_rgb(self, h, s, v):
+        """Convert HSV to RGB tuple"""
+        r, g, b = colorsys.hsv_to_rgb(h, s, v)
+        return (int(r * 255), int(g * 255), int(b * 255))
+
+    def _add_connections(self, draw, fingerprint, colors):
+        """Add connection lines"""
+        files = list(fingerprint['files'].items())
+        if len(files) < 2:
+            return
+
+        seed = fingerprint['total_lines']
+        random.seed(seed)
+
+        connections = min(len(files) * 2, 30)
+
+        for i in range(connections):
+            idx1 = i % len(files)
+            idx2 = (i + random.randint(1, 3)) % len(files)
+
+            golden_angle = 137.508
+            angle1 = (idx1 * golden_angle) * (math.pi / 180)
+            radius1 = 60 + idx1 * (min(self.width, self.height) / (2.2 * len(files)))
+            cx, cy = self.width / 2, self.height / 2
+            x1 = cx + radius1 * math.cos(angle1)
+            y1 = cy + radius1 * math.sin(angle1)
+
+            angle2 = (idx2 * golden_angle) * (math.pi / 180)
+            radius2 = 60 + idx2 * (min(self.width, self.height) / (2.2 * len(files)))
+            x2 = cx + radius2 * math.cos(angle2)
+            y2 = cy + radius2 * math.sin(angle2)
+
+            points = OrganicShapes.flowing_line(
+                (x1, y1), (x2, y2),
+                curviness=random.uniform(0.1, 0.25),
+                segments=40
+            )
+
+            color = colors[i % len(colors)]
+
+            for j in range(len(points) - 1):
+                thickness = 2 + int(4 * math.sin((j / len(points)) * math.pi))  # Thicker
+                draw.line([points[j], points[j+1]],
+                         fill=color + (100,),  # More opaque
+                         width=thickness)
+
+    def _add_particles(self, draw, fingerprint, colors):
+        """Add particle effects"""
+        files = list(fingerprint['files'].items())
+        if not files:
+            return
+
+        for idx, (file_path, file_data) in enumerate(files[:5]):
+            golden_angle = 137.508
+            angle = (idx * golden_angle) * (math.pi / 180)
+            radius = 60 + idx * (min(self.width, self.height) / (2.2 * len(files)))
+
+            cx, cy = self.width / 2, self.height / 2
+            x = cx + radius * math.cos(angle)
+            y = cy + radius * math.sin(angle)
+
+            hash_val = int(file_data['hash'][:8], 16)
+            particle_count = 18 + (file_data['lines'] // 15)  # More particles
+
+            particles = OrganicShapes.particle_burst((x, y), particle_count, 30, 80, hash_val)  # Larger radius
+
+            color = colors[hash_val % len(colors)]
+
+            for px, py, size in particles:
+                larger_size = size * 1.5  # Make particles bigger
+                draw.ellipse(
+                    [px - larger_size/2, py - larger_size/2, px + larger_size/2, py + larger_size/2],
+                    fill=color + (170,)  # More opaque
+                )
+
+    def _add_spirals(self, draw, fingerprint, colors):
+        """Add spiral patterns emanating from key points"""
+        seed = fingerprint['total_lines']
+        random.seed(seed)
+
+        num_spirals = 2 + (fingerprint['commit_count'] % 3)
+
+        for i in range(num_spirals):
+            cx = random.randint(int(self.width * 0.2), int(self.width * 0.8))
+            cy = random.randint(int(self.height * 0.2), int(self.height * 0.8))
+
+            start_radius = random.randint(10, 30)
+            end_radius = random.randint(100, 200)
+            turns = random.uniform(2, 4)
+
+            points = OrganicShapes.spiral_pattern((cx, cy), start_radius, end_radius, turns, segments=150)
+
+            color = colors[i % len(colors)]
+
+            # Draw spiral with fading opacity
+            for j in range(len(points) - 1):
+                fade_ratio = j / len(points)
+                opacity = int(80 * (1 - fade_ratio))  # Fade out
+                thickness = max(1, int(5 * (1 - fade_ratio * 0.5)))  # Thinner as it spirals
+
+                draw.line([points[j], points[j+1]],
+                         fill=color + (opacity,),
+                         width=thickness)
+
+    def _add_circular_loops(self, draw, fingerprint, colors):
+        """Add concentric circular loops"""
+        seed = fingerprint['total_lines']
+        random.seed(seed)
+
+        num_loop_centers = 2 + (len(fingerprint['files']) % 3)
+
+        for i in range(num_loop_centers):
+            cx = random.randint(int(self.width * 0.15), int(self.width * 0.85))
+            cy = random.randint(int(self.height * 0.15), int(self.height * 0.85))
+
+            num_loops = random.randint(3, 6)
+            base_radius = random.randint(30, 60)
+
+            for loop in range(num_loops):
+                radius = base_radius + loop * random.randint(15, 30)
+                points = OrganicShapes.circle_loop((cx, cy), radius, segments=80)
+
+                color = colors[(i + loop) % len(colors)]
+                opacity = max(20, int(70 - loop * 10))  # Fade outward
+
+                for j in range(len(points) - 1):
+                    draw.line([points[j], points[j+1]],
+                             fill=color + (opacity,),
+                             width=2)
+
+    def _add_rotating_elements(self, draw, fingerprint, colors):
+        """Add rotating circular elements around main objects"""
+        files = list(fingerprint['files'].items())
+        if not files:
+            return
+
+        seed = fingerprint['total_lines']
+        random.seed(seed)
+
+        # Add rotating elements around top 3 files
+        for idx, (file_path, file_data) in enumerate(files[:3]):
+            golden_angle = 137.508
+            angle = (idx * golden_angle) * (math.pi / 180)
+            radius = 60 + idx * (min(self.width, self.height) / (2.2 * len(files)))
+
+            cx, cy = self.width / 2, self.height / 2
+            x = cx + radius * math.cos(angle)
+            y = cy + radius * math.sin(angle)
+
+            hash_val = int(file_data['hash'][:8], 16)
+            rotation_offset = (hash_val % 360) * (math.pi / 180)
+
+            # Create rotating pattern
+            orbit_radius = 40 + idx * 15
+            num_elements = 6 + (hash_val % 5)
+
+            elements = OrganicShapes.rotating_pattern((x, y), orbit_radius, num_elements, rotation_offset, (4, 10))
+
+            color = colors[hash_val % len(colors)]
+
+            for ex, ey, esize, eangle in elements:
+                draw.ellipse(
+                    [ex - esize, ey - esize, ex + esize, ey + esize],
+                    fill=color + (120,)
+                )
+
+    def _add_waves_with_fade(self, draw, fingerprint, colors):
+        """Add wave patterns with directional color fading"""
+        seed = fingerprint['total_lines']
+        random.seed(seed)
+
+        num_waves = 6 + (fingerprint['commit_count'] % 6)
+
+        for i in range(num_waves):
+            y_base = random.randint(int(self.height * 0.15), int(self.height * 0.85))
+            amplitude = random.randint(20, 40)
+            frequency = random.uniform(2.0, 3.5)
+            phase = random.uniform(0, 2 * math.pi)
+
+            points = OrganicShapes.wave_pattern(
+                y_base, self.width, amplitude, frequency, phase
+            )
+
+            base_color = colors[i % len(colors)]
+            r, g, b = base_color
+            h, s, v = colorsys.rgb_to_hsv(r/255, g/255, b/255)
+
+            # Draw wave with fading color and opacity from left to right
+            for j in range(len(points) - 1):
+                # Fade ratio based on position
+                fade_ratio = j / len(points)
+
+                # Gradually shift hue across the wave
+                wave_h = (h + fade_ratio * 0.1) % 1.0
+                wave_v = v * (1 - fade_ratio * 0.3)  # Darker towards right
+                wave_s = s * (1 - fade_ratio * 0.2)  # Less saturated towards right
+
+                wave_color = self._hsv_to_rgb(wave_h, wave_s, wave_v)
+
+                # Fade opacity
+                opacity = int(80 * (1 - fade_ratio * 0.5))
+
+                # Vary thickness
+                thickness = max(2, int(5 * (1 - fade_ratio * 0.4)))
+
+                draw.line([points[j], points[j+1]],
+                         fill=wave_color + (opacity,),
+                         width=thickness)
 
 
 def main():
-    """Main function to generate art from current repository"""
+    """Main function"""
     import argparse
 
-    parser = argparse.ArgumentParser(description='Generate abstract art from a git repository')
-    parser.add_argument('--repo', default='.', help='Path to git repository (default: current directory)')
+    parser = argparse.ArgumentParser(
+        description='Generate harmonious generative art from a git repository'
+    )
+    parser.add_argument('--repo', default='.', help='Path to git repository')
     parser.add_argument('--output', default='repo_art.png', help='Output image path')
     parser.add_argument('--size', type=int, default=1200, help='Image size (square)')
 
