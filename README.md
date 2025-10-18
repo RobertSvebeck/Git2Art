@@ -2,6 +2,8 @@
 
 Turn your git repository into a beautiful piece of abstract art!
 
+[![GitHub](https://img.shields.io/badge/github-RobertSvebeck%2FGit2Art-blue)](https://github.com/RobertSvebeck/Git2Art)
+
 ## Concept
 
 Git2Art creates deterministic abstract art from your codebase:
