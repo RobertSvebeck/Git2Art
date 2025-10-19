@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gallery - Git2Art</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/gallery.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Git2Art Gallery</h1>
+            <p class="tagline">Browse all generated artworks</p>
+            <nav class="header-nav">
+                <a href="{{ url_for('main.index') }}" class="nav-link">← Generate New Art</a>
+            </nav>
+        </header>
+
+        <main>
+            {% if artworks %}
+                <div class="gallery-grid">
+                    {% for artwork in artworks %}
+                    <div class="gallery-card">
+                        <div class="card-frame">
+                            <div class="card-passepartout">
+                                <div class="card-image">
+                                    <img src="{{ artwork.image_url }}" alt="Art for {{ artwork.repo_name }}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-content">
+                            <h3 class="repo-name">
+                                <a href="{{ artwork.repo_url }}" target="_blank">{{ artwork.repo_name }}</a>
+                            </h3>
+                            <p class="commit-hash">Commit: {{ artwork.commit_hash[:8] }}</p>
+                            <p class="created-date">{{ artwork.created_at_formatted }}</p>
+                            <div class="card-actions">
+                                {% if artwork.id %}
+                                <button class="btn btn-like" data-artwork-id="{{ artwork.id }}" onclick="toggleLike({{ artwork.id }})">
+                                    <span class="like-icon">♡</span>
+                                    <span class="like-count">{{ artwork.like_count }}</span>
+                                </button>
+                                {% endif %}
+                                <a href="{{ artwork.image_url }}" target="_blank" class="btn btn-view">View Full Size</a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <h2>No artworks yet</h2>
+                    <p>Generate your first artwork to see it here!</p>
+                    <a href="{{ url_for('main.index') }}" class="btn btn-primary">Generate Art</a>
+                </div>
+            {% endif %}
+        </main>
+
+        <footer>
+            <p>Created with ❤️ using Git2Art | <a href="https://github.com/RobertSvebeck/Git2Art" target="_blank">View on GitHub</a></p>
+        </footer>
+    </div>
+
+    <script>
+        // Hide cards with missing images
+        document.addEventListener('DOMContentLoaded', function() {
+            const images = document.querySelectorAll('.card-image img');
+            images.forEach(img => {
+                img.addEventListener('error', function() {
+                    const card = this.closest('.gallery-card');
+                    if (card) {
+                        card.style.display = 'none';
+                    }
+                });
+            });
+
+            // Initialize like states when page loads
+            const likeButtons = document.querySelectorAll('.btn-like');
+            likeButtons.forEach(button => {
+                const artworkId = button.dataset.artworkId;
+                checkHasLiked(artworkId);
+            });
+        });
+
+        async function checkHasLiked(artworkId) {
+            try {
+                const response = await fetch(`/api/artwork/${artworkId}/has_liked`);
+                const data = await response.json();
+                const button = document.querySelector(`[data-artwork-id="${artworkId}"]`);
+                if (button && data.has_liked) {
+                    button.classList.add('liked');
+                    button.querySelector('.like-icon').textContent = '♥';
+                }
+            } catch (error) {
+                console.error('Error checking like status:', error);
+            }
+        }
+
+        async function toggleLike(artworkId) {
+            const button = document.querySelector(`[data-artwork-id="${artworkId}"]`);
+            if (!button) return;
+
+            try {
+                const response = await fetch(`/api/artwork/${artworkId}/like`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    const likeIcon = button.querySelector('.like-icon');
+                    const likeCount = button.querySelector('.like-count');
+
+                    if (data.action === 'liked') {
+                        button.classList.add('liked');
+                        likeIcon.textContent = '♥';
+                    } else {
+                        button.classList.remove('liked');
+                        likeIcon.textContent = '♡';
+                    }
+
+                    likeCount.textContent = data.like_count;
+                }
+            } catch (error) {
+                console.error('Error toggling like:', error);
+            }
+        }
+    </script>
+</body>
+</html>

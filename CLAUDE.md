@@ -97,7 +97,7 @@ Git2Art transforms git repositories into beautiful, unique abstract art. Each re
 3. **Extreme Variations**: Stroke widths from 0.5px to 20px
 4. **Layered Complexity**: Multiple rendering passes
 
-### Bold & Expressive Style (Session 8 - Current)
+### Bold & Expressive Style (Session 8)
 **Challenge**: Make it BOLD with thick, paint-like strokes and filled areas
 
 **Final Enhancements**:
@@ -106,6 +106,42 @@ Git2Art transforms git repositories into beautiful, unique abstract art. Each re
 3. **Bold Color Blocks**: 4-10 large rectangles at angles
 4. **Color Mixing**: Blend 2-3 palette colors per element
 5. **Abstract Expressionist**: De Kooning/Kandinsky style
+
+### Automatic Aspect Ratio Detection (Session 9 - Current)
+**Goal**: Make canvas shape meaningful - let repository type determine aspect ratio
+
+**Motivation**:
+- Visual form should match content
+- Mobile apps look different from web apps
+- Aspect ratio becomes part of the repository's evolving "fingerprint"
+
+**Implementation**:
+1. **Detection Logic**:
+   - Analyzes file type distribution in repository
+   - Calculates percentages of mobile, web, and documentation files
+   - Automatically selects appropriate aspect ratio
+
+2. **Aspect Ratio Rules**:
+   - **Portrait (3:4)**: Mobile apps → Swift, Kotlin, Java+Android files >30%
+   - **Landscape (16:9)**: Web frontends → HTML/CSS/JS files >40% OR docs >50%
+   - **Square (1:1)**: Backend, libraries, general purpose (default)
+
+3. **Features**:
+   - Default behavior: `--aspect auto` (automatic detection)
+   - Manual override still available: `--aspect portrait_3:4`, `--aspect 16:9`, etc.
+   - Output displays detected aspect ratio: `📐 Aspect ratio: 16:9 (1920x1080)`
+   - Deterministic: same repo state = same aspect ratio
+
+4. **Evolution Over Time**:
+   - Repo starts as Python library → Square
+   - Add React frontend → Shifts to Landscape
+   - Add mobile app → Shifts to Portrait
+   - Visual form evolves with the codebase
+
+**Example Results**:
+- Git2Art (Python backend) → square (1200x1200)
+- React (JavaScript frontend) → 16:9 landscape (1200x675)
+- Rails (Ruby backend) → square (1200x1200)
 
 ## Technical Architecture
 
@@ -183,7 +219,8 @@ https://github.com/RobertSvebeck/Git2Art
 
 ## Key Features
 
-✅ **Repository-driven palettes** (8 curated schemes)
+✅ **Repository-driven palettes** (10 curated schemes based on language)
+✅ **Automatic aspect ratio** (canvas shape matches repo type: mobile=portrait, web=landscape, backend=square)
 ✅ **Deterministic** (same code = same art)
 ✅ **Incremental changes** (small changes = small differences)
 ✅ **Art theory-based** (golden ratio, color harmony)
@@ -192,7 +229,7 @@ https://github.com/RobertSvebeck/Git2Art
 ✅ **Professional quality** (gallery-worthy output)
 ✅ **Web application** (Flask-based UI with smart caching)
 
-### Flask Web Application (Session 9)
+### Flask Web Application (Session 10)
 **Goal**: Create web interface for public access to Git2Art
 
 **Phase 1 Implementation** (✅ COMPLETED Oct 19, 2025):
@@ -228,12 +265,74 @@ https://github.com/RobertSvebeck/Git2Art
    - QUICKSTART.md - User guide
    - PHASE1_SUMMARY.md - Implementation details
 
+**Phase 2 Implementation** (✅ COMPLETED Oct 19, 2025):
+1. **Gallery System**:
+   - `get_all_gallery_artworks()` service function
+   - Reads all cache files from filesystem
+   - Extracts metadata (repo_name, commit_hash, created_at)
+   - Automatic sorting by creation date (newest first)
+
+2. **Gallery UI**:
+   - Responsive grid layout with card design
+   - Each card displays: artwork thumbnail, repo name, commit hash, timestamp
+   - "View Full Size" link for each artwork
+   - Empty state when no artworks exist
+   - Consistent design with main app (gradient header, modern styling)
+
+3. **Navigation**:
+   - Bidirectional navigation between home and gallery
+   - Header navigation links on both pages
+   - Clean URL structure (/gallery route)
+
+4. **Features Delivered**:
+   - Browse all generated artworks in grid layout
+   - Automatic sorting (newest first)
+   - Display repository metadata for each artwork
+   - Direct links to view full-size images
+   - Mobile-responsive design
+   - No database required (filesystem-based)
+
+**Phase 3 Implementation** (✅ COMPLETED Oct 19, 2025):
+1. **Database Infrastructure**:
+   - MariaDB integration with PyMySQL
+   - Environment-based configuration (.env file)
+   - Connection pooling and context managers
+   - Automatic schema initialization (init_db.py)
+
+2. **Database Schema**:
+   - `artworks` table: stores artwork metadata (repo_url, commit_hash, image_path, like_count)
+   - `artwork_likes` table: tracks user likes with foreign key relationships
+   - Proper indexes on frequently queried fields
+   - Unique constraints to prevent duplicates
+
+3. **Data Models**:
+   - `Artwork` model: CRUD operations for artwork records
+   - `ArtworkLike` model: like/unlike operations with atomic transactions
+   - Database-backed gallery with filesystem fallback
+   - Automatic like count synchronization
+
+4. **Like Functionality**:
+   - Session-based user identification (anonymous users)
+   - Toggle like/unlike with single click
+   - Real-time like count updates
+   - Visual feedback (heart icon changes color)
+   - Server-side validation and atomic transactions
+
+5. **Features Delivered**:
+   - Persistent artwork storage in MariaDB
+   - Like/unlike functionality for each artwork
+   - Popularity tracking via like counts
+   - Gallery sorting by creation date or popularity
+   - Graceful degradation (filesystem fallback if DB unavailable)
+   - Secure database operations with prepared statements
+
 ## Future Possibilities
 
 ### Near Term
 - ✅ Flask web application Phase 1 (COMPLETED)
-- Gallery page for browsing all generated art (Phase 2)
-- Database integration with MariaDB (Phase 3)
+- ✅ Gallery page for browsing all generated art (Phase 2 - COMPLETED)
+- ✅ Database integration with MariaDB (Phase 3 - COMPLETED)
+- Deployment to production web hosting (Phase 4)
 - Animation showing repository evolution over time
 - More art style presets (minimalist, maximalist, etc.)
 - Export formats (SVG, high-res print)
@@ -243,7 +342,7 @@ https://github.com/RobertSvebeck/Git2Art
 - Interactive parameter tweaking
 - Social sharing features
 - Repository comparison visualizations
-- Like/favorite functionality with user accounts
+- User accounts and authentication
 
 ## Lessons Learned
 

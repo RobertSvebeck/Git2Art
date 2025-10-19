@@ -604,7 +604,43 @@ class GitArtGenerator:
         'portrait': (1200, 1600), # 3:4 portrait
     }
 
-    def __init__(self, repo_path='.', width=1600, height=1200, aspect_ratio='4:3', contrast='high'):
+    @staticmethod
+    def detect_aspect_ratio(fingerprint):
+        """
+        Automatically detect aspect ratio based on repository characteristics
+
+        Portrait (3:4) - Mobile apps (Swift, Kotlin, Dart, Java+Android)
+        Landscape (16:9) - Web frontends, documentation-heavy
+        Square (1:1) - Backend, libraries, general purpose
+
+        Returns:
+            str: Aspect ratio name ('portrait_3:4', '16:9', or 'square')
+        """
+        file_types = fingerprint['file_types']
+        total_lines = fingerprint['total_lines']
+
+        if total_lines == 0:
+            return 'square'
+
+        # Calculate percentages for different categories
+        mobile_lines = sum(file_types.get(ext, 0) for ext in ['.swift', '.kt', '.dart', '.m', '.mm'])
+        mobile_pct = mobile_lines / total_lines
+
+        web_lines = sum(file_types.get(ext, 0) for ext in ['.html', '.css', '.js', '.jsx', '.ts', '.tsx', '.vue', '.svelte'])
+        web_pct = web_lines / total_lines
+
+        doc_lines = sum(file_types.get(ext, 0) for ext in ['.md', '.rst', '.txt'])
+        doc_pct = doc_lines / total_lines
+
+        # Detection rules (lowered thresholds for polyglot projects)
+        if mobile_pct > 0.15:
+            return 'portrait_3:4'
+        elif web_pct > 0.25 or doc_pct > 0.40:
+            return '16:9'
+        else:
+            return 'square'
+
+    def __init__(self, repo_path='.', width=1600, height=1200, aspect_ratio='auto', contrast='high'):
         """
         Initialize art generator
 
@@ -612,12 +648,17 @@ class GitArtGenerator:
             repo_path: Path to git repository
             width: Canvas width (ignored if aspect_ratio is specified)
             height: Canvas height (ignored if aspect_ratio is specified)
-            aspect_ratio: Aspect ratio name from ASPECT_RATIOS (default: '4:3')
+            aspect_ratio: Aspect ratio name from ASPECT_RATIOS or 'auto' for automatic detection
             contrast: Contrast level for color palette ('low', 'medium', 'high')
         """
         self.repo = git.Repo(repo_path)
         self.repo_path = Path(repo_path)
         self.contrast = contrast
+
+        # Auto-detect aspect ratio if requested
+        if aspect_ratio == 'auto':
+            fingerprint = self.get_repo_fingerprint()
+            aspect_ratio = self.detect_aspect_ratio(fingerprint)
 
         # Apply aspect ratio if specified
         if aspect_ratio and aspect_ratio in self.ASPECT_RATIOS:
@@ -625,9 +666,11 @@ class GitArtGenerator:
             # Use width as the base dimension
             self.width = width
             self.height = int(width * ratio_h / ratio_w)
+            self.aspect_ratio = aspect_ratio
         else:
             self.width = width
             self.height = height
+            self.aspect_ratio = 'custom'
 
     def get_repo_fingerprint(self):
         """Generate repository fingerprint"""
@@ -728,6 +771,7 @@ class GitArtGenerator:
 
         img.save(output_path, quality=95)
         print(f"🎨 Art generated: {output_path}")
+        print(f"📐 Aspect ratio: {self.aspect_ratio} ({self.width}x{self.height})")
         print(f"📊 {len(fingerprint['files'])} files, "
               f"{fingerprint['total_lines']} lines, "
               f"{fingerprint['commit_count']} commits")
@@ -1482,9 +1526,9 @@ def main():
     parser.add_argument('--repo', default='.', help='Path to git repository')
     parser.add_argument('--output', default=None, help='Output image path (auto-generated if not specified)')
     parser.add_argument('--size', type=int, default=1600, help='Canvas width in pixels')
-    parser.add_argument('--aspect', default='4:3',
-                       choices=list(GitArtGenerator.ASPECT_RATIOS.keys()),
-                       help='Canvas aspect ratio (default: 4:3)')
+    parser.add_argument('--aspect', default='auto',
+                       choices=['auto'] + list(GitArtGenerator.ASPECT_RATIOS.keys()),
+                       help='Canvas aspect ratio (default: auto - detects based on repo type)')
     parser.add_argument('--contrast', default='high',
                        choices=['low', 'medium', 'high'],
                        help='Color contrast level: low (subtle), medium (balanced), high (dramatic). Default: high')

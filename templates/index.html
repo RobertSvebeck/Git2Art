@@ -5,12 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Git2Art - Transform Code into Art</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/gallery.css') }}">
 </head>
 <body>
     <div class="container">
         <header>
             <h1>Git2Art</h1>
             <p class="tagline">Transform your GitHub repositories into beautiful abstract art</p>
+            <nav class="header-nav">
+                <a href="{{ url_for('main.gallery') }}" class="nav-link">View Gallery →</a>
+            </nav>
         </header>
 
         <main>

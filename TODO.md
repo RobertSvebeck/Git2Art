@@ -29,26 +29,27 @@
 - ✅ Add watermark on image
 - ✅ Add download button for artwork
 
-#### Phase 2: Gallery Feature (Filesystem-based)
-- [ ] Create gallery page to browse all generated art
-- [ ] Display artwork with:
-  - [ ] Repository name
-  - [ ] Repository owner/user
-  - [ ] Link to GitHub repository
-- [ ] Gallery grid/card layout
-- [ ] Sort gallery (newest first, most popular, etc.)
+#### Phase 2: Gallery Feature (Filesystem-based) ✅ COMPLETED
+- ✅ Create gallery page to browse all generated art
+- ✅ Display artwork with:
+  - ✅ Repository name
+  - ✅ Commit hash
+  - ✅ Creation timestamp
+  - ✅ View full size link
+- ✅ Gallery grid/card layout
+- ✅ Sort gallery (newest first)
 
-#### Phase 3: Database Integration (MariaDB)
-- [ ] Set up .env configuration for MariaDB credentials
-- [ ] Create database schema for:
-  - [ ] Generated artworks (repo_url, commit_hash, image_path, created_at)
-  - [ ] User likes (user_id, artwork_id, liked_at)
-- [ ] Implement "like" functionality for artworks
-- [ ] Track popularity metrics
-- [ ] Migrate from filesystem-only to database-backed gallery
+#### Phase 3: Database Integration (MariaDB) ✅ COMPLETED
+- ✅ Set up .env configuration for MariaDB credentials
+- ✅ Create database schema for:
+  - ✅ Generated artworks (repo_url, commit_hash, image_path, created_at)
+  - ✅ User likes (user_id, artwork_id, liked_at)
+- ✅ Implement "like" functionality for artworks
+- ✅ Track popularity metrics
+- ✅ Migrate from filesystem-only to database-backed gallery
 
 #### Phase 4: Deployment
-- [ ] Deploy to Heroku/Render/Railway
+- [ ] Deploy to Oderland Webhotel (more details needed) Cpanel based passenger_WSGI.py
 - [ ] Set up production database connection
 - [ ] Configure static file serving for images
 
@@ -204,7 +205,75 @@
 - [ ] Workshop/tutorial series
 
 ## Bug Fixes Needed
-- [ ] None currently identified
+
+### Automatic Aspect Ratio Detection Not Working in Flask App (High Priority)
+**Status**: Feature implemented but broken in production
+**Date Added**: 2025-10-19
+
+**Problem**:
+- Automatic aspect ratio detection works perfectly when calling `git2art.py` directly from CLI
+- Same feature generates wrong dimensions (1600x1200 instead of correct ratios) when called through Flask subprocess
+- All images generated through web app are 4:3 (1600x1200) regardless of repo type
+
+**Expected Behavior**:
+- Mobile repos (Flutter, Ionic) → Portrait 3:4 (1600x2133)
+- Web repos (Vue, Svelte, React) → Landscape 16:9 (1600x900)
+- Backend repos (Flask, Rails) → Square 1:1 (1600x1600)
+
+**What Works**:
+```bash
+# Direct CLI call works correctly
+python3 git2art.py --repo temp_repos/flask --output test.png --aspect auto
+# Output: 📐 Aspect ratio: 16:9 (1600x900) ✓ CORRECT
+```
+
+**What Doesn't Work**:
+```bash
+# Flask API call produces wrong dimensions
+curl -X POST http://localhost:5000/generate -H "Content-Type: application/json" \
+  --data '{"github_url":"https://github.com/pallets/flask"}'
+# Generates: 1600x1200 (4:3) ✗ WRONG - should be 1600x900 (16:9)
+```
+
+**Technical Details**:
+- `services/art_service.py` line 114 correctly passes `'--aspect', 'auto'`
+- Detection thresholds lowered: mobile 15%, web 25%, docs 40%
+- Added `.dart` support for Flutter, `.svelte` for Svelte
+- Python bytecode cache cleared, Flask fully restarted - still broken
+- Subprocess appears to be calling correct git2art.py path
+
+**Debugging Done**:
+- ✅ Verified art_service.py has correct `--aspect auto` parameter
+- ✅ Cleared Python __pycache__ directories
+- ✅ Killed all Python processes and restarted Flask fresh
+- ✅ Cleared database and filesystem cache completely
+- ✅ Tested direct CLI call - works correctly
+- ✅ Verified subprocess call path is correct
+- ❌ Still generates 1600x1200 through Flask
+
+**Next Steps to Debug**:
+1. Add logging to capture actual subprocess.run() command being executed
+2. Check subprocess stdout/stderr for aspect ratio detection output
+3. Verify temp_repos have correct file structure for detection
+4. Test if subprocess uses different Python environment/PATH
+5. Check if watermark.py modifies image dimensions after generation
+6. Consider subprocess shell=True vs shell=False behavior
+
+**Workaround**:
+Users can generate with correct aspect ratios using CLI:
+```bash
+python3 git2art.py --repo /path/to/repo --output art.png --aspect auto
+```
+
+**Files Involved**:
+- `git2art.py` lines 607-641 (detect_aspect_ratio method) - WORKS
+- `services/art_service.py` lines 106-121 (subprocess call) - BROKEN
+- Detection logic lowered thresholds and added Dart/Svelte support
+
+**Impact**:
+- Medium - Gallery currently shows all artworks in same 4:3 aspect ratio
+- Reduces visual variety in gallery
+- Feature works in CLI, just not in web app
 
 ## Performance Optimizations
 - [ ] Consider caching generated textures
@@ -222,5 +291,5 @@
 
 ---
 
-*Last Updated: 2025-10-18*
-*Priority: Focus on Flask web app for public accessibility*
+*Last Updated: 2025-10-19*
+*Priority: Phase 2 Complete! Next: Phase 3 - Database Integration*
