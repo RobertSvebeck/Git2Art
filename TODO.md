@@ -3,12 +3,15 @@
 ## High Priority
 
 ### Visual Improvements
-- [ ] **Increase contrast** in compositions (darker darks, lighter lights)
-- [ ] **Add complementary color accents** - Use opposite colors on color wheel for pop
-- [ ] **Implement color wheel theory** - Triadic, split-complementary, tetradic schemes
+- ✅ **Increase contrast** in compositions (darker darks, lighter lights)
+- ✅ **Add complementary color accents** - Use opposite colors on color wheel for pop
+- ✅ **Implement color wheel theory** - Triadic, split-complementary, tetradic schemes
+- ✅ Complementary colors automatically added to palette
+- ✅ Tints at 1.4x brightness, shades at 0.4x brightness for high contrast
+- ✅ Advanced expand_palette_with_theory() implements all color schemes
 - [ ] Add contrast adjustment parameter (low/medium/high)
-- [ ] Experiment with complementary color highlights on main elements
-- [ ] Use analogous + complementary (dominant harmony with accent pops)
+- [ ] Experiment with different palette mixing ratios
+- [ ] Use analogous + complementary variations per element
 
 ### Flask Web Application
 - [ ] Create basic Flask app structure
@@ -35,9 +38,12 @@
 ## Medium Priority
 
 ### Art Enhancements
-- [ ] **Default to canvas aspect ratios** instead of square (e.g., 16:10, 3:2, 4:3)
-- [ ] Common canvas sizes: 1920x1200, 1800x1200, 1600x1200
-- [ ] Portrait and landscape orientation options
+- ✅ **Default to canvas aspect ratios** instead of square (e.g., 16:10, 3:2, 4:3)
+- ✅ Common canvas sizes: 1920x1200, 1800x1200, 1600x1200
+- ✅ Portrait and landscape orientation options
+- ✅ 8 aspect ratio presets including portrait modes
+- ✅ --aspect CLI parameter with all options
+- ✅ Default changed from square (1200x1200) to 4:3 (1600x1200)
 - [ ] Preset canvas sizes (social media, print standards, display)
 - [ ] Add art style presets (minimalist, maximalist, classic)
 - [ ] Create "dark mode" palette variants
@@ -45,10 +51,11 @@
 - [ ] Add texture overlay options (canvas, paper, watercolor)
 
 ### Features
-- [ ] **Smart filename generation** - Name images after git repo name (e.g., `Git2Art_1600x1600.png`)
-- [ ] Include repo name, size, timestamp in filename
-- [ ] Option to include commit hash in filename for versioning
-- [ ] Sanitize special characters in repo names for filenames
+- ✅ **Smart filename generation** - Name images after git repo name (e.g., `Git2Art_1600x1200_20251019_143022_aa7f55a.png`)
+- ✅ Include repo name, size, timestamp in filename
+- ✅ Option to include commit hash in filename for versioning
+- ✅ Sanitize special characters in repo names for filenames
+- ✅ Timestamp ensures uniqueness for repos with same name
 - [ ] Auto-create output directory if it doesn't exist
 - [ ] Animation: Show repository evolution over time
 - [ ] Compare mode: Visual diff between two commits

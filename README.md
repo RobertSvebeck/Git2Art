@@ -67,10 +67,12 @@ python git2art.py --repo /path/to/repo --size 2400
 
 When you don't specify `--output`, Git2Art automatically generates descriptive filenames:
 ```
-Git2Art_1600x1200_aa7f55a.png
-         ↓        ↓      ↓
-    repo name  size  commit hash
+Git2Art_1600x1200_20251019_143022_aa7f55a.png
+         ↓        ↓          ↓          ↓
+    repo name  size    timestamp  commit hash
 ```
+
+The timestamp ensures uniqueness even when generating multiple artworks from repos with the same name.
 
 ## How It Works
 
