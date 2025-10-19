@@ -52,21 +52,49 @@ class DeterministicRandom:
 class RepositoryPalette:
     """Generate harmonious color palettes based on repository characteristics"""
 
-    # Curated professional color schemes - harmonious and balanced
+    # Curated professional color schemes - each represents a language/ecosystem
     PALETTES = {
-        # Python projects - Cool blues and teals
+        # Python projects - Cool blues and teals (like the logo)
         'python': {
             'base': [(52, 152, 219), (41, 128, 185), (26, 188, 156)],  # Sky blue, Ocean, Teal
             'accents': [(236, 240, 241), (44, 62, 80)],  # Ice, Navy
             'bg_light': (245, 248, 250),
             'bg_dark': (52, 73, 94)
         },
-        # JavaScript/Web - Warm yellows and oranges
+        # JavaScript/Web - Warm yellows and oranges (like JS logo)
         'javascript': {
             'base': [(241, 196, 15), (230, 126, 34), (211, 84, 0)],  # Yellow, Orange, Deep orange
             'accents': [(254, 250, 224), (123, 63, 0)],  # Cream, Brown
             'bg_light': (255, 252, 244),
             'bg_dark': (100, 56, 14)
+        },
+        # PHP - Purple and violet (distinctive PHP identity)
+        'php': {
+            'base': [(142, 68, 173), (155, 89, 182), (187, 143, 206)],  # Purple, Violet, Lavender
+            'accents': [(244, 236, 247), (74, 35, 90)],  # Light lavender, Deep purple
+            'bg_light': (250, 244, 252),
+            'bg_dark': (63, 31, 77)
+        },
+        # Java/Enterprise - Professional burgundy and brown
+        'java': {
+            'base': [(231, 76, 60), (192, 57, 43), (165, 105, 79)],  # Red, Crimson, Brown
+            'accents': [(255, 235, 230), (120, 40, 31)],  # Light red, Dark brown
+            'bg_light': (255, 245, 243),
+            'bg_dark': (100, 30, 22)
+        },
+        # Ruby - Rich reds and gems
+        'ruby': {
+            'base': [(220, 20, 60), (178, 34, 34), (255, 99, 71)],  # Crimson, Firebrick, Tomato
+            'accents': [(255, 240, 245), (139, 0, 0)],  # Lavender blush, Dark red
+            'bg_light': (255, 250, 250),
+            'bg_dark': (100, 0, 0)
+        },
+        # Go/Rust - Modern cyan and steel
+        'systems': {
+            'base': [(0, 173, 181), (52, 152, 219), (149, 165, 166)],  # Cyan, Blue, Steel
+            'accents': [(236, 240, 241), (44, 62, 80)],  # Light gray, Dark blue
+            'bg_light': (245, 248, 250),
+            'bg_dark': (44, 62, 80)
         },
         # Data/Science - Natural greens
         'data': {
@@ -75,73 +103,93 @@ class RepositoryPalette:
             'bg_light': (240, 252, 245),
             'bg_dark': (35, 67, 56)
         },
-        # Creative/Design - Purples and pinks
-        'creative': {
-            'base': [(155, 89, 182), (142, 68, 173), (231, 76, 60)],  # Amethyst, Purple, Red
-            'accents': [(244, 236, 247), (74, 35, 90)],  # Lavender, Deep purple
-            'bg_light': (250, 244, 252),
-            'bg_dark': (63, 31, 77)
+        # C/C++ - Industrial gray and blue
+        'cpp': {
+            'base': [(69, 85, 96), (52, 73, 94), (93, 109, 126)],  # Charcoal, Dark blue, Slate
+            'accents': [(236, 240, 241), (33, 42, 48)],  # Light gray, Almost black
+            'bg_light': (245, 248, 250),
+            'bg_dark': (33, 42, 48)
         },
-        # Sunset - Warm gradient
-        'sunset': {
-            'base': [(255, 107, 107), (255, 159, 64), (255, 205, 86)],  # Coral, Peach, Gold
+        # Mobile/Swift - Vibrant orange and pink
+        'mobile': {
+            'base': [(255, 107, 107), (255, 159, 64), (255, 118, 117)],  # Coral, Orange, Pink
             'accents': [(255, 244, 230), (92, 47, 43)],  # Cream, Deep brown
             'bg_light': (255, 250, 245),
             'bg_dark': (92, 53, 48)
         },
-        # Ocean - Deep blues and aqua
-        'ocean': {
-            'base': [(54, 162, 235), (72, 219, 251), (29, 209, 161)],  # Azure, Cyan, Aqua
-            'accents': [(230, 246, 253), (18, 65, 95)],  # Ice, Deep sea
-            'bg_light': (242, 249, 253),
-            'bg_dark': (23, 72, 99)
-        },
-        # Forest - Earth tones
-        'forest': {
-            'base': [(76, 133, 87), (108, 166, 108), (163, 196, 117)],  # Forest, Sage, Lime
-            'accents': [(242, 244, 238), (35, 58, 38)],  # Cream, Dark forest
-            'bg_light': (246, 248, 243),
-            'bg_dark': (41, 61, 43)
-        },
-        # Mono - Elegant grays
-        'mono': {
-            'base': [(69, 85, 96), (120, 135, 145), (178, 190, 195)],  # Charcoal, Slate, Silver
-            'accents': [(245, 247, 248), (33, 42, 48)],  # Pearl, Black
+        # Documentation/Markdown - Elegant grays
+        'documentation': {
+            'base': [(120, 135, 145), (178, 190, 195), (149, 165, 166)],  # Slate, Silver, Gray
+            'accents': [(245, 247, 248), (69, 85, 96)],  # Pearl, Charcoal
             'bg_light': (250, 251, 252),
-            'bg_dark': (38, 47, 53)
+            'bg_dark': (69, 85, 96)
         }
     }
 
     @staticmethod
     def select_palette_by_repo(fingerprint):
-        """Select color palette based on repository characteristics"""
+        """Select color palette based on repository language and type - visually readable"""
         file_types = fingerprint['file_types']
         total_lines = fingerprint['total_lines']
         num_files = len(fingerprint['files'])
 
-        # Determine project type
-        has_py = '.py' in file_types
-        has_js = any(ext in file_types for ext in ['.js', '.jsx', '.ts', '.tsx', '.vue'])
-        has_md = '.md' in file_types
-        has_data = any(ext in file_types for ext in ['.csv', '.json', '.xml'])
+        # Count lines per language for accurate detection
+        py_lines = file_types.get('.py', 0)
+        js_lines = sum(file_types.get(ext, 0) for ext in ['.js', '.jsx', '.ts', '.tsx', '.vue'])
+        php_lines = file_types.get('.php', 0)
+        java_lines = file_types.get('.java', 0)
+        rb_lines = file_types.get('.rb', 0)
+        go_lines = file_types.get('.go', 0)
+        rs_lines = file_types.get('.rs', 0)
+        cpp_lines = sum(file_types.get(ext, 0) for ext in ['.c', '.cpp', '.h', '.hpp', '.cc'])
+        mobile_lines = sum(file_types.get(ext, 0) for ext in ['.swift', '.kt', '.m', '.mm'])
+        md_lines = file_types.get('.md', 0)
+        data_lines = sum(file_types.get(ext, 0) for ext in ['.csv', '.json', '.xml', '.yaml', '.yml'])
 
-        # Smart selection
-        if has_py and has_data:
-            palette_name = 'data'
-        elif has_py and total_lines > 300:
-            palette_name = 'python'
-        elif has_js:
+        # Calculate dominant language (>30% of codebase)
+        threshold = total_lines * 0.3
+
+        # Priority: Most specific to least specific
+        # 1. Primary languages (clear majority)
+        if php_lines > threshold:
+            palette_name = 'php'
+        elif java_lines > threshold:
+            palette_name = 'java'
+        elif rb_lines > threshold:
+            palette_name = 'ruby'
+        elif go_lines > threshold or rs_lines > threshold:
+            palette_name = 'systems'
+        elif cpp_lines > threshold:
+            palette_name = 'cpp'
+        elif mobile_lines > threshold:
+            palette_name = 'mobile'
+        elif js_lines > threshold:
             palette_name = 'javascript'
-        elif has_md and num_files <= 5:
-            palette_name = 'mono'
-        elif total_lines > 800:
-            palette_name = 'ocean'
-        elif num_files > 8:
-            palette_name = 'creative'
+        elif py_lines > threshold:
+            # Check if it's data science focused
+            if data_lines > total_lines * 0.2:
+                palette_name = 'data'
+            else:
+                palette_name = 'python'
+        # 2. Documentation-heavy repos
+        elif md_lines > total_lines * 0.5 and num_files <= 10:
+            palette_name = 'documentation'
+        # 3. Mixed/small repos - deterministic fallback
         else:
-            # Deterministic based on total lines
-            hash_val = total_lines % len(RepositoryPalette.PALETTES)
-            palette_name = list(RepositoryPalette.PALETTES.keys())[hash_val]
+            # Deterministic based on dominant file type
+            if file_types:
+                sorted_types = sorted(file_types.items(), key=lambda x: x[1], reverse=True)
+                dominant_ext = sorted_types[0][0]
+                # Map extension to palette
+                ext_map = {
+                    '.py': 'python', '.js': 'javascript', '.php': 'php',
+                    '.java': 'java', '.rb': 'ruby', '.go': 'systems',
+                    '.rs': 'systems', '.c': 'cpp', '.cpp': 'cpp',
+                    '.swift': 'mobile', '.md': 'documentation'
+                }
+                palette_name = ext_map.get(dominant_ext, 'documentation')
+            else:
+                palette_name = 'documentation'
 
         return palette_name, RepositoryPalette.PALETTES[palette_name]
 
