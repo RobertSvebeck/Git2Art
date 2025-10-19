@@ -16,6 +16,39 @@ import math
 import random
 
 
+class DeterministicRandom:
+    """Deterministic random number generator based on hash values"""
+
+    @staticmethod
+    def from_hash(hash_string, index=0):
+        """Generate a deterministic random value from a hash string and index"""
+        combined = f"{hash_string}_{index}"
+        hash_bytes = hashlib.md5(combined.encode()).digest()
+        # Convert first 8 bytes to integer
+        value = int.from_bytes(hash_bytes[:8], byteorder='big')
+        # Normalize to 0-1 range
+        return value / (2**64 - 1)
+
+    @staticmethod
+    def uniform(hash_string, index, min_val, max_val):
+        """Deterministic uniform distribution"""
+        rand_val = DeterministicRandom.from_hash(hash_string, index)
+        return min_val + rand_val * (max_val - min_val)
+
+    @staticmethod
+    def randint(hash_string, index, min_val, max_val):
+        """Deterministic integer in range [min_val, max_val] inclusive"""
+        rand_val = DeterministicRandom.from_hash(hash_string, index)
+        return int(min_val + rand_val * (max_val - min_val + 1))
+
+    @staticmethod
+    def choice(hash_string, index, choices):
+        """Deterministic choice from list"""
+        rand_val = DeterministicRandom.from_hash(hash_string, index)
+        idx = int(rand_val * len(choices))
+        return choices[min(idx, len(choices) - 1)]
+
+
 class RepositoryPalette:
     """Generate harmonious color palettes based on repository characteristics"""
 
@@ -851,21 +884,20 @@ class GitArtGenerator:
             self._draw_single_element(draw, idx, file_data, colors, len(sorted_files))
 
     def _draw_single_element(self, draw, idx, file_data, colors, total_files):
-        """Draw a single main element"""
+        """Draw a single main element - 100% deterministic based on file hash"""
         golden_angle = 137.508
         angle = (idx * golden_angle) * (math.pi / 180)
 
-        # MUCH MORE VARIED positioning - spread across entire canvas
-        hash_seed = int(file_data['hash'][:8], 16)
-        random.seed(hash_seed)
+        # DETERMINISTIC positioning based on file hash
+        file_hash = file_data['hash']
 
-        # Mix golden spiral with random placement
+        # Mix golden spiral with hash-based placement
         if idx < 3:
             # First 3 files use golden spiral but with wider radius
-            radius = random.randint(50, min(self.width, self.height) // 3)
+            radius = DeterministicRandom.randint(file_hash, 0, 50, min(self.width, self.height) // 3)
         else:
-            # Others spread randomly across canvas
-            radius = random.randint(0, int(min(self.width, self.height) * 0.4))
+            # Others spread based on hash
+            radius = DeterministicRandom.randint(file_hash, 0, 0, int(min(self.width, self.height) * 0.4))
 
         cx, cy = self.width / 2, self.height / 2
         x = cx + radius * math.cos(angle)
@@ -879,22 +911,19 @@ class GitArtGenerator:
         max_size = int(min(self.width, self.height) * 0.70)  # 70% maximum!
         size = min_size + normalized_size * (max_size - min_size)
 
-        # Add random variation to make sizes less uniform
-        size_variation = random.uniform(0.6, 1.4)
+        # Add deterministic variation based on hash
+        size_variation = DeterministicRandom.uniform(file_hash, 1, 0.6, 1.4)
         size = int(size * size_variation)
 
-        hash_val = int(file_data['hash'][:8], 16)
+        hash_val = int(file_hash[:8], 16)
         color = colors[hash_val % len(colors)]
 
         # Choose different shape types based on hash
         shape_type = hash_val % 5
-        self._draw_varied_shape(draw, x, y, size, color, file_data['hash'], shape_type)
+        self._draw_varied_shape(draw, x, y, size, color, file_hash, shape_type)
 
     def _draw_varied_shape(self, draw, x, y, size, color, seed_hash, shape_type):
-        """Draw varied shapes: blob, star, polygon, stretched blob, or splatter"""
-        hash_seed = int(seed_hash[:8], 16)
-        random.seed(hash_seed)
-
+        """Draw varied shapes: blob, star, polygon, stretched blob, or splatter - 100% deterministic"""
         if shape_type == 0:
             # Organic blob (original)
             self._draw_blob(draw, x, y, size, color, seed_hash)
@@ -912,17 +941,16 @@ class GitArtGenerator:
             self._draw_splatter_shape(draw, x, y, size, color, seed_hash)
 
     def _draw_blob(self, draw, x, y, size, color, seed_hash):
-        """Draw organic blob with gradient shading and hue variations"""
+        """Draw organic blob - 100% deterministic"""
         points = []
-        segments = random.randint(12, 24)  # More varied segment count
-
-        hash_seed = int(seed_hash[:8], 16)
-        random.seed(hash_seed)
+        segments = DeterministicRandom.randint(seed_hash, 0, 12, 24)
 
         for i in range(segments):
             angle = (i / segments) * 2 * math.pi
-            # Much more variation
-            variation = 1 + random.uniform(-0.3, 0.4) + 0.2 * math.sin(angle * random.randint(2, 5))
+            # Deterministic variation based on hash + index
+            rand_variation = DeterministicRandom.uniform(seed_hash, i * 2, -0.3, 0.4)
+            sin_freq = DeterministicRandom.randint(seed_hash, i * 2 + 1, 2, 5)
+            variation = 1 + rand_variation + 0.2 * math.sin(angle * sin_freq)
             radius = (size / 2) * variation
             px = x + radius * math.cos(angle)
             py = y + radius * math.sin(angle)
@@ -931,21 +959,18 @@ class GitArtGenerator:
         self._draw_layered_shape(draw, points, color, seed_hash)
 
     def _draw_star_shape(self, draw, x, y, size, color, seed_hash):
-        """Draw star/spiky shape"""
-        hash_seed = int(seed_hash[:8], 16)
-        random.seed(hash_seed)
-
+        """Draw star/spiky shape - 100% deterministic"""
         points = []
-        num_spikes = random.randint(5, 12)
+        num_spikes = DeterministicRandom.randint(seed_hash, 100, 5, 12)
 
         for i in range(num_spikes * 2):
             angle = (i / (num_spikes * 2)) * 2 * math.pi
             if i % 2 == 0:
                 # Outer spike
-                radius = size / 2 * random.uniform(0.8, 1.2)
+                radius = size / 2 * DeterministicRandom.uniform(seed_hash, 200 + i, 0.8, 1.2)
             else:
                 # Inner valley
-                radius = size / 2 * random.uniform(0.3, 0.6)
+                radius = size / 2 * DeterministicRandom.uniform(seed_hash, 200 + i, 0.3, 0.6)
 
             px = x + radius * math.cos(angle)
             py = y + radius * math.sin(angle)
@@ -954,17 +979,14 @@ class GitArtGenerator:
         self._draw_layered_shape(draw, points, color, seed_hash)
 
     def _draw_polygon_shape(self, draw, x, y, size, color, seed_hash):
-        """Draw angular polygon shape"""
-        hash_seed = int(seed_hash[:8], 16)
-        random.seed(hash_seed)
-
+        """Draw angular polygon shape - 100% deterministic"""
         points = []
-        num_sides = random.choice([3, 4, 5, 6, 7, 8])
-        rotation = random.uniform(0, math.pi)
+        num_sides = DeterministicRandom.choice(seed_hash, 300, [3, 4, 5, 6, 7, 8])
+        rotation = DeterministicRandom.uniform(seed_hash, 301, 0, math.pi)
 
         for i in range(num_sides):
             angle = (i / num_sides) * 2 * math.pi + rotation
-            radius = size / 2 * random.uniform(0.8, 1.2)
+            radius = size / 2 * DeterministicRandom.uniform(seed_hash, 400 + i, 0.8, 1.2)
             px = x + radius * math.cos(angle)
             py = y + radius * math.sin(angle)
             points.append((px, py))
@@ -972,18 +994,15 @@ class GitArtGenerator:
         self._draw_layered_shape(draw, points, color, seed_hash)
 
     def _draw_stretched_blob(self, draw, x, y, size, color, seed_hash):
-        """Draw stretched/elongated organic shape"""
-        hash_seed = int(seed_hash[:8], 16)
-        random.seed(hash_seed)
-
+        """Draw stretched/elongated organic shape - 100% deterministic"""
         points = []
-        segments = random.randint(15, 25)
-        stretch_angle = random.uniform(0, math.pi)
-        stretch_factor = random.uniform(1.5, 3.0)
+        segments = DeterministicRandom.randint(seed_hash, 500, 15, 25)
+        stretch_angle = DeterministicRandom.uniform(seed_hash, 501, 0, math.pi)
+        stretch_factor = DeterministicRandom.uniform(seed_hash, 502, 1.5, 3.0)
 
         for i in range(segments):
             angle = (i / segments) * 2 * math.pi
-            variation = 1 + random.uniform(-0.2, 0.3)
+            variation = 1 + DeterministicRandom.uniform(seed_hash, 600 + i, -0.2, 0.3)
 
             # Stretch along one axis
             radius_x = (size / 2) * variation
@@ -1000,19 +1019,18 @@ class GitArtGenerator:
         self._draw_layered_shape(draw, points, color, seed_hash)
 
     def _draw_splatter_shape(self, draw, x, y, size, color, seed_hash):
-        """Draw irregular splatter shape"""
-        hash_seed = int(seed_hash[:8], 16)
-        random.seed(hash_seed)
-
+        """Draw irregular splatter shape - 100% deterministic"""
         points = []
-        segments = random.randint(20, 40)
+        segments = DeterministicRandom.randint(seed_hash, 700, 20, 40)
 
         for i in range(segments):
             angle = (i / segments) * 2 * math.pi
             # Extreme variation for splatter effect
-            variation = random.uniform(0.4, 1.3)
-            if random.random() < 0.2:
-                variation *= random.uniform(1.2, 1.8)  # Occasional big spikes
+            variation = DeterministicRandom.uniform(seed_hash, 800 + i * 2, 0.4, 1.3)
+            spike_check = DeterministicRandom.from_hash(seed_hash, 800 + i * 2 + 1)
+            if spike_check < 0.2:
+                spike_mult = DeterministicRandom.uniform(seed_hash, 800 + i * 2 + 2, 1.2, 1.8)
+                variation *= spike_mult
 
             radius = (size / 2) * variation
             px = x + radius * math.cos(angle)
@@ -1022,10 +1040,7 @@ class GitArtGenerator:
         self._draw_layered_shape(draw, points, color, seed_hash)
 
     def _draw_layered_shape(self, draw, points, color, seed_hash):
-        """Draw shape with multiple gradient layers"""
-        hash_seed = int(seed_hash[:8], 16)
-        random.seed(hash_seed)
-
+        """Draw shape with multiple gradient layers - 100% deterministic"""
         # Convert to HSV for hue variations
         r, g, b = color
         h, s, v = colorsys.rgb_to_hsv(r/255, g/255, b/255)
@@ -1035,7 +1050,7 @@ class GitArtGenerator:
         cy = sum(p[1] for p in points) / len(points)
 
         # Draw multiple layers with gradient effect
-        num_layers = random.randint(6, 10)
+        num_layers = DeterministicRandom.randint(seed_hash, 1000, 6, 10)
         for layer in range(num_layers, 0, -1):
             layer_ratio = layer / num_layers
 
@@ -1047,28 +1062,31 @@ class GitArtGenerator:
                 layer_points.append((lx, ly))
 
             # Vary hue slightly for each layer
-            layer_h = (h + (layer / num_layers) * random.uniform(0.02, 0.08)) % 1.0
-            layer_v = min(1.0, v + (1 - layer_ratio) * random.uniform(0.1, 0.3))
+            hue_var = DeterministicRandom.uniform(seed_hash, 1100 + layer, 0.02, 0.08)
+            layer_h = (h + (layer / num_layers) * hue_var) % 1.0
+            v_var = DeterministicRandom.uniform(seed_hash, 1200 + layer, 0.1, 0.3)
+            layer_v = min(1.0, v + (1 - layer_ratio) * v_var)
             layer_s = s * (0.6 + layer_ratio * 0.4)
 
             layer_color = self._hsv_to_rgb(layer_h, layer_s, layer_v)
-            layer_opacity = int(random.randint(120, 180) + layer_ratio * 60)
+            base_opacity = DeterministicRandom.randint(seed_hash, 1300 + layer, 120, 180)
+            layer_opacity = int(base_opacity + layer_ratio * 60)
 
             if len(layer_points) > 2:
                 draw.polygon(layer_points, fill=layer_color + (layer_opacity,))
 
-        # Add outer glow/shadow with more variety
+        # Add outer glow/shadow with deterministic variety
         shadow_points = []
-        for px, py in points:
-            expansion = random.uniform(1.08, 1.2)
+        for i, (px, py) in enumerate(points):
+            expansion = DeterministicRandom.uniform(seed_hash, 1400 + i, 1.08, 1.2)
             sx = cx + (px - cx) * expansion
             sy = cy + (py - cy) * expansion
             shadow_points.append((sx, sy))
 
-        darker = (max(0, r - random.randint(30, 60)),
-                  max(0, g - random.randint(30, 60)),
-                  max(0, b - random.randint(30, 60)))
-        shadow_opacity = random.randint(40, 80)
+        darker = (max(0, r - DeterministicRandom.randint(seed_hash, 1500, 30, 60)),
+                  max(0, g - DeterministicRandom.randint(seed_hash, 1501, 30, 60)),
+                  max(0, b - DeterministicRandom.randint(seed_hash, 1502, 30, 60)))
+        shadow_opacity = DeterministicRandom.randint(seed_hash, 1503, 40, 80)
         if len(shadow_points) > 2:
             draw.polygon(shadow_points, fill=darker + (shadow_opacity,))
 

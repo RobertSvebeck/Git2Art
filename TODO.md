@@ -100,9 +100,11 @@
 
 ### Core Functionality
 - ✅ Basic git repository analysis
-- ✅ Deterministic art generation
-- ✅ File-based fingerprinting
+- ✅ **100% Deterministic art generation** (identical repos → identical artwork)
+- ✅ Deterministic random number generation from file hashes
+- ✅ File-based fingerprinting with MD5 hashing
 - ✅ Commit history visualization
+- ✅ Tested: Multiple generations produce byte-identical PNG files
 
 ### Art Theory
 - ✅ Color harmony (complementary, triadic, analogous)
