@@ -722,9 +722,49 @@ class GitArtGenerator:
         path = Path(file_path)
         return path.suffix in skip_extensions or path.name in skip_names
 
+    def _calculate_repo_scale(self, fingerprint):
+        """Calculate a scale factor (0-1) based on repository size"""
+        file_count = len(fingerprint['files'])
+        total_lines = fingerprint['total_lines']
+        commit_count = fingerprint['commit_count']
+
+        # Scale factors for different metrics
+        # Very small: 0-5 files, 0-200 lines -> 0.1-0.3
+        # Small: 6-20 files, 200-2000 lines -> 0.3-0.6
+        # Medium: 21-50 files, 2000-10000 lines -> 0.6-0.8
+        # Large: 50+ files, 10000+ lines -> 0.8-1.0
+
+        # File-based scale (most important)
+        if file_count <= 5:
+            file_scale = 0.1 + (file_count / 5) * 0.2  # 0.1-0.3
+        elif file_count <= 20:
+            file_scale = 0.3 + ((file_count - 5) / 15) * 0.3  # 0.3-0.6
+        elif file_count <= 50:
+            file_scale = 0.6 + ((file_count - 20) / 30) * 0.2  # 0.6-0.8
+        else:
+            file_scale = min(1.0, 0.8 + ((file_count - 50) / 50) * 0.2)  # 0.8-1.0
+
+        # Line-based scale
+        if total_lines <= 200:
+            line_scale = 0.1 + (total_lines / 200) * 0.3
+        elif total_lines <= 2000:
+            line_scale = 0.4 + ((total_lines - 200) / 1800) * 0.3
+        elif total_lines <= 10000:
+            line_scale = 0.7 + ((total_lines - 2000) / 8000) * 0.2
+        else:
+            line_scale = min(1.0, 0.9 + ((total_lines - 10000) / 10000) * 0.1)
+
+        # Combine file and line scales (file count is more important)
+        scale = file_scale * 0.7 + line_scale * 0.3
+
+        return max(0.1, min(1.0, scale))
+
     def generate_art(self, output_path='repo_art.png'):
         """Generate harmonious generative art with smooth, soft finish"""
         fingerprint = self.get_repo_fingerprint()
+
+        # Calculate repository scale factor
+        scale_factor = self._calculate_repo_scale(fingerprint)
 
         # Get harmonious palette with advanced color theory
         palette_name, palette_dict = RepositoryPalette.select_palette_by_repo(fingerprint)
@@ -736,46 +776,58 @@ class GitArtGenerator:
         draw = ImageDraw.Draw(img, 'RGBA')
 
         # Add layers of elements with MIXED ordering for depth
-        # Interleave background and foreground to create visual complexity
+        # Scale complexity based on repository size
 
-        # Layer 1: Deep background elements
-        self._add_filled_color_areas(draw, fingerprint, all_colors)
-        self._add_background_flows(draw, fingerprint, all_colors)
+        # Layer 1: Deep background elements (scale with repo size)
+        if scale_factor > 0.2:
+            self._add_filled_color_areas(draw, fingerprint, all_colors, scale_factor)
+        if scale_factor > 0.3:
+            self._add_background_flows(draw, fingerprint, all_colors, scale_factor)
 
         # Layer 2: Some main elements (largest ones first for depth)
         self._draw_some_main_elements(draw, fingerprint, all_colors, start_idx=0, count=3)
 
-        # Layer 3: Mid-ground texture and curves
-        self._add_cornu_curves(draw, fingerprint, all_colors)
-        self._add_bold_color_blocks(draw, fingerprint, all_colors)
+        # Layer 3: Mid-ground texture and curves (scale with repo size)
+        if scale_factor > 0.25:
+            self._add_cornu_curves(draw, fingerprint, all_colors, scale_factor)
+        if scale_factor > 0.3:
+            self._add_bold_color_blocks(draw, fingerprint, all_colors, scale_factor)
 
         # Layer 4: More main elements
         self._draw_some_main_elements(draw, fingerprint, all_colors, start_idx=3, count=5)
 
-        # Layer 5: Decorative elements
-        self._add_spirals(draw, fingerprint, all_colors)
-        self._add_circular_loops(draw, fingerprint, all_colors)
+        # Layer 5: Decorative elements (scale with repo size)
+        if scale_factor > 0.4:
+            self._add_spirals(draw, fingerprint, all_colors, scale_factor)
+        if scale_factor > 0.4:
+            self._add_circular_loops(draw, fingerprint, all_colors, scale_factor)
 
         # Layer 6: Remaining main elements (smaller ones on top)
         self._draw_some_main_elements(draw, fingerprint, all_colors, start_idx=8, count=None)
 
-        # Layer 7: Fine details and texture
-        self._add_rich_texture(draw, fingerprint, all_colors)
-        self._add_rotating_elements(draw, fingerprint, all_colors)
-        self._add_connections(draw, fingerprint, all_colors)
-        self._add_particles(draw, fingerprint, all_colors)
-        self._add_waves_with_fade(draw, fingerprint, all_colors)
+        # Layer 7: Fine details and texture (scale with repo size)
+        if scale_factor > 0.3:
+            self._add_rich_texture(draw, fingerprint, all_colors, scale_factor)
+        if scale_factor > 0.35:
+            self._add_rotating_elements(draw, fingerprint, all_colors, scale_factor)
+        if scale_factor > 0.2:
+            self._add_connections(draw, fingerprint, all_colors, scale_factor)
+        if scale_factor > 0.25:
+            self._add_particles(draw, fingerprint, all_colors, scale_factor)
+        if scale_factor > 0.3:
+            self._add_waves_with_fade(draw, fingerprint, all_colors, scale_factor)
 
         # Apply final smoothing for soft, polished finish
         img = self._apply_soft_finish(img, fingerprint)
 
         img.save(output_path, quality=95)
-        print(f"🎨 Art generated: {output_path}")
-        print(f"📐 Aspect ratio: {self.aspect_ratio} ({self.width}x{self.height})")
-        print(f"📊 {len(fingerprint['files'])} files, "
+        print(f"Art generated: {output_path}")
+        print(f"Aspect ratio: {self.aspect_ratio} ({self.width}x{self.height})")
+        print(f"{len(fingerprint['files'])} files, "
               f"{fingerprint['total_lines']} lines, "
               f"{fingerprint['commit_count']} commits")
-        print(f"🌈 Palette: '{palette_name}' ({len(all_colors)} harmonious colors)")
+        print(f"Palette: '{palette_name}' ({len(all_colors)} harmonious colors)")
+        print(f"Complexity scale: {scale_factor:.1%} (visual elements scaled to repo size)")
 
         return output_path
 
@@ -856,12 +908,12 @@ class GitArtGenerator:
 
         return img
 
-    def _add_filled_color_areas(self, draw, fingerprint, colors):
+    def _add_filled_color_areas(self, draw, fingerprint, colors, scale_factor=1.0):
         """Add large filled color areas for bold visual impact with sophisticated color mixing"""
         seed = fingerprint['total_lines']
         random.seed(seed)
 
-        num_areas = 3 + (fingerprint['commit_count'] % 5)
+        num_areas = max(1, int((3 + (fingerprint['commit_count'] % 5)) * scale_factor))
 
         for i in range(num_areas):
             # Create unique hash for this area
@@ -893,12 +945,12 @@ class GitArtGenerator:
 
             draw.polygon(points, fill=blended + (opacity,))
 
-    def _add_bold_color_blocks(self, draw, fingerprint, colors):
+    def _add_bold_color_blocks(self, draw, fingerprint, colors, scale_factor=1.0):
         """Add bold rectangular color blocks with sophisticated color mixing"""
         seed = fingerprint['total_lines']
         random.seed(seed)
 
-        num_blocks = 4 + (len(fingerprint['files']) % 6)
+        num_blocks = max(1, int((4 + (len(fingerprint['files']) % 6)) * scale_factor))
 
         for i in range(num_blocks):
             # Create unique hash for this block
@@ -931,12 +983,12 @@ class GitArtGenerator:
 
             draw.polygon(corners, fill=mixed + (opacity,))
 
-    def _add_background_flows(self, draw, fingerprint, colors):
+    def _add_background_flows(self, draw, fingerprint, colors, scale_factor=1.0):
         """Add flowing background lines - BOLD and THICK"""
         seed = fingerprint['total_lines']
         random.seed(seed)
 
-        num_flows = 8 + (fingerprint['commit_count'] % 10)
+        num_flows = max(1, int((8 + (fingerprint['commit_count'] % 10)) * scale_factor))
 
         for i in range(num_flows):
             x1 = random.randint(-self.width // 2, self.width + self.width // 2)
@@ -965,13 +1017,13 @@ class GitArtGenerator:
                          fill=color + (random.randint(60, 120),),  # Varied opacity
                          width=stroke_width)
 
-    def _add_cornu_curves(self, draw, fingerprint, colors):
+    def _add_cornu_curves(self, draw, fingerprint, colors, scale_factor=1.0):
         """Add Cornu/Euler spiral curves - IDEO Tsunami style with hundreds of curves"""
         seed = fingerprint['total_lines']
         random.seed(seed)
 
         # Generate many curves (50-100) like the Tsunami artwork
-        num_curves = 50 + (fingerprint['commit_count'] * 5)
+        num_curves = max(5, int((50 + (fingerprint['commit_count'] * 5)) * scale_factor))
 
         for i in range(num_curves):
             x1 = random.randint(-self.width // 4, self.width + self.width // 4)
@@ -1003,7 +1055,7 @@ class GitArtGenerator:
                          fill=color + (opacity,),
                          width=int(stroke_width))
 
-    def _add_rich_texture(self, draw, fingerprint, colors):
+    def _add_rich_texture(self, draw, fingerprint, colors, scale_factor=1.0):
         """Add thousands of micro-lines for rich texture - IDEO 'All Seeing Eye' style"""
         seed = fingerprint['total_lines']
 
@@ -1012,8 +1064,9 @@ class GitArtGenerator:
         if not files:
             return
 
-        # Generate texture for top 3 files (millions of lines would be slow, so thousands)
-        for idx, (file_path, file_data) in enumerate(files[:3]):
+        # Generate texture for top files (scale with repo size)
+        max_files = max(1, int(3 * scale_factor))
+        for idx, (file_path, file_data) in enumerate(files[:max_files]):
             golden_angle = 137.508
             angle = (idx * golden_angle) * (math.pi / 180)
             radius_pos = 60 + idx * (min(self.width, self.height) / (2.2 * len(files)))
@@ -1026,7 +1079,7 @@ class GitArtGenerator:
 
             # Generate thousands of tiny lines (IDEO: millions, but we'll do thousands for performance)
             texture_radius = 80 + idx * 30
-            num_lines = 500 + (file_data['lines'] * 5)  # More lines for larger files
+            num_lines = max(50, int((500 + (file_data['lines'] * 5)) * scale_factor))  # More lines for larger files
 
             texture_lines = OrganicShapes.generate_texture_lines((x, y), texture_radius, num_lines, hash_val)
 
@@ -1307,7 +1360,7 @@ class GitArtGenerator:
         r, g, b = colorsys.hsv_to_rgb(h, s, v)
         return (int(r * 255), int(g * 255), int(b * 255))
 
-    def _add_connections(self, draw, fingerprint, colors):
+    def _add_connections(self, draw, fingerprint, colors, scale_factor=1.0):
         """Add connection lines"""
         files = list(fingerprint['files'].items())
         if len(files) < 2:
@@ -1316,7 +1369,7 @@ class GitArtGenerator:
         seed = fingerprint['total_lines']
         random.seed(seed)
 
-        connections = min(len(files) * 2, 30)
+        connections = max(1, int(min(len(files) * 2, 30) * scale_factor))
 
         for i in range(connections):
             idx1 = i % len(files)
@@ -1348,13 +1401,14 @@ class GitArtGenerator:
                          fill=color + (100,),  # More opaque
                          width=thickness)
 
-    def _add_particles(self, draw, fingerprint, colors):
+    def _add_particles(self, draw, fingerprint, colors, scale_factor=1.0):
         """Add particle effects"""
         files = list(fingerprint['files'].items())
         if not files:
             return
 
-        for idx, (file_path, file_data) in enumerate(files[:5]):
+        max_files = max(1, int(5 * scale_factor))
+        for idx, (file_path, file_data) in enumerate(files[:max_files]):
             golden_angle = 137.508
             angle = (idx * golden_angle) * (math.pi / 180)
             radius = 60 + idx * (min(self.width, self.height) / (2.2 * len(files)))
@@ -1364,7 +1418,7 @@ class GitArtGenerator:
             y = cy + radius * math.sin(angle)
 
             hash_val = int(file_data['hash'][:8], 16)
-            particle_count = 18 + (file_data['lines'] // 15)  # More particles
+            particle_count = max(5, int((18 + (file_data['lines'] // 15)) * scale_factor))  # More particles
 
             particles = OrganicShapes.particle_burst((x, y), particle_count, 30, 80, hash_val)  # Larger radius
 
@@ -1377,13 +1431,13 @@ class GitArtGenerator:
                     fill=color + (170,)  # More opaque
                 )
 
-    def _add_spirals(self, draw, fingerprint, colors):
+    def _add_spirals(self, draw, fingerprint, colors, scale_factor=1.0):
         """Add smooth spiral patterns emanating from key points"""
         seed = fingerprint['total_lines']
         random.seed(seed)
 
         # MORE spirals for smoother, more organic look
-        num_spirals = 5 + (fingerprint['commit_count'] % 5)
+        num_spirals = max(1, int((5 + (fingerprint['commit_count'] % 5)) * scale_factor))
 
         for i in range(num_spirals):
             cx = random.randint(int(self.width * 0.1), int(self.width * 0.9))
@@ -1408,12 +1462,12 @@ class GitArtGenerator:
                          fill=color + (opacity,),
                          width=thickness)
 
-    def _add_circular_loops(self, draw, fingerprint, colors):
+    def _add_circular_loops(self, draw, fingerprint, colors, scale_factor=1.0):
         """Add concentric circular loops"""
         seed = fingerprint['total_lines']
         random.seed(seed)
 
-        num_loop_centers = 2 + (len(fingerprint['files']) % 3)
+        num_loop_centers = max(1, int((2 + (len(fingerprint['files']) % 3)) * scale_factor))
 
         for i in range(num_loop_centers):
             cx = random.randint(int(self.width * 0.15), int(self.width * 0.85))
@@ -1434,7 +1488,7 @@ class GitArtGenerator:
                              fill=color + (opacity,),
                              width=2)
 
-    def _add_rotating_elements(self, draw, fingerprint, colors):
+    def _add_rotating_elements(self, draw, fingerprint, colors, scale_factor=1.0):
         """Add rotating circular elements around main objects"""
         files = list(fingerprint['files'].items())
         if not files:
@@ -1443,8 +1497,9 @@ class GitArtGenerator:
         seed = fingerprint['total_lines']
         random.seed(seed)
 
-        # Add rotating elements around top 3 files
-        for idx, (file_path, file_data) in enumerate(files[:3]):
+        # Add rotating elements around top files (scale with repo size)
+        max_files = max(1, int(3 * scale_factor))
+        for idx, (file_path, file_data) in enumerate(files[:max_files]):
             golden_angle = 137.508
             angle = (idx * golden_angle) * (math.pi / 180)
             radius = 60 + idx * (min(self.width, self.height) / (2.2 * len(files)))
@@ -1470,12 +1525,12 @@ class GitArtGenerator:
                     fill=color + (120,)
                 )
 
-    def _add_waves_with_fade(self, draw, fingerprint, colors):
+    def _add_waves_with_fade(self, draw, fingerprint, colors, scale_factor=1.0):
         """Add wave patterns with directional color fading"""
         seed = fingerprint['total_lines']
         random.seed(seed)
 
-        num_waves = 6 + (fingerprint['commit_count'] % 6)
+        num_waves = max(1, int((6 + (fingerprint['commit_count'] % 6)) * scale_factor))
 
         for i in range(num_waves):
             y_base = random.randint(int(self.height * 0.15), int(self.height * 0.85))

@@ -236,11 +236,11 @@ class GitArtGenerator:
 
         # Save the art
         img.save(output_path, quality=95)
-        print(f"🌊 Organic art generated: {output_path}")
-        print(f"📊 Based on: {len(fingerprint['files'])} files, "
+        print(f"Organic art generated: {output_path}")
+        print(f"Based on: {len(fingerprint['files'])} files, "
               f"{fingerprint['total_lines']} lines of code, "
               f"{fingerprint['commit_count']} commits")
-        print(f"🎨 Vibrant palette with {len(all_colors)} colors")
+        print(f"Vibrant palette with {len(all_colors)} colors")
 
         return output_path
 

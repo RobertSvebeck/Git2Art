@@ -58,9 +58,15 @@ def save_cache_info(images_dir, repo_name, commit_hash, filename):
         json.dump(cache_info, f, indent=2)
 
 
-def generate_art_from_github(github_url, temp_dir, images_dir):
+def generate_art_from_github(github_url, temp_dir, images_dir, force=False):
     """
     Generate artwork from a GitHub repository.
+
+    Args:
+        github_url: GitHub repository URL
+        temp_dir: Temporary directory for cloning repos
+        images_dir: Directory for generated images
+        force: If True, bypass cache and force regeneration
 
     Returns:
         dict: Result with image_url, repo_name, artwork_id, and cached flag
@@ -70,32 +76,34 @@ def generate_art_from_github(github_url, temp_dir, images_dir):
     repo_name = extract_repo_name(github_url)
 
     try:
-        # Check database first for cached art
-        try:
-            db_artwork = Artwork.get_by_repo_and_commit(github_url, commit_hash)
-            if db_artwork:
-                image_path = os.path.join(images_dir, db_artwork['image_filename'])
-                if os.path.exists(image_path):
-                    return {
-                        'image_url': f'/static/generated/{db_artwork["image_filename"]}',
-                        'repo_name': repo_name,
-                        'artwork_id': db_artwork['id'],
-                        'like_count': db_artwork['like_count'],
-                        'cached': True
-                    }
-        except Exception:
-            pass
+        # Skip cache checks if force regeneration requested
+        if not force:
+            # Check database first for cached art
+            try:
+                db_artwork = Artwork.get_by_repo_and_commit(github_url, commit_hash)
+                if db_artwork:
+                    image_path = os.path.join(images_dir, db_artwork['image_filename'])
+                    if os.path.exists(image_path):
+                        return {
+                            'image_url': f'/static/generated/{db_artwork["image_filename"]}',
+                            'repo_name': repo_name,
+                            'artwork_id': db_artwork['id'],
+                            'like_count': db_artwork['like_count'],
+                            'cached': True
+                        }
+            except Exception:
+                pass
 
-        # Fallback: Check filesystem cache
-        cache_info = get_cached_art_info(images_dir, repo_name, commit_hash)
-        if cache_info:
-            return {
-                'image_url': f'/static/generated/{cache_info["filename"]}',
-                'repo_name': repo_name,
-                'artwork_id': None,
-                'like_count': 0,
-                'cached': True
-            }
+            # Fallback: Check filesystem cache
+            cache_info = get_cached_art_info(images_dir, repo_name, commit_hash)
+            if cache_info:
+                return {
+                    'image_url': f'/static/generated/{cache_info["filename"]}',
+                    'repo_name': repo_name,
+                    'artwork_id': None,
+                    'like_count': 0,
+                    'cached': True
+                }
 
         # Generate new artwork
         output_filename = f'{repo_name}_{commit_hash[:8]}.png'

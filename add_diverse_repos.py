@@ -87,11 +87,11 @@ def add_repos():
         if i < len(REPOS):
             time.sleep(2)
 
-    print(f"\n✅ Complete!")
+    print(f"\nComplete!")
     print(f"   Success: {success_count}/{len(REPOS)}")
 
     if failed_repos:
-        print(f"\n⚠️  Failed repos:")
+        print(f"\nFailed repos:")
         for repo in failed_repos:
             print(f"   - {repo}")
 

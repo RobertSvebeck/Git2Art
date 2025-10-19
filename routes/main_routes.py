@@ -27,6 +27,7 @@ def gallery():
 def generate():
     """Generate artwork from a GitHub repository URL."""
     github_url = request.json.get('github_url')
+    force_regenerate = request.json.get('force_regenerate', False)
 
     if not github_url:
         return jsonify({'error': 'GitHub URL is required'}), 400
@@ -41,7 +42,8 @@ def generate():
         result = generate_art_from_github(
             github_url,
             current_app.config['TEMP_REPOS_DIR'],
-            current_app.config['GENERATED_IMAGES_DIR']
+            current_app.config['GENERATED_IMAGES_DIR'],
+            force=force_regenerate
         )
 
         return jsonify({

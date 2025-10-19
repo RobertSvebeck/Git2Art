@@ -30,17 +30,17 @@ def regenerate_all():
 
             if response.status_code == 200:
                 result = response.json()
-                print(f"    ✓ Success! {result.get('message', 'Generated')}")
+                print(f"    Success! {result.get('message', 'Generated')}")
                 if 'aspect_ratio' in result:
-                    print(f"    📐 Aspect ratio: {result['aspect_ratio']}")
+                    print(f"    Aspect ratio: {result['aspect_ratio']}")
             else:
-                print(f"    ✗ Error: {response.status_code}")
+                print(f"    Error: {response.status_code}")
                 print(f"    {response.text[:200]}")
 
         except requests.exceptions.Timeout:
-            print(f"    ✗ Timeout (repo too large or slow)")
+            print(f"    Timeout (repo too large or slow)")
         except Exception as e:
-            print(f"    ✗ Error: {str(e)}")
+            print(f"    Error: {str(e)}")
 
         print()
 
@@ -48,7 +48,7 @@ def regenerate_all():
         if i < len(real_repos):
             time.sleep(2)
 
-    print("\n✅ Regeneration complete!")
+    print("\nRegeneration complete!")
 
 if __name__ == '__main__':
     regenerate_all()

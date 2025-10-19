@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
 
         const githubUrl = document.getElementById('githubUrl').value.trim();
+        const forceRegenerate = document.getElementById('forceRegenerate').checked;
 
         showStatus('Generating artwork... This may take a minute.', 'info');
         generateBtn.disabled = true;
@@ -24,7 +25,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ github_url: githubUrl }),
+                body: JSON.stringify({
+                    github_url: githubUrl,
+                    force_regenerate: forceRegenerate
+                }),
             });
 
             const data = await response.json();
@@ -56,6 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
     newArtBtn.addEventListener('click', () => {
         resultSection.classList.add('hidden');
         document.getElementById('githubUrl').value = '';
+        document.getElementById('forceRegenerate').checked = false;
         document.getElementById('githubUrl').focus();
         hideStatus();
     });
