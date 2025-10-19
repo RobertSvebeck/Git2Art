@@ -544,7 +544,7 @@ class GitArtGenerator:
         return path.suffix in skip_extensions or path.name in skip_names
 
     def generate_art(self, output_path='repo_art.png'):
-        """Generate harmonious generative art with color wheel theory"""
+        """Generate harmonious generative art with smooth, soft finish"""
         fingerprint = self.get_repo_fingerprint()
 
         # Get harmonious palette with advanced color theory
@@ -553,6 +553,10 @@ class GitArtGenerator:
 
         # Create background
         img = self._create_background(fingerprint, palette_dict)
+
+        # Apply subtle blur to background for smoothness
+        img = img.filter(ImageFilter.GaussianBlur(radius=2))
+
         draw = ImageDraw.Draw(img, 'RGBA')
 
         # Add layers of elements with MIXED ordering for depth
@@ -586,6 +590,9 @@ class GitArtGenerator:
         self._add_particles(draw, fingerprint, all_colors)
         self._add_waves_with_fade(draw, fingerprint, all_colors)
 
+        # Apply final smoothing for soft, polished finish
+        img = self._apply_soft_finish(img, fingerprint)
+
         img.save(output_path, quality=95)
         print(f"🎨 Art generated: {output_path}")
         print(f"📊 {len(fingerprint['files'])} files, "
@@ -594,6 +601,19 @@ class GitArtGenerator:
         print(f"🌈 Palette: '{palette_name}' ({len(all_colors)} harmonious colors)")
 
         return output_path
+
+    def _apply_soft_finish(self, img, fingerprint):
+        """Apply soft blur and smoothing for polished finish"""
+        # Determine blur strength based on repo size
+        blur_radius = 1.5 + (min(fingerprint['total_lines'], 5000) / 5000) * 1.5
+
+        # Apply gentle Gaussian blur for soft edges
+        img = img.filter(ImageFilter.GaussianBlur(radius=blur_radius))
+
+        # Optional: Add slight smoothing filter
+        img = img.filter(ImageFilter.SMOOTH)
+
+        return img
 
     def _create_background(self, fingerprint, palette_dict):
         """Create dynamic, interesting background with color variations"""
@@ -979,16 +999,26 @@ class GitArtGenerator:
         self._draw_layered_shape(draw, points, color, seed_hash)
 
     def _draw_polygon_shape(self, draw, x, y, size, color, seed_hash):
-        """Draw angular polygon shape - 100% deterministic"""
+        """Draw smooth polygon shape with rounded corners - 100% deterministic"""
         points = []
-        num_sides = DeterministicRandom.choice(seed_hash, 300, [3, 4, 5, 6, 7, 8])
+        num_sides = DeterministicRandom.choice(seed_hash, 300, [5, 6, 7, 8, 10, 12])  # More sides for smoother
         rotation = DeterministicRandom.uniform(seed_hash, 301, 0, math.pi)
 
-        for i in range(num_sides):
-            angle = (i / num_sides) * 2 * math.pi + rotation
-            radius = size / 2 * DeterministicRandom.uniform(seed_hash, 400 + i, 0.8, 1.2)
-            px = x + radius * math.cos(angle)
-            py = y + radius * math.sin(angle)
+        # Generate more points between corners for smooth curves
+        segments_per_side = 3  # Add intermediate points for smoothness
+        for i in range(num_sides * segments_per_side):
+            base_angle = (i / (num_sides * segments_per_side)) * 2 * math.pi + rotation
+            side_idx = i // segments_per_side
+            within_side = (i % segments_per_side) / segments_per_side
+
+            # Interpolate radius for smooth transitions
+            radius_var1 = DeterministicRandom.uniform(seed_hash, 400 + side_idx, 0.9, 1.1)
+            radius_var2 = DeterministicRandom.uniform(seed_hash, 400 + side_idx + 1, 0.9, 1.1)
+            radius_var = radius_var1 + (radius_var2 - radius_var1) * within_side
+
+            radius = size / 2 * radius_var
+            px = x + radius * math.cos(base_angle)
+            py = y + radius * math.sin(base_angle)
             points.append((px, py))
 
         self._draw_layered_shape(draw, points, color, seed_hash)
@@ -1124,8 +1154,8 @@ class GitArtGenerator:
 
             points = OrganicShapes.flowing_line(
                 (x1, y1), (x2, y2),
-                curviness=random.uniform(0.1, 0.25),
-                segments=40
+                curviness=random.uniform(0.3, 0.5),  # More curviness for smoother flow
+                segments=80  # More segments for smoother curves
             )
 
             color = colors[i % len(colors)]
@@ -1166,21 +1196,23 @@ class GitArtGenerator:
                 )
 
     def _add_spirals(self, draw, fingerprint, colors):
-        """Add spiral patterns emanating from key points"""
+        """Add smooth spiral patterns emanating from key points"""
         seed = fingerprint['total_lines']
         random.seed(seed)
 
-        num_spirals = 2 + (fingerprint['commit_count'] % 3)
+        # MORE spirals for smoother, more organic look
+        num_spirals = 5 + (fingerprint['commit_count'] % 5)
 
         for i in range(num_spirals):
-            cx = random.randint(int(self.width * 0.2), int(self.width * 0.8))
-            cy = random.randint(int(self.height * 0.2), int(self.height * 0.8))
+            cx = random.randint(int(self.width * 0.1), int(self.width * 0.9))
+            cy = random.randint(int(self.height * 0.1), int(self.height * 0.9))
 
-            start_radius = random.randint(10, 30)
-            end_radius = random.randint(100, 200)
-            turns = random.uniform(2, 4)
+            start_radius = random.randint(5, 20)
+            end_radius = random.randint(80, 250)
+            turns = random.uniform(3, 6)  # More turns for smoother spirals
 
-            points = OrganicShapes.spiral_pattern((cx, cy), start_radius, end_radius, turns, segments=150)
+            # MORE segments for ultra-smooth curves
+            points = OrganicShapes.spiral_pattern((cx, cy), start_radius, end_radius, turns, segments=300)
 
             color = colors[i % len(colors)]
 
