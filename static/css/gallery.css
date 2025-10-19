@@ -1,87 +1,99 @@
+/* Scandinavian Modern Art Gallery */
+
 body {
-    background: #f8f8f8 !important;
+    background: var(--gallery-white) !important;
 }
 
 .container {
-    background: #f8f8f8 !important;
+    background: var(--pure-white) !important;
     max-width: 100% !important;
+    box-shadow: none !important;
 }
 
 main {
-    background: #f8f8f8 !important;
-    padding: 60px 40px !important;
+    background: var(--pure-white) !important;
+    padding: 80px 60px 100px !important;
+    max-width: 1400px;
+    margin: 0 auto;
 }
 
 .header-nav {
-    margin-top: 20px;
+    margin-top: 30px;
 }
 
 .nav-link {
-    color: white;
+    color: var(--charcoal);
     text-decoration: none;
-    font-weight: 500;
-    padding: 8px 16px;
-    border: 2px solid white;
-    border-radius: 6px;
+    font-weight: 400;
+    font-size: 0.9em;
+    padding: 10px 20px;
+    border-bottom: 2px solid var(--charcoal);
     display: inline-block;
     transition: all 0.3s;
+    letter-spacing: 1px;
+    text-transform: uppercase;
 }
 
 .nav-link:hover {
-    background: white;
-    color: #667eea;
+    border-bottom-color: var(--accent-sage);
+    color: var(--accent-sage);
 }
 
+/* Gallery wall - grid layout like a real gallery */
 .gallery-grid {
-    columns: 4 300px;
-    column-gap: 50px;
-    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 60px;
+    margin-top: 20px;
 }
 
 .gallery-card {
-    break-inside: avoid;
-    margin-bottom: 50px;
-    display: inline-block;
-    width: 100%;
-    transition: transform 0.3s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: transform 0.4s ease;
 }
 
 .gallery-card:hover {
-    transform: translateY(-5px);
+    transform: translateY(-4px);
 }
 
+/* Picture frame like paintings on a gallery wall with 3D bevel */
 .card-frame {
-    background: #1a1a1a;
+    width: 100%;
+    background: var(--soft-black);
     padding: 12px;
     box-shadow:
-        0 2px 4px rgba(0, 0, 0, 0.1),
-        0 8px 16px rgba(0, 0, 0, 0.15),
-        0 16px 32px rgba(0, 0, 0, 0.15),
-        0 24px 48px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s;
-    display: inline-block;
-    width: 100%;
+        0 1px 3px rgba(0, 0, 0, 0.08),
+        0 8px 24px rgba(0, 0, 0, 0.12),
+        inset 1px 1px 2px rgba(255, 255, 255, 0.2),
+        inset -1px -1px 2px rgba(0, 0, 0, 0.5);
+    transition: all 0.4s ease;
+    position: relative;
 }
 
 .gallery-card:hover .card-frame {
     box-shadow:
-        0 4px 8px rgba(0, 0, 0, 0.12),
-        0 12px 24px rgba(0, 0, 0, 0.18),
-        0 20px 40px rgba(0, 0, 0, 0.18),
-        0 28px 56px rgba(0, 0, 0, 0.12);
-    transform: translateY(-2px);
+        0 2px 6px rgba(0, 0, 0, 0.1),
+        0 12px 32px rgba(0, 0, 0, 0.15),
+        inset 1px 1px 2px rgba(255, 255, 255, 0.2),
+        inset -1px -1px 2px rgba(0, 0, 0, 0.5);
 }
 
+/* White mat/passepartout with 3D depth effect */
 .card-passepartout {
-    background: white;
+    background: var(--pure-white);
     padding: 8%;
     width: 100%;
     box-sizing: border-box;
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .card-image {
     width: 100%;
     display: block;
+    border: 1px solid #F0F0F0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .card-image img {
@@ -91,85 +103,205 @@ main {
     object-fit: contain;
 }
 
+/* Gallery label/placard beneath artwork */
 .card-content {
-    padding: 15px 5px 5px 5px;
-    text-align: center;
+    padding: 20px 0 0 0;
+    text-align: left;
+    width: 100%;
 }
 
 .repo-name {
-    font-size: 0.9em;
-    font-weight: 500;
-    color: #333;
-    margin: 0;
+    font-size: 0.95em;
+    font-weight: 400;
+    color: var(--soft-black);
+    margin: 0 0 4px 0;
+    letter-spacing: 0.5px;
 }
 
 .repo-name a {
-    color: #333;
+    color: var(--soft-black);
     text-decoration: none;
-    transition: color 0.2s;
+    transition: color 0.3s;
 }
 
 .repo-name a:hover {
-    color: #667eea;
+    color: var(--accent-sage);
 }
 
 .commit-hash {
-    display: none;
+    font-size: 0.75em;
+    color: var(--mid-grey);
+    margin: 2px 0;
+    font-family: 'Courier New', monospace;
+    font-weight: 300;
 }
 
 .created-date {
-    display: none;
+    font-size: 0.75em;
+    color: var(--mid-grey);
+    margin: 2px 0 12px 0;
+    font-weight: 300;
 }
 
 .card-actions {
-    display: none;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-top: 10px;
 }
 
+/* Minimal clean buttons */
+.btn {
+    padding: 6px 14px;
+    font-size: 0.75em;
+    font-weight: 400;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s;
+    border: 1px solid;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    display: inline-block;
+    background: transparent;
+}
+
+.btn-like {
+    background: transparent;
+    color: var(--mid-grey);
+    border-color: var(--warm-grey);
+    padding: 6px 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-like:hover {
+    border-color: var(--accent-terracotta);
+    color: var(--accent-terracotta);
+}
+
+.btn-like.liked {
+    background: var(--accent-terracotta);
+    color: var(--pure-white);
+    border-color: var(--accent-terracotta);
+}
+
+.like-icon {
+    font-size: 1em;
+    line-height: 1;
+}
+
+.like-count {
+    font-weight: 400;
+    font-size: 0.9em;
+}
+
+.btn-view {
+    background: transparent;
+    color: var(--charcoal);
+    border-color: var(--charcoal);
+    padding: 6px 14px;
+}
+
+.btn-view:hover {
+    background: var(--soft-black);
+    color: var(--pure-white);
+    border-color: var(--soft-black);
+}
+
+/* Empty state */
 .empty-state {
     text-align: center;
-    padding: 60px 20px;
+    padding: 100px 20px;
+    max-width: 500px;
+    margin: 0 auto;
 }
 
 .empty-state h2 {
+    font-family: var(--heading-font);
     font-size: 2em;
-    color: #667eea;
-    margin-bottom: 10px;
+    color: var(--soft-black);
+    margin-bottom: 12px;
+    font-weight: 300;
+    letter-spacing: 3px;
+    text-transform: uppercase;
 }
 
 .empty-state p {
-    font-size: 1.1em;
-    color: #666;
-    margin-bottom: 30px;
+    font-size: 1em;
+    color: var(--mid-grey);
+    margin-bottom: 35px;
+    font-weight: 300;
 }
 
-@media (max-width: 1200px) {
+.empty-state .btn-primary {
+    background: var(--soft-black);
+    color: var(--pure-white);
+    border: 1px solid var(--soft-black);
+    padding: 12px 28px;
+    font-size: 13px;
+    letter-spacing: 2px;
+}
+
+.empty-state .btn-primary:hover {
+    background: var(--accent-sage);
+    border-color: var(--accent-sage);
+}
+
+/* Responsive gallery layout */
+@media (max-width: 1400px) {
     .gallery-grid {
-        columns: 3 280px;
-        column-gap: 40px;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 50px;
     }
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1000px) {
     .gallery-grid {
-        columns: 2 280px;
-        column-gap: 30px;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 40px;
     }
 
     main {
-        padding: 40px 20px !important;
+        padding: 60px 40px 80px !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .gallery-grid {
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 35px;
+    }
+
+    main {
+        padding: 50px 30px 60px !important;
+    }
+
+    .card-frame {
+        padding: 10px;
     }
 }
 
 @media (max-width: 600px) {
     .gallery-grid {
-        columns: 1;
+        grid-template-columns: 1fr;
+        gap: 40px;
     }
 
     .gallery-card {
-        margin-bottom: 40px;
+        max-width: 400px;
+        margin: 0 auto;
     }
 
     main {
-        padding: 30px 15px !important;
+        padding: 40px 20px 50px !important;
+    }
+
+    .card-frame {
+        padding: 10px;
+    }
+
+    .card-passepartout {
+        padding: 6%;
     }
 }
