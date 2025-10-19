@@ -39,10 +39,10 @@ main {
     color: var(--accent-sage);
 }
 
-/* Gallery wall - grid layout like a real gallery */
+/* Gallery wall - two column continuous flow */
 .gallery-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    grid-template-columns: 1fr 1fr;
     gap: 60px;
     margin-top: 20px;
 }
@@ -52,10 +52,11 @@ main {
     flex-direction: column;
     align-items: center;
     transition: transform 0.4s ease;
+    transform-origin: center center;
 }
 
 .gallery-card:hover {
-    transform: translateY(-4px);
+    transform: translateY(-8px) scale(var(--card-scale, 1)) !important;
 }
 
 /* Picture frame like paintings on a gallery wall with 3D bevel */
@@ -251,14 +252,12 @@ main {
 /* Responsive gallery layout */
 @media (max-width: 1400px) {
     .gallery-grid {
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
         gap: 50px;
     }
 }
 
 @media (max-width: 1000px) {
     .gallery-grid {
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
         gap: 40px;
     }
 
@@ -269,7 +268,6 @@ main {
 
 @media (max-width: 768px) {
     .gallery-grid {
-        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
         gap: 35px;
     }
 

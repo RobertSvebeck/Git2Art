@@ -95,3 +95,13 @@ def clone_or_update_repo(github_url, temp_dir):
         return repo_path, commit_hash, False
     except subprocess.CalledProcessError as e:
         raise Exception(f"Failed to clone repository: {e.stderr}")
+
+
+def cleanup_repo(repo_path):
+    """Remove temporary repository directory."""
+    import shutil
+    if os.path.exists(repo_path):
+        try:
+            shutil.rmtree(repo_path)
+        except Exception as e:
+            print(f"Warning: Failed to cleanup repository at {repo_path}: {e}")

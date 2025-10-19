@@ -21,7 +21,7 @@
             {% if artworks %}
                 <div class="gallery-grid">
                     {% for artwork in artworks %}
-                    <div class="gallery-card">
+                    <div class="gallery-card" style="--card-scale: {{ artwork.scale }}; transform: scale({{ artwork.scale }});">
                         <div class="card-frame">
                             <div class="card-passepartout">
                                 <div class="card-image">
@@ -31,7 +31,11 @@
                         </div>
                         <div class="card-content">
                             <h3 class="repo-name">
+                                {% if artwork.repo_url %}
                                 <a href="{{ artwork.repo_url }}" target="_blank">{{ artwork.repo_name }}</a>
+                                {% else %}
+                                {{ artwork.repo_name }}
+                                {% endif %}
                             </h3>
                             <p class="commit-hash">Commit: {{ artwork.commit_hash[:8] }}</p>
                             <p class="created-date">{{ artwork.created_at_formatted }}</p>

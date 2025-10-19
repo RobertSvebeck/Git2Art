@@ -4,8 +4,9 @@ import os
 import json
 import subprocess
 import glob
+import random
 from datetime import datetime
-from services.git_service import clone_or_update_repo, extract_repo_name
+from services.git_service import clone_or_update_repo, extract_repo_name, cleanup_repo
 from utils.watermark import add_watermark
 from models.artwork import Artwork
 
@@ -68,79 +69,83 @@ def generate_art_from_github(github_url, temp_dir, images_dir):
     repo_path, commit_hash, _ = clone_or_update_repo(github_url, temp_dir)
     repo_name = extract_repo_name(github_url)
 
-    # Check database first for cached art
     try:
-        db_artwork = Artwork.get_by_repo_and_commit(github_url, commit_hash)
-        if db_artwork:
-            image_path = os.path.join(images_dir, db_artwork['image_filename'])
-            if os.path.exists(image_path):
-                return {
-                    'image_url': f'/static/generated/{db_artwork["image_filename"]}',
-                    'repo_name': repo_name,
-                    'artwork_id': db_artwork['id'],
-                    'like_count': db_artwork['like_count'],
-                    'cached': True
-                }
-    except Exception:
-        pass
+        # Check database first for cached art
+        try:
+            db_artwork = Artwork.get_by_repo_and_commit(github_url, commit_hash)
+            if db_artwork:
+                image_path = os.path.join(images_dir, db_artwork['image_filename'])
+                if os.path.exists(image_path):
+                    return {
+                        'image_url': f'/static/generated/{db_artwork["image_filename"]}',
+                        'repo_name': repo_name,
+                        'artwork_id': db_artwork['id'],
+                        'like_count': db_artwork['like_count'],
+                        'cached': True
+                    }
+        except Exception:
+            pass
 
-    # Fallback: Check filesystem cache
-    cache_info = get_cached_art_info(images_dir, repo_name, commit_hash)
-    if cache_info:
+        # Fallback: Check filesystem cache
+        cache_info = get_cached_art_info(images_dir, repo_name, commit_hash)
+        if cache_info:
+            return {
+                'image_url': f'/static/generated/{cache_info["filename"]}',
+                'repo_name': repo_name,
+                'artwork_id': None,
+                'like_count': 0,
+                'cached': True
+            }
+
+        # Generate new artwork
+        output_filename = f'{repo_name}_{commit_hash[:8]}.png'
+        output_path = os.path.join(images_dir, output_filename)
+
+        # Get absolute path to git2art.py (should be in parent directory of services)
+        current_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        git2art_script = os.path.join(current_dir, 'git2art.py')
+
+        # Run git2art.py on the cloned repository
+        try:
+            subprocess.run(
+                [
+                    'python3', git2art_script,
+                    '--repo', repo_path,
+                    '--output', output_path,
+                    '--size', '1600',
+                    '--aspect', 'auto'
+                ],
+                capture_output=True,
+                text=True,
+                check=True
+            )
+        except subprocess.CalledProcessError as e:
+            raise Exception(f"Failed to generate artwork: {e.stderr}")
+
+        # Add watermark
+        add_watermark(output_path, github_url)
+
+        # Save to database
+        artwork_id = None
+        try:
+            relative_path = f'/static/generated/{output_filename}'
+            artwork_id = Artwork.create(github_url, repo_name, commit_hash, relative_path, output_filename)
+        except Exception as e:
+            print(f"Warning: Failed to save to database: {e}")
+
+        # Save filesystem cache as backup
+        save_cache_info(images_dir, repo_name, commit_hash, output_filename)
+
         return {
-            'image_url': f'/static/generated/{cache_info["filename"]}',
+            'image_url': f'/static/generated/{output_filename}',
             'repo_name': repo_name,
-            'artwork_id': None,
+            'artwork_id': artwork_id,
             'like_count': 0,
-            'cached': True
+            'cached': False
         }
-
-    # Generate new artwork
-    output_filename = f'{repo_name}_{commit_hash[:8]}.png'
-    output_path = os.path.join(images_dir, output_filename)
-
-    # Get absolute path to git2art.py (should be in parent directory of services)
-    current_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    git2art_script = os.path.join(current_dir, 'git2art.py')
-
-    # Run git2art.py on the cloned repository
-    try:
-        subprocess.run(
-            [
-                'python3', git2art_script,
-                '--repo', repo_path,
-                '--output', output_path,
-                '--size', '1600',
-                '--aspect', 'auto'
-            ],
-            capture_output=True,
-            text=True,
-            check=True
-        )
-    except subprocess.CalledProcessError as e:
-        raise Exception(f"Failed to generate artwork: {e.stderr}")
-
-    # Add watermark
-    add_watermark(output_path, github_url)
-
-    # Save to database
-    artwork_id = None
-    try:
-        relative_path = f'/static/generated/{output_filename}'
-        artwork_id = Artwork.create(github_url, repo_name, commit_hash, relative_path, output_filename)
-    except Exception as e:
-        print(f"Warning: Failed to save to database: {e}")
-
-    # Save filesystem cache as backup
-    save_cache_info(images_dir, repo_name, commit_hash, output_filename)
-
-    return {
-        'image_url': f'/static/generated/{output_filename}',
-        'repo_name': repo_name,
-        'artwork_id': artwork_id,
-        'like_count': 0,
-        'cached': False
-    }
+    finally:
+        # Always cleanup the temporary repository
+        cleanup_repo(repo_path)
 
 
 def get_all_gallery_artworks(images_dir):
@@ -148,7 +153,7 @@ def get_all_gallery_artworks(images_dir):
     Load all generated artworks from database (with filesystem fallback).
 
     Returns:
-        list: List of artwork dicts with id, repo_name, image_url, commit_hash, created_at, like_count
+        list: List of artwork dicts with id, repo_name, image_url, commit_hash, created_at, like_count, scale
     """
     artworks = []
 
@@ -156,14 +161,20 @@ def get_all_gallery_artworks(images_dir):
     try:
         db_artworks = Artwork.get_all(order_by='created_at', order_dir='DESC')
         for artwork in db_artworks:
+            # Generate deterministic scale based on artwork ID
+            random.seed(artwork['id'])
+            scale = round(random.uniform(0.85, 1.15), 2)
+
             artworks.append({
                 'id': artwork['id'],
                 'repo_name': artwork['repo_name'],
+                'repo_url': artwork['repo_url'],
                 'image_url': artwork['image_path'],
                 'commit_hash': artwork['commit_hash'],
                 'created_at': artwork['created_at'],
                 'created_at_formatted': artwork['created_at'].strftime('%b %d, %Y at %I:%M %p'),
-                'like_count': artwork['like_count']
+                'like_count': artwork['like_count'],
+                'scale': scale
             })
         return artworks
     except Exception as e:
@@ -186,14 +197,20 @@ def get_all_gallery_artworks(images_dir):
                 file_stat = os.stat(image_path)
                 created_at = datetime.fromtimestamp(file_stat.st_mtime)
 
+                # Generate deterministic scale based on filename
+                random.seed(hash(cache_info['filename']))
+                scale = round(random.uniform(0.85, 1.15), 2)
+
                 artworks.append({
                     'id': None,
                     'repo_name': cache_info['repo_name'],
+                    'repo_url': None,
                     'image_url': f'/static/generated/{cache_info["filename"]}',
                     'commit_hash': cache_info['commit_hash'],
                     'created_at': created_at,
                     'created_at_formatted': created_at.strftime('%b %d, %Y at %I:%M %p'),
-                    'like_count': 0
+                    'like_count': 0,
+                    'scale': scale
                 })
 
         except (json.JSONDecodeError, KeyError, OSError):
