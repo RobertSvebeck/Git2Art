@@ -14,11 +14,13 @@ Git2Art creates deterministic abstract art from your codebase:
 ## Features
 
 - 🎨 **Advanced Color Theory**: Complementary, triadic, split-complementary, and tetradic color schemes
+- 🎭 **Adjustable Contrast**: Choose low, medium, or high contrast levels for different aesthetics
+- 🌈 **Sophisticated Color Mixing**: Elements blend 2-4 colors with deterministic ratios
+- 🔀 **Analogous & Complementary Variations**: Each element uses subtle color shifts or bold complementary accents
 - 📐 **Professional Composition**: Golden ratio, rule of thirds, Fibonacci spirals
-- 🎭 **High Contrast**: Rich darks and bright lights for visual impact
 - 📊 **Visual Hierarchy**: File importance mapped to size and opacity
 - 🌊 **Organic Flow**: IDEO-inspired Cornu curves and bold strokes (up to 30% canvas width)
-- 🔄 **100% Deterministic**: Same code always generates identical art
+- 🔄 **100% Deterministic**: Same code always generates identical art (byte-for-byte)
 - 🖼️ **Flexible Canvas**: Multiple aspect ratios (4:3, 16:10, 16:9, 3:2, portrait modes)
 - 📝 **Smart Naming**: Auto-generated filenames with repo name, dimensions, and commit hash
 
@@ -53,6 +55,18 @@ python git2art.py --aspect 16:9 --size 1920
 
 Available aspect ratios: `square`, `4:3`, `16:10`, `16:9`, `3:2`, `5:4`, `portrait_3:4`, `portrait_2:3`
 
+Adjust contrast level:
+```bash
+# Low contrast (subtle, muted tones)
+python git2art.py --contrast low
+
+# Medium contrast (balanced)
+python git2art.py --contrast medium
+
+# High contrast (dramatic, default)
+python git2art.py --contrast high
+```
+
 Generate art with custom filename:
 ```bash
 python git2art.py --output my_artwork.png
@@ -61,6 +75,11 @@ python git2art.py --output my_artwork.png
 Generate from a specific repository:
 ```bash
 python git2art.py --repo /path/to/repo --size 2400
+```
+
+Combine multiple options:
+```bash
+python git2art.py --repo /path/to/repo --aspect 16:10 --size 1920 --contrast medium --output my_art.png
 ```
 
 ### Smart Filenames
@@ -84,7 +103,9 @@ The timestamp ensures uniqueness even when generating multiple artworks from rep
 
 2. **Applies Art Theory**:
    - **Advanced Color Theory**: Complementary, triadic, split-complementary, and tetradic schemes
-   - **High Contrast**: Very light tints (1.4x brightness) and very dark shades (0.4x brightness)
+   - **Adjustable Contrast**: Low (1.15x/0.7x), Medium (1.25x/0.55x), or High (1.4x/0.4x) brightness ratios
+   - **Sophisticated Mixing**: Each element blends 2-4 colors with deterministic weighted ratios
+   - **Color Variations**: Analogous shifts (subtle) or complementary accents (bold) per element
    - **Composition**: Places elements using golden ratio and rule of thirds
    - **Visual Hierarchy**: Sizes elements by code importance
    - **Bold Strokes**: IDEO-inspired thick strokes up to 30% of canvas width
@@ -98,9 +119,36 @@ The timestamp ensures uniqueness even when generating multiple artworks from rep
 
 See [ART_THEORY.md](ART_THEORY.md) for detailed explanation of principles used.
 
+## Web Application 🌐
+
+Git2Art now includes a Flask web application for easy artwork generation!
+
+### Quick Start
+
+```bash
+# Install Flask dependencies
+pip install -r requirements.txt
+
+# Run the web app
+python app.py
+```
+
+Then open http://localhost:5000 in your browser.
+
+### Features
+
+- ✅ GitHub URL input form with validation
+- ✅ Automatic artwork generation from any public GitHub repository
+- ✅ Smart caching based on commit hash (avoids regeneration)
+- ✅ Watermark with repository URL
+- ✅ Download button for generated artwork
+- ✅ Beautiful, responsive UI
+
+See [FLASK_SETUP.md](FLASK_SETUP.md) for more details.
+
 ## Coming Soon
 
-- Flask web app for easy visualization
+- Gallery page to browse all generated art
+- Database integration (MariaDB) with like functionality
 - More art styles and algorithms
 - Animation showing repository evolution over time
-- Gallery of repository artworks

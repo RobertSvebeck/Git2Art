@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Git2Art - Transform Code into Art</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Git2Art</h1>
+            <p class="tagline">Transform your GitHub repositories into beautiful abstract art</p>
+        </header>
+
+        <main>
+            <section class="input-section">
+                <form id="artForm">
+                    <div class="form-group">
+                        <label for="githubUrl">GitHub Repository URL</label>
+                        <input
+                            type="text"
+                            id="githubUrl"
+                            name="githubUrl"
+                            placeholder="https://github.com/owner/repository"
+                            required
+                        >
+                    </div>
+                    <button type="submit" id="generateBtn">Generate Art</button>
+                </form>
+
+                <div id="status" class="status hidden"></div>
+            </section>
+
+            <section id="resultSection" class="result-section hidden">
+                <h2 id="repoName"></h2>
+                <div class="image-container">
+                    <img id="artworkImage" alt="Generated artwork">
+                </div>
+                <div class="actions">
+                    <a id="downloadBtn" class="btn btn-primary" download>Download Artwork</a>
+                    <button id="newArtBtn" class="btn btn-secondary">Generate Another</button>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>Created with ❤️ using Git2Art | <a href="https://github.com/RobertSvebeck/Git2Art" target="_blank">View on GitHub</a></p>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

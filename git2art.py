@@ -7,7 +7,6 @@ Inspired by "Painting with Code" - IDEO
 
 import git
 import hashlib
-import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
 import colorsys
 from pathlib import Path
@@ -282,11 +281,26 @@ class RepositoryPalette:
         ]
 
     @staticmethod
-    def expand_palette_with_theory(palette_dict, seed):
-        """Expand palette using advanced color wheel theory"""
+    def expand_palette_with_theory(palette_dict, seed, contrast='high'):
+        """Expand palette using advanced color wheel theory with adjustable contrast
+
+        Args:
+            palette_dict: Palette dictionary with base/accent colors
+            seed: Random seed for determinism
+            contrast: 'low', 'medium', or 'high' - controls tint/shade brightness
+        """
         expanded = []
         base_colors = palette_dict['base']
         accent_colors = palette_dict['accents']
+
+        # Contrast multipliers for tints and shades
+        contrast_settings = {
+            'low': {'tint': 1.15, 'shade': 0.7, 'sat_tint': 0.6, 'sat_shade': 1.1},
+            'medium': {'tint': 1.25, 'shade': 0.55, 'sat_tint': 0.5, 'sat_shade': 1.2},
+            'high': {'tint': 1.4, 'shade': 0.4, 'sat_tint': 0.3, 'sat_shade': 1.3}
+        }
+
+        settings = contrast_settings.get(contrast, contrast_settings['high'])
 
         random.seed(seed)
 
@@ -298,9 +312,9 @@ class RepositoryPalette:
             r, g, b = color
             h, s, v = colorsys.rgb_to_hsv(r/255, g/255, b/255)
 
-            # INCREASED CONTRAST variations
-            very_light = RepositoryPalette._hsv_to_rgb(h, s * 0.3, min(1.0, v * 1.4))
-            very_dark = RepositoryPalette._hsv_to_rgb(h, min(1.0, s * 1.3), v * 0.4)
+            # Contrast-adjusted variations
+            very_light = RepositoryPalette._hsv_to_rgb(h, s * settings['sat_tint'], min(1.0, v * settings['tint']))
+            very_dark = RepositoryPalette._hsv_to_rgb(h, min(1.0, s * settings['sat_shade']), v * settings['shade'])
             expanded.extend([very_light, very_dark])
 
             # Use different color theory for each base color
@@ -330,6 +344,78 @@ class RepositoryPalette:
         """Convert HSV to RGB (0-255)"""
         r, g, b = colorsys.hsv_to_rgb(h, s, v)
         return (int(r * 255), int(g * 255), int(b * 255))
+
+
+class ColorMixer:
+    """Deterministic color mixing utilities"""
+
+    @staticmethod
+    def blend_colors(colors, seed_hash, count=2):
+        """Blend multiple colors with deterministic ratios
+
+        Args:
+            colors: List of RGB tuples to choose from
+            seed_hash: Hash string for deterministic selection
+            count: Number of colors to blend (2-4)
+
+        Returns:
+            Blended RGB tuple
+        """
+        count = max(2, min(4, count))  # Clamp between 2-4
+
+        # Select colors deterministically
+        selected_colors = []
+        for i in range(count):
+            idx = DeterministicRandom.randint(seed_hash, 2000 + i, 0, len(colors) - 1)
+            selected_colors.append(colors[idx])
+
+        # Generate deterministic mixing ratios that sum to 1.0
+        ratios = []
+        for i in range(count):
+            ratio = DeterministicRandom.uniform(seed_hash, 2100 + i, 0.1, 1.0)
+            ratios.append(ratio)
+
+        # Normalize to sum to 1.0
+        total = sum(ratios)
+        ratios = [r / total for r in ratios]
+
+        # Blend colors according to ratios
+        r, g, b = 0, 0, 0
+        for color, ratio in zip(selected_colors, ratios):
+            r += color[0] * ratio
+            g += color[1] * ratio
+            b += color[2] * ratio
+
+        return (int(r), int(g), int(b))
+
+    @staticmethod
+    def get_analogous_variation(color, seed_hash, shift_range=0.05):
+        """Get analogous color variation (nearby on color wheel)
+
+        Args:
+            color: Base RGB tuple
+            seed_hash: Hash for deterministic variation
+            shift_range: Maximum hue shift (0.05 = 18 degrees)
+
+        Returns:
+            Analogous RGB tuple
+        """
+        r, g, b = color
+        h, s, v = colorsys.rgb_to_hsv(r/255, g/255, b/255)
+
+        # Deterministic hue shift
+        shift = DeterministicRandom.uniform(seed_hash, 2200, -shift_range, shift_range)
+        new_h = (h + shift) % 1.0
+
+        # Slight saturation and value variations
+        s_var = DeterministicRandom.uniform(seed_hash, 2201, 0.9, 1.1)
+        v_var = DeterministicRandom.uniform(seed_hash, 2202, 0.9, 1.1)
+
+        new_s = max(0, min(1.0, s * s_var))
+        new_v = max(0, min(1.0, v * v_var))
+
+        r_new, g_new, b_new = colorsys.hsv_to_rgb(new_h, new_s, new_v)
+        return (int(r_new * 255), int(g_new * 255), int(b_new * 255))
 
 
 class OrganicShapes:
@@ -518,7 +604,7 @@ class GitArtGenerator:
         'portrait': (1200, 1600), # 3:4 portrait
     }
 
-    def __init__(self, repo_path='.', width=1600, height=1200, aspect_ratio='4:3'):
+    def __init__(self, repo_path='.', width=1600, height=1200, aspect_ratio='4:3', contrast='high'):
         """
         Initialize art generator
 
@@ -527,9 +613,11 @@ class GitArtGenerator:
             width: Canvas width (ignored if aspect_ratio is specified)
             height: Canvas height (ignored if aspect_ratio is specified)
             aspect_ratio: Aspect ratio name from ASPECT_RATIOS (default: '4:3')
+            contrast: Contrast level for color palette ('low', 'medium', 'high')
         """
         self.repo = git.Repo(repo_path)
         self.repo_path = Path(repo_path)
+        self.contrast = contrast
 
         # Apply aspect ratio if specified
         if aspect_ratio and aspect_ratio in self.ASPECT_RATIOS:
@@ -597,13 +685,10 @@ class GitArtGenerator:
 
         # Get harmonious palette with advanced color theory
         palette_name, palette_dict = RepositoryPalette.select_palette_by_repo(fingerprint)
-        all_colors = RepositoryPalette.expand_palette_with_theory(palette_dict, fingerprint['total_lines'])
+        all_colors = RepositoryPalette.expand_palette_with_theory(palette_dict, fingerprint['total_lines'], self.contrast)
 
         # Create background
         img = self._create_background(fingerprint, palette_dict)
-
-        # Apply subtle blur to background for smoothness
-        img = img.filter(ImageFilter.GaussianBlur(radius=2))
 
         draw = ImageDraw.Draw(img, 'RGBA')
 
@@ -651,15 +736,11 @@ class GitArtGenerator:
         return output_path
 
     def _apply_soft_finish(self, img, fingerprint):
-        """Apply soft blur and smoothing for polished finish"""
-        # Determine blur strength based on repo size
-        blur_radius = 1.5 + (min(fingerprint['total_lines'], 5000) / 5000) * 1.5
+        """Apply very light smoothing for subtle polish without losing sharpness"""
+        # Much lighter blur - just to soften harsh edges slightly
+        blur_radius = 0.3
 
-        # Apply gentle Gaussian blur for soft edges
         img = img.filter(ImageFilter.GaussianBlur(radius=blur_radius))
-
-        # Optional: Add slight smoothing filter
-        img = img.filter(ImageFilter.SMOOTH)
 
         return img
 
@@ -732,62 +813,62 @@ class GitArtGenerator:
         return img
 
     def _add_filled_color_areas(self, draw, fingerprint, colors):
-        """Add large filled color areas for bold visual impact"""
+        """Add large filled color areas for bold visual impact with sophisticated color mixing"""
         seed = fingerprint['total_lines']
         random.seed(seed)
 
         num_areas = 3 + (fingerprint['commit_count'] % 5)
 
         for i in range(num_areas):
+            # Create unique hash for this area
+            area_hash = hashlib.md5(f"{seed}_{i}_area".encode()).hexdigest()
+
             # Large organic filled shapes
-            cx = random.randint(0, self.width)
-            cy = random.randint(0, self.height)
+            cx = DeterministicRandom.randint(area_hash, 0, 0, self.width)
+            cy = DeterministicRandom.randint(area_hash, 1, 0, self.height)
 
             # Make HUGE shapes
-            size = random.randint(int(self.width * 0.2), int(self.width * 0.5))
+            size = DeterministicRandom.randint(area_hash, 2, int(self.width * 0.2), int(self.width * 0.5))
 
             # Generate organic blob shape
-            segments = random.randint(6, 12)
+            segments = DeterministicRandom.randint(area_hash, 3, 6, 12)
             points = []
             for j in range(segments):
                 angle = (j / segments) * 2 * math.pi
-                variation = random.uniform(0.7, 1.3)
+                variation = DeterministicRandom.uniform(area_hash, 100 + j, 0.7, 1.3)
                 radius = size * variation
                 px = cx + radius * math.cos(angle)
                 py = cy + radius * math.sin(angle)
                 points.append((px, py))
 
-            # Mix colors - use multiple colors from palette
-            color1 = colors[i % len(colors)]
-            color2 = colors[(i + 3) % len(colors)]
+            # Use sophisticated color mixing with deterministic ratios
+            blend_count = DeterministicRandom.choice(area_hash, 4, [2, 2, 3, 3, 4])
+            blended = ColorMixer.blend_colors(colors, area_hash, blend_count)
 
-            # Blend colors
-            r = (color1[0] + color2[0]) // 2
-            g = (color1[1] + color2[1]) // 2
-            b = (color1[2] + color2[2]) // 2
-            blended = (r, g, b)
-
-            opacity = random.randint(40, 100)
+            opacity = DeterministicRandom.randint(area_hash, 5, 40, 100)
 
             draw.polygon(points, fill=blended + (opacity,))
 
     def _add_bold_color_blocks(self, draw, fingerprint, colors):
-        """Add bold rectangular color blocks mixing multiple colors"""
+        """Add bold rectangular color blocks with sophisticated color mixing"""
         seed = fingerprint['total_lines']
         random.seed(seed)
 
         num_blocks = 4 + (len(fingerprint['files']) % 6)
 
         for i in range(num_blocks):
-            # Large rectangles at various angles
-            x = random.randint(-self.width // 4, self.width)
-            y = random.randint(-self.height // 4, self.height)
+            # Create unique hash for this block
+            block_hash = hashlib.md5(f"{seed}_{i}_block".encode()).hexdigest()
 
-            width = random.randint(int(self.width * 0.15), int(self.width * 0.40))
-            height = random.randint(int(self.height * 0.10), int(self.height * 0.30))
+            # Large rectangles at various angles
+            x = DeterministicRandom.randint(block_hash, 0, -self.width // 4, self.width)
+            y = DeterministicRandom.randint(block_hash, 1, -self.height // 4, self.height)
+
+            width = DeterministicRandom.randint(block_hash, 2, int(self.width * 0.15), int(self.width * 0.40))
+            height = DeterministicRandom.randint(block_hash, 3, int(self.height * 0.10), int(self.height * 0.30))
 
             # Rotate rectangle
-            angle = random.uniform(0, math.pi)
+            angle = DeterministicRandom.uniform(block_hash, 4, 0, math.pi)
 
             # Create rotated rectangle points
             corners = [
@@ -798,18 +879,11 @@ class GitArtGenerator:
                 (x - height * math.sin(angle), y + height * math.cos(angle))
             ]
 
-            # Bold mixed colors
-            color1 = colors[i % len(colors)]
-            color2 = colors[(i + 2) % len(colors)]
-            color3 = colors[(i + 5) % len(colors)]
+            # Use sophisticated color mixing (typically 3-4 colors)
+            blend_count = DeterministicRandom.choice(block_hash, 5, [3, 3, 3, 4])
+            mixed = ColorMixer.blend_colors(colors, block_hash, blend_count)
 
-            # Mix three colors
-            r = (color1[0] + color2[0] + color3[0]) // 3
-            g = (color1[1] + color2[1] + color3[1]) // 3
-            b = (color1[2] + color2[2] + color3[2]) // 3
-            mixed = (r, g, b)
-
-            opacity = random.randint(50, 120)
+            opacity = DeterministicRandom.randint(block_hash, 6, 50, 120)
 
             draw.polygon(corners, fill=mixed + (opacity,))
 
@@ -1118,7 +1192,7 @@ class GitArtGenerator:
         self._draw_layered_shape(draw, points, color, seed_hash)
 
     def _draw_layered_shape(self, draw, points, color, seed_hash):
-        """Draw shape with multiple gradient layers - 100% deterministic"""
+        """Draw shape with multiple gradient layers using analogous and complementary variations - 100% deterministic"""
         # Convert to HSV for hue variations
         r, g, b = color
         h, s, v = colorsys.rgb_to_hsv(r/255, g/255, b/255)
@@ -1126,6 +1200,9 @@ class GitArtGenerator:
         # Calculate centroid
         cx = sum(p[0] for p in points) / len(points)
         cy = sum(p[1] for p in points) / len(points)
+
+        # Determine color variation strategy based on hash
+        use_complementary = DeterministicRandom.from_hash(seed_hash, 900) > 0.7
 
         # Draw multiple layers with gradient effect
         num_layers = DeterministicRandom.randint(seed_hash, 1000, 6, 10)
@@ -1139,21 +1216,30 @@ class GitArtGenerator:
                 ly = cy + (py - cy) * layer_ratio
                 layer_points.append((lx, ly))
 
-            # Vary hue slightly for each layer
-            hue_var = DeterministicRandom.uniform(seed_hash, 1100 + layer, 0.02, 0.08)
-            layer_h = (h + (layer / num_layers) * hue_var) % 1.0
-            v_var = DeterministicRandom.uniform(seed_hash, 1200 + layer, 0.1, 0.3)
-            layer_v = min(1.0, v + (1 - layer_ratio) * v_var)
-            layer_s = s * (0.6 + layer_ratio * 0.4)
+            if use_complementary and layer < num_layers // 2:
+                # Use complementary color for inner layers (visual pop!)
+                comp_h = (h + 0.5) % 1.0
+                layer_h = comp_h
+                # Adjust saturation and value for complementary
+                layer_s = s * DeterministicRandom.uniform(seed_hash, 1100 + layer, 0.7, 1.1)
+                v_var = DeterministicRandom.uniform(seed_hash, 1200 + layer, 0.1, 0.3)
+                layer_v = min(1.0, v + (1 - layer_ratio) * v_var)
+            else:
+                # Use analogous variation (subtle hue shifts)
+                hue_shift = DeterministicRandom.uniform(seed_hash, 1100 + layer, -0.08, 0.08)
+                layer_h = (h + hue_shift) % 1.0
+                v_var = DeterministicRandom.uniform(seed_hash, 1200 + layer, 0.1, 0.3)
+                layer_v = min(1.0, v + (1 - layer_ratio) * v_var)
+                layer_s = s * (0.6 + layer_ratio * 0.4)
 
-            layer_color = self._hsv_to_rgb(layer_h, layer_s, layer_v)
+            layer_color = self._hsv_to_rgb(layer_h, min(1.0, layer_s), layer_v)
             base_opacity = DeterministicRandom.randint(seed_hash, 1300 + layer, 120, 180)
             layer_opacity = int(base_opacity + layer_ratio * 60)
 
             if len(layer_points) > 2:
                 draw.polygon(layer_points, fill=layer_color + (layer_opacity,))
 
-        # Add outer glow/shadow with deterministic variety
+        # Add outer glow using analogous variation
         shadow_points = []
         for i, (px, py) in enumerate(points):
             expansion = DeterministicRandom.uniform(seed_hash, 1400 + i, 1.08, 1.2)
@@ -1161,9 +1247,13 @@ class GitArtGenerator:
             sy = cy + (py - cy) * expansion
             shadow_points.append((sx, sy))
 
-        darker = (max(0, r - DeterministicRandom.randint(seed_hash, 1500, 30, 60)),
-                  max(0, g - DeterministicRandom.randint(seed_hash, 1501, 30, 60)),
-                  max(0, b - DeterministicRandom.randint(seed_hash, 1502, 30, 60)))
+        # Use analogous color for shadow (more cohesive)
+        shadow_color = ColorMixer.get_analogous_variation(color, seed_hash, shift_range=0.03)
+        # Darken the analogous color
+        sr, sg, sb = shadow_color
+        darker = (max(0, sr - DeterministicRandom.randint(seed_hash, 1500, 30, 60)),
+                  max(0, sg - DeterministicRandom.randint(seed_hash, 1501, 30, 60)),
+                  max(0, sb - DeterministicRandom.randint(seed_hash, 1502, 30, 60)))
         shadow_opacity = DeterministicRandom.randint(seed_hash, 1503, 40, 80)
         if len(shadow_points) > 2:
             draw.polygon(shadow_points, fill=darker + (shadow_opacity,))
@@ -1395,6 +1485,9 @@ def main():
     parser.add_argument('--aspect', default='4:3',
                        choices=list(GitArtGenerator.ASPECT_RATIOS.keys()),
                        help='Canvas aspect ratio (default: 4:3)')
+    parser.add_argument('--contrast', default='high',
+                       choices=['low', 'medium', 'high'],
+                       help='Color contrast level: low (subtle), medium (balanced), high (dramatic). Default: high')
 
     args = parser.parse_args()
 
@@ -1417,7 +1510,7 @@ def main():
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
 
         # Calculate actual dimensions
-        generator_temp = GitArtGenerator(args.repo, width=args.size, aspect_ratio=args.aspect)
+        generator_temp = GitArtGenerator(args.repo, width=args.size, aspect_ratio=args.aspect, contrast=args.contrast)
         width = generator_temp.width
         height = generator_temp.height
 
@@ -1426,7 +1519,7 @@ def main():
         args.output = f"{sanitized_name}_{width}x{height}_{timestamp}_{commit_hash}.png"
         print(f"📝 Auto-generated filename: {args.output}")
 
-    generator = GitArtGenerator(args.repo, width=args.size, aspect_ratio=args.aspect)
+    generator = GitArtGenerator(args.repo, width=args.size, aspect_ratio=args.aspect, contrast=args.contrast)
     generator.generate_art(args.output)
 
 

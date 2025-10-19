@@ -9,17 +9,48 @@
 - ✅ Complementary colors automatically added to palette
 - ✅ Tints at 1.4x brightness, shades at 0.4x brightness for high contrast
 - ✅ Advanced expand_palette_with_theory() implements all color schemes
-- [ ] Add contrast adjustment parameter (low/medium/high)
-- [ ] Experiment with different palette mixing ratios
-- [ ] Use analogous + complementary variations per element
+- ✅ Add contrast adjustment parameter (low/medium/high)
+- ✅ Experiment with different palette mixing ratios
+- ✅ Use analogous + complementary variations per element
+- ✅ ColorMixer class with blend_colors() and get_analogous_variation()
+- ✅ Elements blend 2-4 colors with deterministic weighted ratios
+- ✅ Layered shapes use complementary colors for inner layers (30% chance)
+- ✅ Shadows use analogous variations for cohesive look
+- ✅ All new features maintain 100% determinism (verified with MD5 hashing)
 
 ### Flask Web Application
-- [ ] Create basic Flask app structure
-- [ ] Add file upload or GitHub URL input
-- [ ] Display generated artwork
-- [ ] Allow size and style customization
-- [ ] Add download button for artwork
+
+#### Phase 1: Basic Setup (No Database) ✅ COMPLETED
+- ✅ Create basic Flask app structure
+- ✅ Add GitHub URL input form
+- ✅ Generate artwork from GitHub URL
+- ✅ Store generated images in folder (filesystem-based)
+- ✅ Skip regeneration if repo exists and hasn't changed (check commit hash)
+- ✅ Add watermark on image
+- ✅ Add download button for artwork
+
+#### Phase 2: Gallery Feature (Filesystem-based)
+- [ ] Create gallery page to browse all generated art
+- [ ] Display artwork with:
+  - [ ] Repository name
+  - [ ] Repository owner/user
+  - [ ] Link to GitHub repository
+- [ ] Gallery grid/card layout
+- [ ] Sort gallery (newest first, most popular, etc.)
+
+#### Phase 3: Database Integration (MariaDB)
+- [ ] Set up .env configuration for MariaDB credentials
+- [ ] Create database schema for:
+  - [ ] Generated artworks (repo_url, commit_hash, image_path, created_at)
+  - [ ] User likes (user_id, artwork_id, liked_at)
+- [ ] Implement "like" functionality for artworks
+- [ ] Track popularity metrics
+- [ ] Migrate from filesystem-only to database-backed gallery
+
+#### Phase 4: Deployment
 - [ ] Deploy to Heroku/Render/Railway
+- [ ] Set up production database connection
+- [ ] Configure static file serving for images
 
 ### Documentation
 - [ ] Add example artworks to README
