@@ -522,14 +522,31 @@ class GitArtGenerator:
         img = self._create_background(fingerprint, palette_dict)
         draw = ImageDraw.Draw(img, 'RGBA')
 
-        # Add layers of elements (IDEO-inspired: hundreds of layers)
-        self._add_filled_color_areas(draw, fingerprint, all_colors)  # NEW: Bold filled areas
+        # Add layers of elements with MIXED ordering for depth
+        # Interleave background and foreground to create visual complexity
+
+        # Layer 1: Deep background elements
+        self._add_filled_color_areas(draw, fingerprint, all_colors)
         self._add_background_flows(draw, fingerprint, all_colors)
+
+        # Layer 2: Some main elements (largest ones first for depth)
+        self._draw_some_main_elements(draw, fingerprint, all_colors, start_idx=0, count=3)
+
+        # Layer 3: Mid-ground texture and curves
         self._add_cornu_curves(draw, fingerprint, all_colors)
-        self._add_bold_color_blocks(draw, fingerprint, all_colors)  # NEW: Abstract color blocks
+        self._add_bold_color_blocks(draw, fingerprint, all_colors)
+
+        # Layer 4: More main elements
+        self._draw_some_main_elements(draw, fingerprint, all_colors, start_idx=3, count=5)
+
+        # Layer 5: Decorative elements
         self._add_spirals(draw, fingerprint, all_colors)
         self._add_circular_loops(draw, fingerprint, all_colors)
-        self._draw_main_elements(draw, fingerprint, all_colors)
+
+        # Layer 6: Remaining main elements (smaller ones on top)
+        self._draw_some_main_elements(draw, fingerprint, all_colors, start_idx=8, count=None)
+
+        # Layer 7: Fine details and texture
         self._add_rich_texture(draw, fingerprint, all_colors)
         self._add_rotating_elements(draw, fingerprint, all_colors)
         self._add_connections(draw, fingerprint, all_colors)
@@ -801,8 +818,29 @@ class GitArtGenerator:
                          fill=color + (opacity,),
                          width=int(thickness))
 
+    def _draw_some_main_elements(self, draw, fingerprint, colors, start_idx=0, count=None):
+        """Draw a subset of main elements for layered composition"""
+        files = fingerprint['files']
+        if not files:
+            return
+
+        sorted_files = sorted(files.items(), key=lambda x: x[1]['lines'], reverse=True)
+
+        # Determine which elements to draw
+        if count is None:
+            # Draw from start_idx to end
+            elements_to_draw = sorted_files[start_idx:]
+        else:
+            # Draw specific count starting from start_idx
+            elements_to_draw = sorted_files[start_idx:start_idx + count]
+
+        for idx, (file_path, file_data) in enumerate(elements_to_draw):
+            # Use original index for consistent positioning
+            original_idx = start_idx + idx
+            self._draw_single_element(draw, original_idx, file_data, colors, len(sorted_files))
+
     def _draw_main_elements(self, draw, fingerprint, colors):
-        """Draw main file elements"""
+        """Draw main file elements with extreme variety in size, shape, and placement"""
         files = fingerprint['files']
         if not files:
             return
@@ -810,86 +848,229 @@ class GitArtGenerator:
         sorted_files = sorted(files.items(), key=lambda x: x[1]['lines'], reverse=True)
 
         for idx, (file_path, file_data) in enumerate(sorted_files):
-            golden_angle = 137.508
-            angle = (idx * golden_angle) * (math.pi / 180)
-            radius = 60 + idx * (min(self.width, self.height) / (2.2 * len(files)))
+            self._draw_single_element(draw, idx, file_data, colors, len(sorted_files))
 
-            cx, cy = self.width / 2, self.height / 2
-            x = cx + radius * math.cos(angle)
-            y = cy + radius * math.sin(angle)
+    def _draw_single_element(self, draw, idx, file_data, colors, total_files):
+        """Draw a single main element"""
+        golden_angle = 137.508
+        angle = (idx * golden_angle) * (math.pi / 180)
 
-            max_lines = max(f['lines'] for f in files.values())
-            min_lines = min(f['lines'] for f in files.values())
+        # MUCH MORE VARIED positioning - spread across entire canvas
+        hash_seed = int(file_data['hash'][:8], 16)
+        random.seed(hash_seed)
 
-            if max_lines > min_lines:
-                normalized_size = (file_data['lines'] - min_lines) / (max_lines - min_lines)
-            else:
-                normalized_size = 0.5
+        # Mix golden spiral with random placement
+        if idx < 3:
+            # First 3 files use golden spiral but with wider radius
+            radius = random.randint(50, min(self.width, self.height) // 3)
+        else:
+            # Others spread randomly across canvas
+            radius = random.randint(0, int(min(self.width, self.height) * 0.4))
 
-            size = 60 + normalized_size * 180  # Much larger objects
+        cx, cy = self.width / 2, self.height / 2
+        x = cx + radius * math.cos(angle)
+        y = cy + radius * math.sin(angle)
 
-            hash_val = int(file_data['hash'][:8], 16)
-            color = colors[hash_val % len(colors)]
+        # Calculate normalized size (we don't have access to all files here, so estimate)
+        normalized_size = min(1.0, file_data['lines'] / 500.0)  # Rough normalization
 
-            self._draw_blob(draw, x, y, size, color, file_data['hash'])
+        # EXTREME SIZE VARIETY - from tiny to 70% of canvas!
+        min_size = int(min(self.width, self.height) * 0.03)  # 3% minimum
+        max_size = int(min(self.width, self.height) * 0.70)  # 70% maximum!
+        size = min_size + normalized_size * (max_size - min_size)
+
+        # Add random variation to make sizes less uniform
+        size_variation = random.uniform(0.6, 1.4)
+        size = int(size * size_variation)
+
+        hash_val = int(file_data['hash'][:8], 16)
+        color = colors[hash_val % len(colors)]
+
+        # Choose different shape types based on hash
+        shape_type = hash_val % 5
+        self._draw_varied_shape(draw, x, y, size, color, file_data['hash'], shape_type)
+
+    def _draw_varied_shape(self, draw, x, y, size, color, seed_hash, shape_type):
+        """Draw varied shapes: blob, star, polygon, stretched blob, or splatter"""
+        hash_seed = int(seed_hash[:8], 16)
+        random.seed(hash_seed)
+
+        if shape_type == 0:
+            # Organic blob (original)
+            self._draw_blob(draw, x, y, size, color, seed_hash)
+        elif shape_type == 1:
+            # Star/spiky shape
+            self._draw_star_shape(draw, x, y, size, color, seed_hash)
+        elif shape_type == 2:
+            # Angular polygon (triangle, pentagon, hexagon)
+            self._draw_polygon_shape(draw, x, y, size, color, seed_hash)
+        elif shape_type == 3:
+            # Stretched/elongated blob
+            self._draw_stretched_blob(draw, x, y, size, color, seed_hash)
+        else:
+            # Splatter/irregular shape
+            self._draw_splatter_shape(draw, x, y, size, color, seed_hash)
 
     def _draw_blob(self, draw, x, y, size, color, seed_hash):
         """Draw organic blob with gradient shading and hue variations"""
         points = []
-        segments = 18
+        segments = random.randint(12, 24)  # More varied segment count
 
         hash_seed = int(seed_hash[:8], 16)
         random.seed(hash_seed)
 
         for i in range(segments):
             angle = (i / segments) * 2 * math.pi
-            variation = 1 + 0.12 * math.sin(angle * 3) + random.uniform(-0.08, 0.08)
+            # Much more variation
+            variation = 1 + random.uniform(-0.3, 0.4) + 0.2 * math.sin(angle * random.randint(2, 5))
             radius = (size / 2) * variation
             px = x + radius * math.cos(angle)
             py = y + radius * math.sin(angle)
             points.append((px, py))
 
+        self._draw_layered_shape(draw, points, color, seed_hash)
+
+    def _draw_star_shape(self, draw, x, y, size, color, seed_hash):
+        """Draw star/spiky shape"""
+        hash_seed = int(seed_hash[:8], 16)
+        random.seed(hash_seed)
+
+        points = []
+        num_spikes = random.randint(5, 12)
+
+        for i in range(num_spikes * 2):
+            angle = (i / (num_spikes * 2)) * 2 * math.pi
+            if i % 2 == 0:
+                # Outer spike
+                radius = size / 2 * random.uniform(0.8, 1.2)
+            else:
+                # Inner valley
+                radius = size / 2 * random.uniform(0.3, 0.6)
+
+            px = x + radius * math.cos(angle)
+            py = y + radius * math.sin(angle)
+            points.append((px, py))
+
+        self._draw_layered_shape(draw, points, color, seed_hash)
+
+    def _draw_polygon_shape(self, draw, x, y, size, color, seed_hash):
+        """Draw angular polygon shape"""
+        hash_seed = int(seed_hash[:8], 16)
+        random.seed(hash_seed)
+
+        points = []
+        num_sides = random.choice([3, 4, 5, 6, 7, 8])
+        rotation = random.uniform(0, math.pi)
+
+        for i in range(num_sides):
+            angle = (i / num_sides) * 2 * math.pi + rotation
+            radius = size / 2 * random.uniform(0.8, 1.2)
+            px = x + radius * math.cos(angle)
+            py = y + radius * math.sin(angle)
+            points.append((px, py))
+
+        self._draw_layered_shape(draw, points, color, seed_hash)
+
+    def _draw_stretched_blob(self, draw, x, y, size, color, seed_hash):
+        """Draw stretched/elongated organic shape"""
+        hash_seed = int(seed_hash[:8], 16)
+        random.seed(hash_seed)
+
+        points = []
+        segments = random.randint(15, 25)
+        stretch_angle = random.uniform(0, math.pi)
+        stretch_factor = random.uniform(1.5, 3.0)
+
+        for i in range(segments):
+            angle = (i / segments) * 2 * math.pi
+            variation = 1 + random.uniform(-0.2, 0.3)
+
+            # Stretch along one axis
+            radius_x = (size / 2) * variation
+            radius_y = (size / 2) * variation / stretch_factor
+
+            # Rotate the stretch
+            local_x = radius_x * math.cos(angle)
+            local_y = radius_y * math.sin(angle)
+
+            px = x + local_x * math.cos(stretch_angle) - local_y * math.sin(stretch_angle)
+            py = y + local_x * math.sin(stretch_angle) + local_y * math.cos(stretch_angle)
+            points.append((px, py))
+
+        self._draw_layered_shape(draw, points, color, seed_hash)
+
+    def _draw_splatter_shape(self, draw, x, y, size, color, seed_hash):
+        """Draw irregular splatter shape"""
+        hash_seed = int(seed_hash[:8], 16)
+        random.seed(hash_seed)
+
+        points = []
+        segments = random.randint(20, 40)
+
+        for i in range(segments):
+            angle = (i / segments) * 2 * math.pi
+            # Extreme variation for splatter effect
+            variation = random.uniform(0.4, 1.3)
+            if random.random() < 0.2:
+                variation *= random.uniform(1.2, 1.8)  # Occasional big spikes
+
+            radius = (size / 2) * variation
+            px = x + radius * math.cos(angle)
+            py = y + radius * math.sin(angle)
+            points.append((px, py))
+
+        self._draw_layered_shape(draw, points, color, seed_hash)
+
+    def _draw_layered_shape(self, draw, points, color, seed_hash):
+        """Draw shape with multiple gradient layers"""
+        hash_seed = int(seed_hash[:8], 16)
+        random.seed(hash_seed)
+
         # Convert to HSV for hue variations
         r, g, b = color
         h, s, v = colorsys.rgb_to_hsv(r/255, g/255, b/255)
 
-        # Draw multiple layers with gradient effect (radial gradient simulation)
-        num_layers = 8
+        # Calculate centroid
+        cx = sum(p[0] for p in points) / len(points)
+        cy = sum(p[1] for p in points) / len(points)
+
+        # Draw multiple layers with gradient effect
+        num_layers = random.randint(6, 10)
         for layer in range(num_layers, 0, -1):
-            layer_points = []
             layer_ratio = layer / num_layers
 
-            for i in range(segments):
-                angle = (i / segments) * 2 * math.pi
-                variation = 1 + 0.12 * math.sin(angle * 3) + random.uniform(-0.08, 0.08)
-                radius = (size / 2) * variation * layer_ratio
-                px = x + radius * math.cos(angle)
-                py = y + radius * math.sin(angle)
-                layer_points.append((px, py))
+            # Scale points toward centroid
+            layer_points = []
+            for px, py in points:
+                lx = cx + (px - cx) * layer_ratio
+                ly = cy + (py - cy) * layer_ratio
+                layer_points.append((lx, ly))
 
             # Vary hue slightly for each layer
-            layer_h = (h + (layer / num_layers) * 0.05) % 1.0  # Slight hue shift
-            layer_v = min(1.0, v + (1 - layer_ratio) * 0.2)  # Lighter towards center
-            layer_s = s * (0.7 + layer_ratio * 0.3)  # More saturated outward
+            layer_h = (h + (layer / num_layers) * random.uniform(0.02, 0.08)) % 1.0
+            layer_v = min(1.0, v + (1 - layer_ratio) * random.uniform(0.1, 0.3))
+            layer_s = s * (0.6 + layer_ratio * 0.4)
 
             layer_color = self._hsv_to_rgb(layer_h, layer_s, layer_v)
-            layer_opacity = int(150 + layer_ratio * 80)
+            layer_opacity = int(random.randint(120, 180) + layer_ratio * 60)
 
             if len(layer_points) > 2:
                 draw.polygon(layer_points, fill=layer_color + (layer_opacity,))
 
-        # Add outer glow/shadow
+        # Add outer glow/shadow with more variety
         shadow_points = []
-        for i in range(segments):
-            angle = (i / segments) * 2 * math.pi
-            variation = 1 + 0.12 * math.sin(angle * 3) + random.uniform(-0.08, 0.08)
-            radius = (size / 2) * variation * 1.15  # Slightly larger
-            px = x + radius * math.cos(angle)
-            py = y + radius * math.sin(angle)
-            shadow_points.append((px, py))
+        for px, py in points:
+            expansion = random.uniform(1.08, 1.2)
+            sx = cx + (px - cx) * expansion
+            sy = cy + (py - cy) * expansion
+            shadow_points.append((sx, sy))
 
-        darker = (max(0, r - 40), max(0, g - 40), max(0, b - 40))
-        draw.polygon(shadow_points, fill=darker + (60,))  # Shadow/glow
+        darker = (max(0, r - random.randint(30, 60)),
+                  max(0, g - random.randint(30, 60)),
+                  max(0, b - random.randint(30, 60)))
+        shadow_opacity = random.randint(40, 80)
+        if len(shadow_points) > 2:
+            draw.polygon(shadow_points, fill=darker + (shadow_opacity,))
 
     def _hsv_to_rgb(self, h, s, v):
         """Convert HSV to RGB tuple"""
