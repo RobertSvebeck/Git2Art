@@ -8,6 +8,11 @@ env/
 venv/
 ENV/
 
+# Environment & Secrets
+.env
+.env.local
+.env.*.local
+
 # Generated art files
 *.png
 *.jpg
@@ -28,3 +33,7 @@ temp_repos/
 # OS
 .DS_Store
 Thumbs.db
+
+# Project specific
+database.db
+*.db
