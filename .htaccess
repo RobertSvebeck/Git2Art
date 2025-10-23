@@ -1,0 +1,14 @@
+PassengerEnabled on
+PassengerPython /home/bravoose/virtualenv/repositories/Git2Art/3.10/bin/python
+
+# Protect sensitive files from direct access
+<FilesMatch "\.env|\.git|requirements\.txt|\.gitignore">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Block access to Python cache
+<DirectoryMatch "__pycache__|\.pytest_cache|\.egg-info">
+    Order allow,deny
+    Deny from all
+</DirectoryMatch>
