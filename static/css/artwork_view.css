@@ -1,0 +1,281 @@
+/* Full-size Artwork View - Scandinavian Modern */
+
+body {
+    background: #E5E5E5 !important;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.artwork-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    max-width: 100%;
+    background: #E5E5E5;
+}
+
+/* Top Navigation */
+.top-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 30px 60px;
+    background: #E5E5E5;
+    border-bottom: 1px solid var(--warm-grey);
+}
+
+.nav-link {
+    color: var(--charcoal);
+    text-decoration: none;
+    font-weight: 400;
+    font-size: 0.85em;
+    padding: 8px 16px;
+    border-bottom: 2px solid transparent;
+    transition: all 0.3s;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.nav-link:hover {
+    border-bottom-color: var(--accent-sage);
+    color: var(--accent-sage);
+}
+
+/* Artwork Display Area */
+.artwork-display {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 40px 80px;
+    gap: 40px;
+}
+
+/* Frame with 3D Bevel */
+.artwork-frame {
+    max-width: 90vw;
+    background: var(--soft-black);
+    padding: 6px;
+    box-shadow:
+        0 4px 12px rgba(0, 0, 0, 0.1),
+        0 16px 48px rgba(0, 0, 0, 0.15),
+        inset 2px 2px 4px rgba(255, 255, 255, 0.2),
+        inset -2px -2px 4px rgba(0, 0, 0, 0.5);
+    transition: all 0.4s ease;
+    display: inline-block;
+}
+
+.artwork-frame:hover {
+    box-shadow:
+        0 6px 18px rgba(0, 0, 0, 0.12),
+        0 20px 56px rgba(0, 0, 0, 0.18),
+        inset 2px 2px 4px rgba(255, 255, 255, 0.2),
+        inset -2px -2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* Passepartout (Mat) */
+.artwork-passepartout {
+    background: var(--pure-white);
+    padding: 8%;
+    width: 100%;
+    box-sizing: border-box;
+    box-shadow: inset 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+/* Image Container */
+.artwork-image {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #F0F0F0;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+}
+
+.artwork-image img {
+    max-width: 100%;
+    max-height: 70vh;
+    width: auto;
+    height: auto;
+    display: block;
+    object-fit: contain;
+}
+
+/* Artwork Info */
+.artwork-info {
+    text-align: center;
+    max-width: 600px;
+    padding: 20px;
+}
+
+.artwork-title {
+    font-family: var(--heading-font);
+    font-size: 1.8em;
+    font-weight: 300;
+    color: var(--soft-black);
+    margin: 0 0 10px 0;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+.artwork-title a {
+    color: var(--soft-black);
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+.artwork-title a:hover {
+    color: var(--accent-sage);
+}
+
+.artwork-commit {
+    font-size: 0.85em;
+    color: var(--mid-grey);
+    margin: 5px 0;
+    font-family: 'Courier New', monospace;
+    font-weight: 300;
+}
+
+.artwork-date {
+    font-size: 0.85em;
+    color: var(--mid-grey);
+    margin: 5px 0 20px 0;
+    font-weight: 300;
+}
+
+/* Action Buttons */
+.artwork-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    align-items: center;
+    margin-top: 25px;
+}
+
+.btn {
+    padding: 10px 20px;
+    font-size: 0.8em;
+    font-weight: 400;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s;
+    border: 1px solid;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+}
+
+.btn-like {
+    color: var(--mid-grey);
+    border-color: var(--warm-grey);
+}
+
+.btn-like:hover {
+    border-color: var(--accent-terracotta);
+    color: var(--accent-terracotta);
+}
+
+.btn-like.liked {
+    background: var(--accent-terracotta);
+    color: var(--pure-white);
+    border-color: var(--accent-terracotta);
+}
+
+.like-icon {
+    font-size: 1.2em;
+    line-height: 1;
+}
+
+.like-count {
+    font-weight: 400;
+}
+
+.btn-download {
+    background: transparent;
+    color: var(--charcoal);
+    border-color: var(--charcoal);
+}
+
+.btn-download:hover {
+    background: var(--soft-black);
+    color: var(--pure-white);
+    border-color: var(--soft-black);
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .artwork-frame {
+        max-width: 85vw;
+        padding: 5px;
+    }
+
+    .artwork-passepartout {
+        padding: 6%;
+    }
+}
+
+@media (max-width: 768px) {
+    .top-nav {
+        flex-direction: column;
+        gap: 15px;
+        padding: 20px 30px;
+    }
+
+    .artwork-display {
+        padding: 40px 20px 60px;
+        gap: 30px;
+    }
+
+    .artwork-frame {
+        max-width: 95vw;
+        padding: 4px;
+    }
+
+    .artwork-passepartout {
+        padding: 5%;
+    }
+
+    .artwork-title {
+        font-size: 1.4em;
+    }
+
+    .artwork-actions {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .top-nav {
+        padding: 15px 20px;
+    }
+
+    .artwork-display {
+        padding: 30px 15px 50px;
+    }
+
+    .artwork-frame {
+        padding: 3px;
+    }
+
+    .artwork-passepartout {
+        padding: 4%;
+    }
+
+    .nav-link {
+        font-size: 0.75em;
+        padding: 6px 12px;
+    }
+}

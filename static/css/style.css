@@ -195,7 +195,7 @@ button[type="submit"]:disabled {
 }
 
 .status.info {
-    background: #F5F5F5;
+    background: #E5E5E5;
     color: #424242;
     border-color: #424242;
 }

@@ -1,17 +1,17 @@
 /* Scandinavian Modern Art Gallery */
 
 body {
-    background: var(--gallery-white) !important;
+    background: #E5E5E5 !important;
 }
 
 .container {
-    background: var(--pure-white) !important;
+    background: #E5E5E5 !important;
     max-width: 100% !important;
     box-shadow: none !important;
 }
 
 main {
-    background: var(--pure-white) !important;
+    background: #E5E5E5 !important;
     padding: 80px 60px 100px !important;
     max-width: 1400px;
     margin: 0 auto;
@@ -39,12 +39,19 @@ main {
     color: var(--accent-sage);
 }
 
-/* Gallery wall - two column continuous flow */
+/* Gallery wall - masonry layout with independent columns */
 .gallery-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+    display: flex;
     gap: 60px;
     margin-top: 20px;
+    align-items: flex-start;
+}
+
+.gallery-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 60px;
 }
 
 .gallery-card {
@@ -53,6 +60,7 @@ main {
     align-items: center;
     transition: transform 0.4s ease;
     transform-origin: center center;
+    width: 100%;
 }
 
 .gallery-card:hover {
@@ -63,7 +71,7 @@ main {
 .card-frame {
     width: 100%;
     background: var(--soft-black);
-    padding: 12px;
+    padding: 6px;
     box-shadow:
         0 1px 3px rgba(0, 0, 0, 0.08),
         0 8px 24px rgba(0, 0, 0, 0.12),
@@ -85,7 +93,6 @@ main {
 .card-passepartout {
     background: var(--pure-white);
     padding: 8%;
-    width: 100%;
     box-sizing: border-box;
     box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.1);
 }
@@ -254,10 +261,18 @@ main {
     .gallery-grid {
         gap: 50px;
     }
+
+    .gallery-column {
+        gap: 50px;
+    }
 }
 
 @media (max-width: 1000px) {
     .gallery-grid {
+        gap: 40px;
+    }
+
+    .gallery-column {
         gap: 40px;
     }
 
@@ -271,18 +286,26 @@ main {
         gap: 35px;
     }
 
+    .gallery-column {
+        gap: 35px;
+    }
+
     main {
         padding: 50px 30px 60px !important;
     }
 
     .card-frame {
-        padding: 10px;
+        padding: 5px;
     }
 }
 
 @media (max-width: 600px) {
     .gallery-grid {
-        grid-template-columns: 1fr;
+        flex-direction: column;
+        gap: 40px;
+    }
+
+    .gallery-column {
         gap: 40px;
     }
 
@@ -296,7 +319,7 @@ main {
     }
 
     .card-frame {
-        padding: 10px;
+        padding: 5px;
     }
 
     .card-passepartout {

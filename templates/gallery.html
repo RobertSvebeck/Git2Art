@@ -19,7 +19,8 @@
 
         <main>
             {% if artworks %}
-                <div class="gallery-grid">
+                <!-- Hidden container for cards (will be distributed by JS) -->
+                <div id="cards-source" style="display: none;">
                     {% for artwork in artworks %}
                     <div class="gallery-card" style="--card-scale: {{ artwork.scale }}; transform: scale({{ artwork.scale }});">
                         <div class="card-frame">
@@ -45,12 +46,18 @@
                                     <span class="like-icon">♡</span>
                                     <span class="like-count">{{ artwork.like_count }}</span>
                                 </button>
+                                <a href="{{ url_for('main.artwork_view', artwork_id=artwork.id) }}" class="btn btn-view">View Full Size</a>
                                 {% endif %}
-                                <a href="{{ artwork.image_url }}" target="_blank" class="btn btn-view">View Full Size</a>
                             </div>
                         </div>
                     </div>
                     {% endfor %}
+                </div>
+
+                <!-- Masonry layout with independent columns -->
+                <div class="gallery-grid">
+                    <div class="gallery-column" id="column-1"></div>
+                    <div class="gallery-column" id="column-2"></div>
                 </div>
             {% else %}
                 <div class="empty-state">
@@ -67,8 +74,61 @@
     </div>
 
     <script>
+        // Masonry layout - distribute cards into independent columns
+        function distributeMasonryCards() {
+            const source = document.getElementById('cards-source');
+            const column1 = document.getElementById('column-1');
+            const column2 = document.getElementById('column-2');
+
+            if (!source || !column1 || !column2) return;
+
+            const cards = Array.from(source.querySelectorAll('.gallery-card'));
+
+            // Clear columns
+            column1.innerHTML = '';
+            column2.innerHTML = '';
+
+            // Check if we're on mobile (single column)
+            const isMobile = window.innerWidth <= 600;
+
+            if (isMobile) {
+                // On mobile, put all cards in column 1, hide column 2
+                cards.forEach(card => {
+                    const clonedCard = card.cloneNode(true);
+                    column1.appendChild(clonedCard);
+                });
+                column2.style.display = 'none';
+            } else {
+                // Desktop: distribute cards to balance column heights
+                column2.style.display = 'flex';
+                cards.forEach(card => {
+                    const clonedCard = card.cloneNode(true);
+
+                    // Determine which column is shorter
+                    const col1Height = column1.offsetHeight;
+                    const col2Height = column2.offsetHeight;
+
+                    if (col1Height <= col2Height) {
+                        column1.appendChild(clonedCard);
+                    } else {
+                        column2.appendChild(clonedCard);
+                    }
+                });
+            }
+        }
+
         // Hide cards with missing images
         document.addEventListener('DOMContentLoaded', function() {
+            // Distribute cards into masonry columns
+            distributeMasonryCards();
+
+            // Re-distribute on window resize
+            let resizeTimeout;
+            window.addEventListener('resize', function() {
+                clearTimeout(resizeTimeout);
+                resizeTimeout = setTimeout(distributeMasonryCards, 250);
+            });
+
             const images = document.querySelectorAll('.card-image img');
             images.forEach(img => {
                 img.addEventListener('error', function() {
@@ -77,14 +137,21 @@
                         card.style.display = 'none';
                     }
                 });
+
+                // Re-distribute when images load (affects column heights)
+                img.addEventListener('load', function() {
+                    distributeMasonryCards();
+                });
             });
 
             // Initialize like states when page loads
-            const likeButtons = document.querySelectorAll('.btn-like');
-            likeButtons.forEach(button => {
-                const artworkId = button.dataset.artworkId;
-                checkHasLiked(artworkId);
-            });
+            setTimeout(() => {
+                const likeButtons = document.querySelectorAll('.btn-like');
+                likeButtons.forEach(button => {
+                    const artworkId = button.dataset.artworkId;
+                    checkHasLiked(artworkId);
+                });
+            }, 100);
         });
 
         async function checkHasLiked(artworkId) {

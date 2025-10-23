@@ -23,6 +23,31 @@ def gallery():
     return render_template('gallery.html', artworks=artworks)
 
 
+@bp.route('/artwork/<int:artwork_id>')
+def artwork_view(artwork_id):
+    """Display full-size artwork view with frame and passepartout."""
+    from models.artwork import Artwork
+
+    artwork = Artwork.get_by_id(artwork_id)
+    if not artwork:
+        return "Artwork not found", 404
+
+    # Build image URL from filename
+    image_url = f'/static/generated/{artwork["image_filename"]}'
+
+    artwork_data = {
+        'id': artwork['id'],
+        'repo_name': artwork['repo_name'],
+        'repo_url': artwork['repo_url'],
+        'commit_hash': artwork['commit_hash'],
+        'image_url': image_url,
+        'like_count': artwork['like_count'],
+        'created_at_formatted': artwork['created_at'].strftime('%B %d, %Y') if artwork.get('created_at') else 'Unknown'
+    }
+
+    return render_template('artwork_view.html', artwork=artwork_data)
+
+
 @bp.route('/generate', methods=['POST'])
 def generate():
     """Generate artwork from a GitHub repository URL."""

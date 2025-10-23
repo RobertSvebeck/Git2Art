@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ artwork.repo_name }} - Git2Art</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/artwork_view.css') }}">
+</head>
+<body>
+    <div class="artwork-container">
+        <nav class="top-nav">
+            <a href="{{ url_for('main.gallery') }}" class="nav-link">← Back to Gallery</a>
+            <a href="{{ url_for('main.index') }}" class="nav-link">Generate New Art</a>
+        </nav>
+
+        <div class="artwork-display">
+            <div class="artwork-frame">
+                <div class="artwork-passepartout">
+                    <div class="artwork-image">
+                        <img src="{{ artwork.image_url }}" alt="Art for {{ artwork.repo_name }}">
+                    </div>
+                </div>
+            </div>
+
+            <div class="artwork-info">
+                <h1 class="artwork-title">
+                    {% if artwork.repo_url %}
+                    <a href="{{ artwork.repo_url }}" target="_blank">{{ artwork.repo_name }}</a>
+                    {% else %}
+                    {{ artwork.repo_name }}
+                    {% endif %}
+                </h1>
+                <p class="artwork-commit">Commit: {{ artwork.commit_hash[:8] }}</p>
+                <p class="artwork-date">{{ artwork.created_at_formatted }}</p>
+
+                <div class="artwork-actions">
+                    <button class="btn btn-like" data-artwork-id="{{ artwork.id }}" onclick="toggleLike({{ artwork.id }})">
+                        <span class="like-icon">♡</span>
+                        <span class="like-count">{{ artwork.like_count }}</span>
+                    </button>
+                    <a href="{{ artwork.image_url }}" download class="btn btn-download">Download</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function checkHasLiked(artworkId) {
+            try {
+                const response = await fetch(`/api/artwork/${artworkId}/has_liked`);
+                const data = await response.json();
+                const button = document.querySelector(`[data-artwork-id="${artworkId}"]`);
+                if (button && data.has_liked) {
+                    button.classList.add('liked');
+                    button.querySelector('.like-icon').textContent = '♥';
+                }
+            } catch (error) {
+                console.error('Error checking like status:', error);
+            }
+        }
+
+        async function toggleLike(artworkId) {
+            const button = document.querySelector(`[data-artwork-id="${artworkId}"]`);
+            if (!button) return;
+
+            try {
+                const response = await fetch(`/api/artwork/${artworkId}/like`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    const likeIcon = button.querySelector('.like-icon');
+                    const likeCount = button.querySelector('.like-count');
+
+                    if (data.action === 'liked') {
+                        button.classList.add('liked');
+                        likeIcon.textContent = '♥';
+                    } else {
+                        button.classList.remove('liked');
+                        likeIcon.textContent = '♡';
+                    }
+
+                    likeCount.textContent = data.like_count;
+                }
+            } catch (error) {
+                console.error('Error toggling like:', error);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const artworkId = {{ artwork.id }};
+            checkHasLiked(artworkId);
+        });
+    </script>
+</body>
+</html>

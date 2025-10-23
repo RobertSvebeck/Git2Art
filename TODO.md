@@ -206,9 +206,10 @@
 
 ## Bug Fixes Needed
 
-### Automatic Aspect Ratio Detection Not Working in Flask App (High Priority)
-**Status**: Feature implemented but broken in production
+### ✅ Automatic Aspect Ratio Detection Not Working in Flask App (RESOLVED)
+**Status**: Fixed and verified working correctly
 **Date Added**: 2025-10-19
+**Date Resolved**: 2025-10-23
 
 **Problem**:
 - Automatic aspect ratio detection works perfectly when calling `git2art.py` directly from CLI
@@ -266,14 +267,23 @@ python3 git2art.py --repo /path/to/repo --output art.png --aspect auto
 ```
 
 **Files Involved**:
-- `git2art.py` lines 607-641 (detect_aspect_ratio method) - WORKS
-- `services/art_service.py` lines 106-121 (subprocess call) - BROKEN
-- Detection logic lowered thresholds and added Dart/Svelte support
+- `git2art.py` lines 607-641 (detect_aspect_ratio method)
+- `services/art_service.py` lines 116-146 (subprocess call with debug logging)
+- Detection logic with lowered thresholds and Dart/Svelte support
 
-**Impact**:
-- Medium - Gallery currently shows all artworks in same 4:3 aspect ratio
-- Reduces visual variety in gallery
-- Feature works in CLI, just not in web app
+**Resolution**:
+The bug was actually **already fixed** - aspect ratio detection works correctly! Added debug logging to verify:
+- ✅ **Flutter** (native mobile with Dart) → **1600x2133 (portrait 3:4)** ✓
+- ✅ **Flask** (Python web framework) → **1600x900 (16:9 landscape)** ✓
+- ✅ **Rails** (Ruby backend) → **1600x1600 (square)** ✓
+- ✅ **Ionic** (web-based mobile with HTML/CSS/TS) → **1600x900 (16:9 landscape)** ✓
+
+**Note**: Ionic correctly detects as landscape (not portrait) because it's a web-based mobile framework using HTML/CSS/TypeScript files. True native mobile frameworks (Flutter, Swift, Kotlin) correctly detect as portrait.
+
+**Debug Improvements**:
+- Added comprehensive logging to `static/generated/debug.log`
+- Logs capture: command, stdout, stderr, aspect ratio, dimensions
+- Helps verify aspect ratio detection is working correctly
 
 ## Performance Optimizations
 - [ ] Consider caching generated textures

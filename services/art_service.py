@@ -115,7 +115,7 @@ def generate_art_from_github(github_url, temp_dir, images_dir, force=False):
 
         # Run git2art.py on the cloned repository
         try:
-            subprocess.run(
+            result = subprocess.run(
                 [
                     'python3', git2art_script,
                     '--repo', repo_path,
@@ -127,7 +127,22 @@ def generate_art_from_github(github_url, temp_dir, images_dir, force=False):
                 text=True,
                 check=True
             )
+            # Log the output for debugging aspect ratio detection
+            debug_log = os.path.join(images_dir, 'debug.log')
+            with open(debug_log, 'a') as f:
+                f.write(f"\n=== Generation for {repo_name} at {datetime.now()} ===\n")
+                f.write(f"Command: python3 git2art.py --repo {repo_path} --output {output_path} --size 1600 --aspect auto\n")
+                f.write("=== STDOUT ===\n")
+                f.write(result.stdout)
+                f.write("\n=== STDERR ===\n")
+                f.write(result.stderr)
+                f.write("\n")
         except subprocess.CalledProcessError as e:
+            debug_log = os.path.join(images_dir, 'debug.log')
+            with open(debug_log, 'a') as f:
+                f.write(f"\n=== ERROR for {repo_name} at {datetime.now()} ===\n")
+                f.write(f"stderr: {e.stderr}\n")
+                f.write(f"stdout: {e.stdout}\n")
             raise Exception(f"Failed to generate artwork: {e.stderr}")
 
         # Add watermark
@@ -169,9 +184,7 @@ def get_all_gallery_artworks(images_dir):
     try:
         db_artworks = Artwork.get_all(order_by='created_at', order_dir='DESC')
         for artwork in db_artworks:
-            # Generate deterministic scale based on artwork ID
-            random.seed(artwork['id'])
-            scale = round(random.uniform(0.85, 1.15), 2)
+            scale = 1.0
 
             artworks.append({
                 'id': artwork['id'],
@@ -205,9 +218,7 @@ def get_all_gallery_artworks(images_dir):
                 file_stat = os.stat(image_path)
                 created_at = datetime.fromtimestamp(file_stat.st_mtime)
 
-                # Generate deterministic scale based on filename
-                random.seed(hash(cache_info['filename']))
-                scale = round(random.uniform(0.85, 1.15), 2)
+                scale = 1.0
 
                 artworks.append({
                     'id': None,
