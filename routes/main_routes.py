@@ -3,9 +3,10 @@
 from flask import Blueprint, render_template, request, jsonify, send_file, current_app, session
 from services.art_service import generate_art_from_github, get_all_gallery_artworks
 from services.git_service import validate_github_url
-from models.artwork import ArtworkLike
+from models.artwork import ArtworkLike, Artwork
 import os
 import hashlib
+import base64
 
 bp = Blueprint('main', __name__)
 
@@ -136,5 +137,38 @@ def check_has_liked(artwork_id):
     try:
         has_liked = ArtworkLike.has_liked(artwork_id, user_id)
         return jsonify({'has_liked': has_liked})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@bp.route('/api/versions/<repo_url_encoded>', methods=['GET'])
+def get_versions(repo_url_encoded):
+    """Get all versions for a specific repository."""
+    try:
+        # Decode the repo URL (it's base64 encoded in the URL)
+        repo_url = base64.urlsafe_b64decode(repo_url_encoded).decode('utf-8')
+
+        versions = Artwork.get_versions_by_repo(repo_url)
+
+        if not versions:
+            return jsonify({'error': 'No versions found for this repository'}), 404
+
+        version_list = [
+            {
+                'id': v['id'],
+                'commit_hash': v['commit_hash'],
+                'image_url': v['image_path'],
+                'image_filename': v['image_filename'],
+                'created_at_formatted': v['created_at'].strftime('%b %d, %Y at %I:%M %p'),
+                'like_count': v['like_count']
+            }
+            for v in versions
+        ]
+
+        return jsonify({
+            'success': True,
+            'versions': version_list,
+            'total_versions': len(version_list)
+        })
     except Exception as e:
         return jsonify({'error': str(e)}), 500

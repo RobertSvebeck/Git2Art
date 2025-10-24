@@ -173,30 +173,60 @@ def generate_art_from_github(github_url, temp_dir, images_dir, force=False):
 
 def get_all_gallery_artworks(images_dir):
     """
-    Load all generated artworks from database (with filesystem fallback).
+    Load all generated artworks grouped by repository (one entry per repo with version history).
 
     Returns:
-        list: List of artwork dicts with id, repo_name, image_url, commit_hash, created_at, like_count, scale
+        list: List of artwork dicts with id, repo_name, image_url, commit_hash, created_at,
+              like_count, scale, and versions list
     """
     artworks = []
+    repos_seen = set()
 
     # Try to fetch from database first
     try:
-        db_artworks = Artwork.get_all(order_by='created_at', order_dir='DESC')
-        for artwork in db_artworks:
-            scale = 1.0
+        unique_repos = Artwork.get_unique_repos()
+        for repo_info in unique_repos:
+            repo_url = repo_info['repo_url']
+            repo_name = repo_info['repo_name']
+            version_count = repo_info['version_count']
 
+            # Get the latest version for display
+            latest = Artwork.get_latest_by_repo(repo_url)
+            if not latest:
+                continue
+
+            # Get all versions for this repo
+            versions = Artwork.get_versions_by_repo(repo_url)
+            version_list = [
+                {
+                    'id': v['id'],
+                    'commit_hash': v['commit_hash'],
+                    'image_url': v['image_path'],
+                    'image_filename': v['image_filename'],
+                    'created_at': v['created_at'],
+                    'created_at_formatted': v['created_at'].strftime('%b %d, %Y at %I:%M %p'),
+                    'like_count': v['like_count']
+                }
+                for v in versions
+            ]
+
+            scale = 1.0
             artworks.append({
-                'id': artwork['id'],
-                'repo_name': artwork['repo_name'],
-                'repo_url': artwork['repo_url'],
-                'image_url': artwork['image_path'],
-                'commit_hash': artwork['commit_hash'],
-                'created_at': artwork['created_at'],
-                'created_at_formatted': artwork['created_at'].strftime('%b %d, %Y at %I:%M %p'),
-                'like_count': artwork['like_count'],
-                'scale': scale
+                'id': latest['id'],
+                'repo_name': repo_name,
+                'repo_url': repo_url,
+                'image_url': latest['image_path'],
+                'image_filename': latest['image_filename'],
+                'commit_hash': latest['commit_hash'],
+                'created_at': latest['created_at'],
+                'created_at_formatted': latest['created_at'].strftime('%b %d, %Y at %I:%M %p'),
+                'like_count': latest['like_count'],
+                'scale': scale,
+                'version_count': version_count,
+                'versions': version_list
             })
+            repos_seen.add(repo_url)
+
         return artworks
     except Exception as e:
         print(f"Warning: Database fetch failed, falling back to filesystem: {e}")
@@ -225,11 +255,14 @@ def get_all_gallery_artworks(images_dir):
                     'repo_name': cache_info['repo_name'],
                     'repo_url': None,
                     'image_url': f'/static/generated/{cache_info["filename"]}',
+                    'image_filename': cache_info['filename'],
                     'commit_hash': cache_info['commit_hash'],
                     'created_at': created_at,
                     'created_at_formatted': created_at.strftime('%b %d, %Y at %I:%M %p'),
                     'like_count': 0,
-                    'scale': scale
+                    'scale': scale,
+                    'version_count': 1,
+                    'versions': []
                 })
 
         except (json.JSONDecodeError, KeyError, OSError):

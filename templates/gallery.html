@@ -22,12 +22,17 @@
                 <!-- Hidden container for cards (will be distributed by JS) -->
                 <div id="cards-source" style="display: none;">
                     {% for artwork in artworks %}
-                    <div class="gallery-card" style="--card-scale: {{ artwork.scale }}; transform: scale({{ artwork.scale }});">
+                    <div class="gallery-card" style="--card-scale: {{ artwork.scale }}; transform: scale({{ artwork.scale }});" data-repo-url="{{ artwork.repo_url }}">
                         <div class="card-frame">
                             <div class="card-passepartout">
                                 <div class="card-image">
                                     <img src="{{ artwork.image_url }}" alt="Art for {{ artwork.repo_name }}">
                                 </div>
+                                {% if artwork.version_count > 1 %}
+                                <div class="version-indicator">
+                                    <span class="version-badge">{{ artwork.version_count }} versions</span>
+                                </div>
+                                {% endif %}
                             </div>
                         </div>
                         <div class="card-content">
@@ -47,6 +52,11 @@
                                     <span class="like-count">{{ artwork.like_count }}</span>
                                 </button>
                                 <a href="{{ url_for('main.artwork_view', artwork_id=artwork.id) }}" class="btn btn-view">View Full Size</a>
+                                {% if artwork.version_count > 1 %}
+                                <button class="btn btn-versions" onclick="openVersionHistory('{{ artwork.repo_url }}', '{{ artwork.repo_name }}')">
+                                    <span class="version-icon">📖</span> Versions
+                                </button>
+                                {% endif %}
                                 {% endif %}
                             </div>
                         </div>
@@ -73,7 +83,139 @@
         </footer>
     </div>
 
+    <!-- Version History Modal -->
+    <div id="version-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-repo-name"></h2>
+                <button class="modal-close" onclick="closeVersionHistory()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="version-viewer">
+                    <div class="version-image-container">
+                        <img id="version-image" src="" alt="Repository artwork version">
+                    </div>
+                    <div class="version-info">
+                        <p id="version-commit" class="version-commit"></p>
+                        <p id="version-date" class="version-date"></p>
+                        <p id="version-likes" class="version-likes"></p>
+                    </div>
+                </div>
+                <div class="version-timeline">
+                    <div class="timeline-header">
+                        <span id="timeline-counter">Version 1 of 1</span>
+                    </div>
+                    <div class="timeline-controls">
+                        <button id="prev-version-btn" class="btn btn-timeline" onclick="previousVersion()">← Previous</button>
+                        <div id="timeline-dots" class="timeline-dots"></div>
+                        <button id="next-version-btn" class="btn btn-timeline" onclick="nextVersion()">Next →</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
+        // Global state for version history modal
+        let versionState = {
+            currentIndex: 0,
+            versions: [],
+            repoUrl: null,
+            repoName: null
+        };
+
+        // Version history functions
+        function encodeRepoUrl(url) {
+            return btoa(unescape(encodeURIComponent(url)));
+        }
+
+        async function openVersionHistory(repoUrl, repoName) {
+            try {
+                const encodedUrl = encodeRepoUrl(repoUrl);
+                const response = await fetch(`/api/versions/${encodedUrl}`);
+                const data = await response.json();
+
+                if (data.success && data.versions.length > 0) {
+                    versionState.versions = data.versions;
+                    versionState.currentIndex = data.versions.length - 1; // Start with latest
+                    versionState.repoUrl = repoUrl;
+                    versionState.repoName = repoName;
+
+                    document.getElementById('modal-repo-name').textContent = repoName;
+                    document.getElementById('version-modal').style.display = 'block';
+
+                    renderVersion(versionState.currentIndex);
+                    renderTimeline();
+                } else {
+                    alert('Could not load versions for this repository');
+                }
+            } catch (error) {
+                console.error('Error loading versions:', error);
+                alert('Error loading version history');
+            }
+        }
+
+        function closeVersionHistory() {
+            document.getElementById('version-modal').style.display = 'none';
+        }
+
+        function renderVersion(index) {
+            if (index < 0 || index >= versionState.versions.length) return;
+
+            versionState.currentIndex = index;
+            const version = versionState.versions[index];
+
+            document.getElementById('version-image').src = version.image_url;
+            document.getElementById('version-commit').innerHTML = `<strong>Commit:</strong> ${version.commit_hash}`;
+            document.getElementById('version-date').innerHTML = `<strong>Date:</strong> ${version.created_at_formatted}`;
+            document.getElementById('version-likes').innerHTML = `<strong>Likes:</strong> ${version.like_count}`;
+            document.getElementById('timeline-counter').textContent = `Version ${index + 1} of ${versionState.versions.length}`;
+
+            // Update button states
+            document.getElementById('prev-version-btn').disabled = index === 0;
+            document.getElementById('next-version-btn').disabled = index === versionState.versions.length - 1;
+
+            // Highlight current dot
+            document.querySelectorAll('.timeline-dots .dot').forEach((dot, i) => {
+                dot.classList.toggle('active', i === index);
+            });
+        }
+
+        function renderTimeline() {
+            const dotsContainer = document.getElementById('timeline-dots');
+            dotsContainer.innerHTML = '';
+
+            versionState.versions.forEach((_, index) => {
+                const dot = document.createElement('button');
+                dot.className = 'dot';
+                dot.onclick = () => renderVersion(index);
+                if (index === versionState.currentIndex) {
+                    dot.classList.add('active');
+                }
+                dotsContainer.appendChild(dot);
+            });
+        }
+
+        function previousVersion() {
+            if (versionState.currentIndex > 0) {
+                renderVersion(versionState.currentIndex - 1);
+            }
+        }
+
+        function nextVersion() {
+            if (versionState.currentIndex < versionState.versions.length - 1) {
+                renderVersion(versionState.currentIndex + 1);
+            }
+        }
+
+        // Close modal on background click
+        document.addEventListener('click', function(event) {
+            const modal = document.getElementById('version-modal');
+            if (event.target === modal) {
+                closeVersionHistory();
+            }
+        });
+
         // Masonry layout - distribute cards into independent columns
         function distributeMasonryCards() {
             const source = document.getElementById('cards-source');

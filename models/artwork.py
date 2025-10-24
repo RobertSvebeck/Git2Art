@@ -76,6 +76,41 @@ class Artwork:
                 WHERE id = %s
             """, (artwork_id,))
 
+    @staticmethod
+    def get_versions_by_repo(repo_url):
+        """Get all versions of artwork for a repository, ordered by creation date."""
+        with get_db_cursor(commit=False) as cursor:
+            cursor.execute("""
+                SELECT * FROM artworks
+                WHERE repo_url = %s
+                ORDER BY created_at ASC
+            """, (repo_url,))
+            return cursor.fetchall()
+
+    @staticmethod
+    def get_latest_by_repo(repo_url):
+        """Get the latest version of artwork for a repository."""
+        with get_db_cursor(commit=False) as cursor:
+            cursor.execute("""
+                SELECT * FROM artworks
+                WHERE repo_url = %s
+                ORDER BY created_at DESC
+                LIMIT 1
+            """, (repo_url,))
+            return cursor.fetchone()
+
+    @staticmethod
+    def get_unique_repos():
+        """Get all unique repositories with their latest version count."""
+        with get_db_cursor(commit=False) as cursor:
+            cursor.execute("""
+                SELECT repo_url, repo_name, COUNT(*) as version_count
+                FROM artworks
+                GROUP BY repo_url, repo_name
+                ORDER BY MAX(created_at) DESC
+            """)
+            return cursor.fetchall()
+
 
 class ArtworkLike:
     """Model for artwork like operations."""
