@@ -5,6 +5,7 @@ import json
 import subprocess
 import glob
 import random
+import sys
 from datetime import datetime
 from services.git_service import clone_or_update_repo, extract_repo_name, cleanup_repo
 from utils.watermark import add_watermark
@@ -117,7 +118,7 @@ def generate_art_from_github(github_url, temp_dir, images_dir, force=False):
         try:
             result = subprocess.run(
                 [
-                    'python3', git2art_script,
+                    sys.executable, git2art_script,
                     '--repo', repo_path,
                     '--output', output_path,
                     '--size', '1600',
