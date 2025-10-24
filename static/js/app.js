@@ -14,6 +14,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const githubUrl = document.getElementById('githubUrl').value.trim();
         const forceRegenerate = document.getElementById('forceRegenerate').checked;
 
+        // Clear the input box as soon as processing starts
+        document.getElementById('githubUrl').value = '';
+
         showStatus('Generating artwork... This may take a minute.', 'info');
         generateBtn.disabled = true;
         generateBtn.innerHTML = '<span class="spinner"></span>Generating...';
