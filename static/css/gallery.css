@@ -147,8 +147,16 @@ main {
 .created-date {
     font-size: 0.75em;
     color: var(--mid-grey);
-    margin: 2px 0 12px 0;
+    margin: 2px 0 8px 0;
     font-weight: 300;
+}
+
+.version-info-text {
+    font-size: 0.75em;
+    color: var(--mid-grey);
+    margin: 0 0 12px 0;
+    font-weight: 300;
+    font-style: italic;
 }
 
 .card-actions {
@@ -256,25 +264,6 @@ main {
     border-color: var(--accent-sage);
 }
 
-/* Version badge on card */
-.version-indicator {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    z-index: 10;
-}
-
-.version-badge {
-    background: var(--soft-black);
-    color: var(--pure-white);
-    padding: 4px 10px;
-    font-size: 0.7em;
-    font-weight: 500;
-    border-radius: 3px;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-}
 
 .btn-versions {
     background: transparent;

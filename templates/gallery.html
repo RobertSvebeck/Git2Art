@@ -28,11 +28,6 @@
                                 <div class="card-image">
                                     <img src="{{ artwork.image_url }}" alt="Art for {{ artwork.repo_name }}">
                                 </div>
-                                {% if artwork.version_count > 1 %}
-                                <div class="version-indicator">
-                                    <span class="version-badge">{{ artwork.version_count }} versions</span>
-                                </div>
-                                {% endif %}
                             </div>
                         </div>
                         <div class="card-content">
@@ -45,6 +40,9 @@
                             </h3>
                             <p class="commit-hash">Commit: {{ artwork.commit_hash[:8] }}</p>
                             <p class="created-date">{{ artwork.created_at_formatted }}</p>
+                            {% if artwork.version_count > 1 %}
+                            <p class="version-info-text">{{ artwork.version_count }} versions available</p>
+                            {% endif %}
                             <div class="card-actions">
                                 {% if artwork.id %}
                                 <button class="btn btn-like" data-artwork-id="{{ artwork.id }}" onclick="toggleLike({{ artwork.id }})">
