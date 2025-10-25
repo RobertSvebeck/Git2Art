@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="{% block meta_description %}Transform your GitHub repositories into beautiful, unique abstract art. Each repository generates deterministic artwork based on code metrics, file structure, and commit history.{% endblock %}">
+    <meta name="keywords" content="{% block meta_keywords %}github, art, generative art, code visualization, repository visualization, abstract art, git, open source{% endblock %}">
+    <meta name="author" content="Robert Svebeck">
+    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+    <meta name="language" content="English">
+    <meta name="revisit-after" content="7 days">
+
+    <!-- Open Graph Meta Tags (Social Sharing) -->
+    <meta property="og:title" content="{% block og_title %}Git2Art - Transform Code into Art{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Transform your GitHub repositories into beautiful abstract art{% endblock %}">
+    <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+    <meta property="og:url" content="https://git2art.com{% block og_url %}{% endblock %}">
+    <meta property="og:image" content="https://git2art.com{% block og_image %}/static/images/og-image.png{% endblock %}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:site_name" content="Git2Art">
+
+    <!-- Twitter Card Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{% block twitter_title %}Git2Art - Transform Code into Art{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}Transform your GitHub repositories into beautiful abstract art{% endblock %}">
+    <meta name="twitter:image" content="https://git2art.com{% block twitter_image %}/static/images/og-image.png{% endblock %}">
+    <meta name="twitter:creator" content="@RobertSvebeck">
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://git2art.com{% block canonical_url %}{% endblock %}">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/apple-touch-icon.png') }}">
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block extra_css %}{% endblock %}
+
+    <!-- Structured Data (Schema.org) -->
+    {% block structured_data %}
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Git2Art",
+        "description": "Transform GitHub repositories into beautiful abstract art",
+        "url": "https://git2art.com",
+        "image": "https://git2art.com/static/images/og-image.png",
+        "applicationCategory": "Utilities",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+        },
+        "author": {
+            "@type": "Person",
+            "name": "Robert Svebeck",
+            "url": "https://github.com/RobertSvebeck"
+        }
+    }
+    </script>
+    {% endblock %}
+
+    <title>{% block title %}Git2Art - Transform Code into Art{% endblock %}</title>
+</head>
+<body>
+    {% block content %}{% endblock %}
+
+    <!-- Footer with Legal Links -->
+    <script>
+        // Add footer legal links dynamically
+        document.addEventListener('DOMContentLoaded', function() {
+            const footers = document.querySelectorAll('footer');
+            footers.forEach(footer => {
+                // Only add if not already present
+                if (!footer.querySelector('.footer-links')) {
+                    const linksDiv = document.createElement('div');
+                    linksDiv.className = 'footer-links';
+                    linksDiv.innerHTML = `
+                        <a href="/privacy">Privacy Policy</a>
+                        <a href="/terms">Terms of Service</a>
+                    `;
+                    footer.appendChild(linksDiv);
+                }
+            });
+        });
+    </script>
+
+    <!-- Google Analytics (Add your Google Analytics ID) -->
+    <!-- Uncomment and add your Google Analytics tracking ID -->
+    <!--
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-XXXXXXXXXX');
+    </script>
+    -->
+
+    <!-- Google Search Console verification (replace with your actual verification code) -->
+    <!-- <meta name="google-site-verification" content="YOUR_VERIFICATION_CODE"> -->
+</body>
+</html>

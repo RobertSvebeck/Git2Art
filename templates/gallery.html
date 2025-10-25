@@ -1,19 +1,45 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gallery - Git2Art</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+{% extends "base.html" %}
+
+{% block title %}Git2Art Gallery - Browse Generated Repository Art{% endblock %}
+
+{% block meta_description %}Explore the Git2Art gallery showcasing beautiful abstract artwork generated from GitHub repositories. See how different projects are transformed into unique visual art.{% endblock %}
+
+{% block meta_keywords %}git2art gallery, repository art collection, generative art examples, code visualization showcase{% endblock %}
+
+{% block og_title %}Git2Art Gallery - Repository Art Collection{% endblock %}
+
+{% block og_description %}Browse stunning artwork generated from open source GitHub repositories.{% endblock %}
+
+{% block og_url %}/gallery{% endblock %}
+
+{% block twitter_title %}Git2Art Gallery - See Beautiful Code Art{% endblock %}
+
+{% block canonical_url %}/gallery{% endblock %}
+
+{% block extra_css %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/gallery.css') }}">
-</head>
-<body>
-    <div class="container">
+{% endblock %}
+
+{% block structured_data %}
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        "name": "Git2Art Gallery",
+        "description": "Gallery of artwork generated from GitHub repositories",
+        "url": "https://git2art.com/gallery"
+    }
+    </script>
+{% endblock %}
+
+{% block content %}
+<div class="container">
         <header>
             <h1>Git2Art Gallery</h1>
             <p class="tagline">Browse all generated artworks</p>
             <nav class="header-nav">
-                <a href="{{ url_for('main.index') }}" class="nav-link">← Generate New Art</a>
+                <a href="{{ url_for('main.index') }}" class="nav-link">Generate Art</a>
+                <a href="{{ url_for('main.about') }}" class="nav-link">About</a>
             </nav>
         </header>
 
@@ -341,5 +367,5 @@
             }
         }
     </script>
-</body>
-</html>
+</div>
+{% endblock %}

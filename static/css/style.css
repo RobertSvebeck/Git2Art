@@ -425,3 +425,34 @@ footer a:hover {
         padding: 15px;
     }
 }
+
+/* Footer Legal Links */
+footer .footer-links {
+    margin: 1rem 0 0 0;
+    padding-top: 1rem;
+    border-top: 1px solid var(--warm-grey);
+}
+
+footer .footer-links a {
+    display: inline-block;
+    margin: 0 1rem;
+    font-size: 0.75em;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+footer .footer-links a:last-child {
+    margin-right: 0;
+}
+
+@media (max-width: 480px) {
+    footer .footer-links {
+        display: flex;
+        flex-direction: column;
+    }
+
+    footer .footer-links a {
+        display: block;
+        margin: 0.5rem 0;
+    }
+}

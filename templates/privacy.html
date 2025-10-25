@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}Privacy Policy - Git2Art{% endblock %}
+
+{% block meta_description %}Git2Art Privacy Policy - Learn how we collect, use, and protect your data.{% endblock %}
+
+{% block og_title %}Privacy Policy - Git2Art{% endblock %}
+
+{% block canonical_url %}/privacy{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/legal.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <header>
+        <h1>Privacy Policy</h1>
+        <p class="tagline">Your privacy matters to us</p>
+    </header>
+
+    <main class="legal-content">
+        <div class="legal-body">
+            <p class="last-updated">Last updated: October 25, 2025</p>
+
+            <section>
+                <h2>1. Introduction</h2>
+                <p>Git2Art ("we," "us," "our," or "Company") operates the https://git2art.com website and service. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website and use our service.</p>
+            </section>
+
+            <section>
+                <h2>2. Information We Collect</h2>
+                <h3>2.1 Information You Provide</h3>
+                <ul>
+                    <li><strong>GitHub URLs:</strong> When you request artwork generation, you provide us with GitHub repository URLs. We use these only to generate your artwork and do not store them permanently.</li>
+                    <li><strong>Session Data:</strong> We use cookies to track your session and remember if you've liked artworks in our gallery.</li>
+                </ul>
+
+                <h3>2.2 Automatically Collected Information</h3>
+                <ul>
+                    <li><strong>Log Data:</strong> Our servers automatically record information about your access to the website, including IP address, browser type, pages visited, and timestamps.</li>
+                    <li><strong>Analytics Data:</strong> We use Google Analytics to understand how visitors use our site and to improve our service.</li>
+                    <li><strong>Device Information:</strong> We may collect information about your device, including device type, operating system, and unique device identifiers.</li>
+                </ul>
+
+                <h3>2.3 Information from Third Parties</h3>
+                <p>We may receive limited public information from GitHub's API when analyzing repository data for artwork generation (repository metadata only, never private data).</p>
+            </section>
+
+            <section>
+                <h2>3. How We Use Your Information</h2>
+                <p>We use the information we collect for the following purposes:</p>
+                <ul>
+                    <li>Generate artwork from GitHub repositories</li>
+                    <li>Improve and optimize the Git2Art service</li>
+                    <li>Analyze website usage trends via Google Analytics</li>
+                    <li>Display and store generated artwork in our gallery</li>
+                    <li>Prevent fraud and abuse</li>
+                    <li>Comply with legal obligations</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>4. Data Storage and Retention</h2>
+                <ul>
+                    <li><strong>Artwork Images:</strong> Generated artwork images are stored on our servers and displayed in our gallery (with attribution to the original repository).</li>
+                    <li><strong>Repository URLs:</strong> We store repository URLs associated with generated artwork for gallery display and version tracking.</li>
+                    <li><strong>Session Cookies:</strong> Session data is retained for up to 12 months.</li>
+                    <li><strong>Analytics Data:</strong> Google Analytics retains data for 14 months by default.</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>5. Data Security</h2>
+                <p>Git2Art uses industry-standard security measures to protect your data, including:</p>
+                <ul>
+                    <li>HTTPS encryption for all data transmission</li>
+                    <li>Secure server infrastructure</li>
+                    <li>Regular security monitoring</li>
+                </ul>
+                <p>However, no security system is impenetrable. We cannot guarantee absolute security of your information.</p>
+            </section>
+
+            <section>
+                <h2>6. Third-Party Services</h2>
+                <ul>
+                    <li><strong>Google Analytics:</strong> We use Google Analytics to track website usage. Google Analytics has its own privacy policy which you can review at <a href="https://policies.google.com/privacy" target="_blank">https://policies.google.com/privacy</a></li>
+                    <li><strong>GitHub API:</strong> We access public GitHub repository data through GitHub's API. Your use of Git2Art may result in API calls to GitHub's servers.</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>7. Cookies</h2>
+                <p>Git2Art uses cookies for:</p>
+                <ul>
+                    <li>Session management and user identification</li>
+                    <li>Remembering your like preferences in the gallery</li>
+                    <li>Analytics tracking (Google Analytics)</li>
+                </ul>
+                <p>You can control cookies through your browser settings. Disabling cookies may affect some functionality of our service.</p>
+            </section>
+
+            <section>
+                <h2>8. Your Privacy Rights</h2>
+                <p>Depending on your location, you may have the following rights:</p>
+                <ul>
+                    <li><strong>Access:</strong> Request access to the personal data we hold about you</li>
+                    <li><strong>Deletion:</strong> Request deletion of your data (subject to legal requirements)</li>
+                    <li><strong>Portability:</strong> Receive your data in a structured, portable format</li>
+                    <li><strong>Opt-Out:</strong> Opt out of analytics tracking and marketing communications</li>
+                </ul>
+                <p>To exercise these rights, please contact us at: <a href="mailto:privacy@git2art.com">privacy@git2art.com</a></p>
+            </section>
+
+            <section>
+                <h2>9. Children's Privacy</h2>
+                <p>Git2Art is not intended for users under 13 years of age. We do not knowingly collect information from children under 13. If we become aware that we have collected data from a child under 13, we will take steps to delete such information immediately.</p>
+            </section>
+
+            <section>
+                <h2>10. Changes to This Privacy Policy</h2>
+                <p>We may update this Privacy Policy from time to time. When we make changes, we will update the "Last updated" date at the top of this policy. Your continued use of Git2Art after changes become effective constitutes your acceptance of the updated Privacy Policy.</p>
+            </section>
+
+            <section>
+                <h2>11. Contact Us</h2>
+                <p>If you have questions about this Privacy Policy or our privacy practices, please contact us at:</p>
+                <div class="contact-info">
+                    <p><strong>Email:</strong> <a href="mailto:privacy@git2art.com">privacy@git2art.com</a></p>
+                    <p><strong>GitHub:</strong> <a href="https://github.com/RobertSvebeck/Git2Art" target="_blank">https://github.com/RobertSvebeck/Git2Art</a></p>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer>
+        <p>Created with ❤️ using Git2Art | <a href="https://github.com/RobertSvebeck/Git2Art" target="_blank">View on GitHub</a></p>
+    </footer>
+</div>
+{% endblock %}

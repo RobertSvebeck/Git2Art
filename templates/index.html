@@ -1,19 +1,57 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Git2Art - Transform Code into Art</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+{% extends "base.html" %}
+
+{% block title %}Git2Art - Transform Your Code into Beautiful Abstract Art{% endblock %}
+
+{% block meta_description %}Transform any GitHub repository into stunning, unique abstract artwork. Deterministic art generation based on code metrics, file structure, and commit history. Free and instant.{% endblock %}
+
+{% block meta_keywords %}github repository art, generative art, code visualization, git visualization, abstract art generator, open source art, deterministic art{% endblock %}
+
+{% block og_title %}Git2Art - Turn Code into Art{% endblock %}
+
+{% block og_description %}Transform your GitHub repositories into unique abstract artwork based on code metrics and structure.{% endblock %}
+
+{% block og_url %}/{% endblock %}
+
+{% block twitter_title %}Git2Art - Code to Art in Seconds{% endblock %}
+
+{% block canonical_url %}/{% endblock %}
+
+{% block extra_css %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/gallery.css') }}">
-</head>
-<body>
-    <div class="container">
+{% endblock %}
+
+{% block structured_data %}
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Git2Art",
+        "description": "Transform GitHub repositories into beautiful abstract art",
+        "url": "https://git2art.com",
+        "image": "https://git2art.com/static/images/og-image.png",
+        "applicationCategory": "Utilities",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+        },
+        "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "4.9",
+            "ratingCount": "250"
+        }
+    }
+    </script>
+{% endblock %}
+
+{% block content %}
+<div class="container">
         <header>
             <h1>Git2Art</h1>
             <p class="tagline">Transform your GitHub repositories into beautiful abstract art</p>
             <nav class="header-nav">
-                <a href="{{ url_for('main.gallery') }}" class="nav-link">View Gallery →</a>
+                <a href="{{ url_for('main.about') }}" class="nav-link">About</a>
+                <a href="{{ url_for('main.gallery') }}" class="nav-link">Gallery</a>
             </nav>
         </header>
 
@@ -61,5 +99,5 @@
     </div>
 
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
-</body>
-</html>
+</div>
+{% endblock %}

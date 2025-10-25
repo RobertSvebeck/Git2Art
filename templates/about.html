@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block title %}About Git2Art - How It Works{% endblock %}
+
+{% block meta_description %}Learn about Git2Art - how it transforms GitHub repositories into beautiful abstract art using code metrics, file structure, and generative algorithms.{% endblock %}
+
+{% block meta_keywords %}about git2art, generative art algorithm, code visualization technology, abstract art generation{% endblock %}
+
+{% block og_title %}About Git2Art - Transform Code to Art{% endblock %}
+
+{% block og_description %}Discover how Git2Art uses advanced algorithms to create unique abstract artwork from your GitHub repositories.{% endblock %}
+
+{% block og_url %}/about{% endblock %}
+
+{% block twitter_title %}About Git2Art - The Technology Behind Code Art{% endblock %}
+
+{% block canonical_url %}/about{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/about.css') }}">
+{% endblock %}
+
+{% block structured_data %}
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "AboutPage",
+        "name": "About Git2Art",
+        "description": "Learn how Git2Art transforms GitHub repositories into beautiful abstract art"
+    }
+    </script>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+        <header>
+            <h1>Git2Art</h1>
+            <p class="tagline">Transform your GitHub repositories into beautiful abstract art</p>
+            <nav class="header-nav">
+                <a href="{{ url_for('main.index') }}" class="nav-link">Generate Art</a>
+                <a href="{{ url_for('main.gallery') }}" class="nav-link">Gallery</a>
+            </nav>
+        </header>
+
+        <main class="about-content">
+            <section class="about-hero">
+                <h2>About Git2Art</h2>
+                <p>Git2Art transforms your GitHub repositories into unique, beautiful abstract artwork. Every repository generates deterministic art where the visual form reflects the code structure.</p>
+            </section>
+
+            <section class="about-section">
+                <h3>How It Works</h3>
+                <p>Git2Art analyzes your repository's code metrics and creates a visual representation:</p>
+                <ul>
+                    <li><strong>File Types & Structure</strong> - Mapped to shapes, colors, and composition</li>
+                    <li><strong>Code Complexity</strong> - Reflected in visual density and layering</li>
+                    <li><strong>Repository History</strong> - Commit patterns influence the overall design</li>
+                    <li><strong>Language Detection</strong> - Different languages get harmonious color palettes</li>
+                </ul>
+            </section>
+
+            <section class="about-section">
+                <h3>Key Features</h3>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <h4>🎨 Deterministic Art</h4>
+                        <p>Same repository = same artwork. Your code's visual fingerprint never changes.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>📐 Adaptive Layout</h4>
+                        <p>Canvas aspect ratio automatically adjusts based on repository type: portrait for mobile apps, landscape for web, square for backends.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>🎭 Art Theory</h4>
+                        <p>Built on golden ratio, color harmony, and visual hierarchy principles for professional, gallery-worthy results.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>🔄 Incremental Changes</h4>
+                        <p>Small code changes create subtle visual differences. Large refactors result in dramatic transformations.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="about-section">
+                <h3>Color Palettes</h3>
+                <p>Git2Art automatically selects harmonious color schemes based on your repository's primary language:</p>
+                <div class="palettes-list">
+                    <div class="palette-item">
+                        <strong>Python</strong> - Cool blues and teals
+                    </div>
+                    <div class="palette-item">
+                        <strong>JavaScript</strong> - Warm yellows and oranges
+                    </div>
+                    <div class="palette-item">
+                        <strong>Rust</strong> - Deep reds and oranges
+                    </div>
+                    <div class="palette-item">
+                        <strong>Ruby</strong> - Rich reds and magentas
+                    </div>
+                    <div class="palette-item">
+                        <strong>Go</strong> - Cyan and teals
+                    </div>
+                    <div class="palette-item">
+                        <strong>Java</strong> - Oranges and browns
+                    </div>
+                    <div class="palette-item">
+                        <strong>Swift</strong> - Warm oranges
+                    </div>
+                    <div class="palette-item">
+                        <strong>Data</strong> - Natural greens
+                    </div>
+                </div>
+            </section>
+
+            <section class="about-section">
+                <h3>Art Inspiration</h3>
+                <p>Git2Art draws inspiration from:</p>
+                <ul>
+                    <li><strong>Abstract Expressionism</strong> - Bold strokes and expressive color blocking reminiscent of De Kooning and Kandinsky</li>
+                    <li><strong>Generative Art</strong> - Mathematical algorithms creating organic, complex patterns</li>
+                    <li><strong>Data Visualization</strong> - Transforming code metrics into visual form</li>
+                    <li><strong>Golden Ratio & Fibonacci</strong> - Natural proportion and balance in composition</li>
+                </ul>
+            </section>
+
+            <section class="about-section">
+                <h3>Technical Stack</h3>
+                <div class="tech-stack">
+                    <div class="tech-item">
+                        <strong>Backend:</strong> Python, Flask
+                    </div>
+                    <div class="tech-item">
+                        <strong>Database:</strong> MariaDB
+                    </div>
+                    <div class="tech-item">
+                        <strong>Art Generation:</strong> SVG with Bézier curves and gradients
+                    </div>
+                    <div class="tech-item">
+                        <strong>Frontend:</strong> HTML, CSS, JavaScript
+                    </div>
+                </div>
+            </section>
+
+            <section class="about-section">
+                <h3>About the Creator</h3>
+                <p>Git2Art was created as an exploration of transforming code into beautiful visual art. It combines art theory, generative algorithms, and a deep appreciation for the elegance of well-written code.</p>
+            </section>
+
+            <section class="about-section cta-section">
+                <h3>Ready to see your code as art?</h3>
+                <p>Transform any GitHub repository into a unique artwork.</p>
+                <a href="{{ url_for('main.index') }}" class="btn btn-primary">Generate Your Art</a>
+            </section>
+        </main>
+
+        <footer>
+            <p>Created with ❤️ using Git2Art | <a href="https://github.com/RobertSvebeck/Git2Art" target="_blank">View on GitHub</a></p>
+        </footer>
+    </div>
+{% endblock %}

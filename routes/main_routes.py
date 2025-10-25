@@ -1,9 +1,10 @@
 """Main application routes."""
 
-from flask import Blueprint, render_template, request, jsonify, send_file, current_app, session
+from flask import Blueprint, render_template, request, jsonify, send_file, current_app, session, Response
 from services.art_service import generate_art_from_github, get_all_gallery_artworks
 from services.git_service import validate_github_url
 from models.artwork import ArtworkLike, Artwork
+from datetime import datetime
 import os
 import hashlib
 import base64
@@ -15,6 +16,24 @@ bp = Blueprint('main', __name__)
 def index():
     """Render the main page with the art generation form."""
     return render_template('index.html')
+
+
+@bp.route('/about')
+def about():
+    """Render the about page."""
+    return render_template('about.html')
+
+
+@bp.route('/privacy')
+def privacy():
+    """Render the privacy policy page."""
+    return render_template('privacy.html')
+
+
+@bp.route('/terms')
+def terms():
+    """Render the terms of service page."""
+    return render_template('terms.html')
 
 
 @bp.route('/gallery')
@@ -172,3 +191,43 @@ def get_versions(repo_url_encoded):
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+@bp.route('/sitemap.xml', methods=['GET'])
+def sitemap():
+    """Generate sitemap.xml for search engines."""
+    pages = [
+        {
+            'loc': 'https://git2art.com/',
+            'lastmod': datetime.now().strftime('%Y-%m-%d'),
+            'changefreq': 'daily',
+            'priority': '1.0'
+        },
+        {
+            'loc': 'https://git2art.com/about',
+            'lastmod': datetime.now().strftime('%Y-%m-%d'),
+            'changefreq': 'weekly',
+            'priority': '0.8'
+        },
+        {
+            'loc': 'https://git2art.com/gallery',
+            'lastmod': datetime.now().strftime('%Y-%m-%d'),
+            'changefreq': 'daily',
+            'priority': '0.9'
+        }
+    ]
+
+    sitemap_xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
+    sitemap_xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+
+    for page in pages:
+        sitemap_xml += '  <url>\n'
+        sitemap_xml += f'    <loc>{page["loc"]}</loc>\n'
+        sitemap_xml += f'    <lastmod>{page["lastmod"]}</lastmod>\n'
+        sitemap_xml += f'    <changefreq>{page["changefreq"]}</changefreq>\n'
+        sitemap_xml += f'    <priority>{page["priority"]}</priority>\n'
+        sitemap_xml += '  </url>\n'
+
+    sitemap_xml += '</urlset>'
+
+    return Response(sitemap_xml, mimetype='application/xml')
