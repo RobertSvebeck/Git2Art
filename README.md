@@ -117,17 +117,20 @@ The timestamp ensures uniqueness even when generating multiple artworks from rep
    - Depth and texture with subtle blur
    - High-quality PNG output
 
-See [ART_THEORY.md](ART_THEORY.md) for detailed explanation of principles used.
+See [CLAUDE.md](CLAUDE.md) for detailed development journey and technical architecture.
 
 ## Web Application 🌐
 
-Git2Art now includes a Flask web application for easy artwork generation!
+Git2Art includes a full-featured Flask web application for generating and sharing artwork!
 
 ### Quick Start
 
 ```bash
-# Install Flask dependencies
+# Install dependencies
 pip install -r requirements.txt
+
+# Set up environment (copy and customize)
+cp .env.example .env
 
 # Run the web app
 python app.py
@@ -135,20 +138,44 @@ python app.py
 
 Then open http://localhost:5000 in your browser.
 
-### Features
+### Web Features
 
-- ✅ GitHub URL input form with validation
-- ✅ Automatic artwork generation from any public GitHub repository
-- ✅ Smart caching based on commit hash (avoids regeneration)
-- ✅ Watermark with repository URL
-- ✅ Download button for generated artwork
-- ✅ Beautiful, responsive UI
+✅ **Generate Artwork**
+- GitHub URL input with validation
+- Automatic repository analysis and artwork generation
+- Smart caching (avoids regeneration for unchanged repos)
+- Watermark with repository URL
+- Download button for generated artwork
 
-See [FLASK_SETUP.md](FLASK_SETUP.md) for more details.
+✅ **Gallery & Discovery**
+- Browse all generated artworks in a beautiful grid
+- View artwork details and repository information
+- Like/unlike artworks (persistent with database)
+- Sort by creation date or popularity
+- Responsive design for mobile and desktop
 
-## Coming Soon
+✅ **Database Integration**
+- MariaDB backend for persistent storage
+- Like count tracking and user sessions
+- Artwork metadata management
+- Graceful fallback if database unavailable
 
-- Gallery page to browse all generated art
-- Database integration (MariaDB) with like functionality
-- More art styles and algorithms
+✅ **User Experience**
+- Beautiful, modern responsive UI
+- Real-time generation status updates
+- Error handling and user feedback
+- Mobile-friendly design
+
+## For Developers
+
+See [DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md) for complete documentation.
+
+Research and development docs are in the [/research](research/) folder.
+
+## Future Possibilities
+
 - Animation showing repository evolution over time
+- More art style variations and presets
+- SVG and high-resolution export options
+- Interactive parameter tweaking
+- User accounts and authentication
