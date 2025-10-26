@@ -18,6 +18,8 @@ ENV/
 *.jpg
 *.jpeg
 !example_art.png
+!static/images/favicon.png
+!static/images/og-image.png
 
 # Flask
 static/generated/
