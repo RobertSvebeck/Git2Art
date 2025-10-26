@@ -32,57 +32,61 @@ pip install -r requirements.txt
 
 ## Usage
 
-### Basic Usage
+### Option 1: Python CLI (Simple & Fast) ⚡
 
-Generate art from current repository (auto-named file with 4:3 aspect ratio):
+Just want to generate art directly? Use the Python script!
+
+#### Basic Usage
+
+Generate art from current repository (auto-named file):
 ```bash
 python git2art.py
 ```
 
-### Advanced Options
+#### Common Options
 
-Generate art with specific aspect ratio:
 ```bash
-# Landscape 16:10 (great for wallpapers)
-python git2art.py --aspect 16:10 --size 1920
-
-# Portrait 2:3
-python git2art.py --aspect portrait_2:3 --size 1200
-
-# Wide 16:9 (HD format)
+# Specific aspect ratio (auto-detects by default)
 python git2art.py --aspect 16:9 --size 1920
+
+# Portrait for mobile apps
+python git2art.py --aspect portrait_3:4
+
+# Landscape for web projects
+python git2art.py --aspect 16:9
+
+# Square for backend/libraries (default)
+python git2art.py --aspect square
 ```
 
-Available aspect ratios: `square`, `4:3`, `16:10`, `16:9`, `3:2`, `5:4`, `portrait_3:4`, `portrait_2:3`
+Available aspect ratios: `auto` (recommended), `square`, `4:3`, `16:10`, `16:9`, `3:2`, `5:4`, `portrait_3:4`, `portrait_2:3`
 
-Adjust contrast level:
+#### Adjust Contrast & Size
+
 ```bash
 # Low contrast (subtle, muted tones)
 python git2art.py --contrast low
 
-# Medium contrast (balanced)
-python git2art.py --contrast medium
-
 # High contrast (dramatic, default)
 python git2art.py --contrast high
+
+# Higher resolution (default: 1200px)
+python git2art.py --size 2400
 ```
 
-Generate art with custom filename:
+#### Generate from Specific Repository
+
 ```bash
-python git2art.py --output my_artwork.png
+python git2art.py --repo /path/to/any/git/repo
 ```
 
-Generate from a specific repository:
+#### Combine Options
+
 ```bash
-python git2art.py --repo /path/to/repo --size 2400
+python git2art.py --repo /path/to/repo --aspect 16:9 --size 1920 --contrast medium --output my_art.png
 ```
 
-Combine multiple options:
-```bash
-python git2art.py --repo /path/to/repo --aspect 16:10 --size 1920 --contrast medium --output my_art.png
-```
-
-### Smart Filenames
+#### Smart Filenames
 
 When you don't specify `--output`, Git2Art automatically generates descriptive filenames:
 ```
@@ -91,39 +95,11 @@ Git2Art_1600x1200_20251019_143022_aa7f55a.png
     repo name  size    timestamp  commit hash
 ```
 
-The timestamp ensures uniqueness even when generating multiple artworks from repos with the same name.
+### Option 2: Flask Web Application (Full Featured) 🌐
 
-## How It Works
+Want a complete web interface with gallery and sharing? Use Flask!
 
-1. **Analyzes** your repository:
-   - Scans all tracked files
-   - Counts lines of code
-   - Hashes file content for determinism
-   - Maps file types and relationships
-
-2. **Applies Art Theory**:
-   - **Advanced Color Theory**: Complementary, triadic, split-complementary, and tetradic schemes
-   - **Adjustable Contrast**: Low (1.15x/0.7x), Medium (1.25x/0.55x), or High (1.4x/0.4x) brightness ratios
-   - **Sophisticated Mixing**: Each element blends 2-4 colors with deterministic weighted ratios
-   - **Color Variations**: Analogous shifts (subtle) or complementary accents (bold) per element
-   - **Composition**: Places elements using golden ratio and rule of thirds
-   - **Visual Hierarchy**: Sizes elements by code importance
-   - **Bold Strokes**: IDEO-inspired thick strokes up to 30% of canvas width
-   - **Flow**: Connects elements with Cornu curves and organic Bézier paths
-
-3. **Generates Beautiful Art**:
-   - Multi-center gradient background
-   - Shape variation by file type (circles, hexagons, triangles)
-   - Depth and texture with subtle blur
-   - High-quality PNG output
-
-See [CLAUDE.md](CLAUDE.md) for detailed development journey and technical architecture.
-
-## Web Application 🌐
-
-Git2Art includes a full-featured Flask web application for generating and sharing artwork!
-
-### Quick Start
+#### Quick Start
 
 ```bash
 # Install dependencies
@@ -138,7 +114,7 @@ python app.py
 
 Then open http://localhost:5000 in your browser.
 
-### Web Features
+#### Web Features
 
 ✅ **Generate Artwork**
 - GitHub URL input with validation
@@ -165,6 +141,32 @@ Then open http://localhost:5000 in your browser.
 - Real-time generation status updates
 - Error handling and user feedback
 - Mobile-friendly design
+
+## How It Works
+
+1. **Analyzes** your repository:
+   - Scans all tracked files
+   - Counts lines of code
+   - Hashes file content for determinism
+   - Maps file types and relationships
+
+2. **Applies Art Theory**:
+   - **Advanced Color Theory**: Complementary, triadic, split-complementary, and tetradic schemes
+   - **Adjustable Contrast**: Low (1.15x/0.7x), Medium (1.25x/0.55x), or High (1.4x/0.4x) brightness ratios
+   - **Sophisticated Mixing**: Each element blends 2-4 colors with deterministic weighted ratios
+   - **Color Variations**: Analogous shifts (subtle) or complementary accents (bold) per element
+   - **Composition**: Places elements using golden ratio and rule of thirds
+   - **Visual Hierarchy**: Sizes elements by code importance
+   - **Bold Strokes**: IDEO-inspired thick strokes up to 30% of canvas width
+   - **Flow**: Connects elements with Cornu curves and organic Bézier paths
+
+3. **Generates Beautiful Art**:
+   - Multi-center gradient background
+   - Shape variation by file type (circles, hexagons, triangles)
+   - Depth and texture with subtle blur
+   - High-quality PNG output
+
+See [CLAUDE.md](CLAUDE.md) for detailed development journey and technical architecture.
 
 ## For Developers
 
