@@ -116,6 +116,13 @@ class RepositoryPalette:
             'bg_light': (255, 250, 245),
             'bg_dark': (92, 53, 48)
         },
+        # HTML/CSS - Fresh greens and blues (like web design)
+        'frontend': {
+            'base': [(46, 204, 113), (52, 152, 219), (155, 89, 182)],  # Green, Blue, Purple
+            'accents': [(236, 240, 241), (44, 62, 80)],  # Light gray, Dark blue
+            'bg_light': (245, 252, 247),
+            'bg_dark': (44, 62, 80)
+        },
         # Documentation/Markdown - Elegant grays
         'documentation': {
             'base': [(120, 135, 145), (178, 190, 195), (149, 165, 166)],  # Slate, Silver, Gray
@@ -134,14 +141,15 @@ class RepositoryPalette:
 
         # Count lines per language for accurate detection
         py_lines = file_types.get('.py', 0)
-        js_lines = sum(file_types.get(ext, 0) for ext in ['.js', '.jsx', '.ts', '.tsx', '.vue'])
+        js_lines = sum(file_types.get(ext, 0) for ext in ['.js', '.jsx', '.ts', '.tsx', '.vue', '.svelte'])
         php_lines = file_types.get('.php', 0)
         java_lines = file_types.get('.java', 0)
         rb_lines = file_types.get('.rb', 0)
         go_lines = file_types.get('.go', 0)
         rs_lines = file_types.get('.rs', 0)
         cpp_lines = sum(file_types.get(ext, 0) for ext in ['.c', '.cpp', '.h', '.hpp', '.cc'])
-        mobile_lines = sum(file_types.get(ext, 0) for ext in ['.swift', '.kt', '.m', '.mm'])
+        mobile_lines = sum(file_types.get(ext, 0) for ext in ['.swift', '.kt', '.m', '.mm', '.dart'])
+        html_css_lines = sum(file_types.get(ext, 0) for ext in ['.html', '.htm', '.css', '.scss', '.sass', '.less'])
         md_lines = file_types.get('.md', 0)
         data_lines = sum(file_types.get(ext, 0) for ext in ['.csv', '.json', '.xml', '.yaml', '.yml'])
 
@@ -162,6 +170,8 @@ class RepositoryPalette:
             palette_name = 'cpp'
         elif mobile_lines > threshold:
             palette_name = 'mobile'
+        elif html_css_lines > threshold:
+            palette_name = 'frontend'
         elif js_lines > threshold:
             palette_name = 'javascript'
         elif py_lines > threshold:
@@ -181,10 +191,12 @@ class RepositoryPalette:
                 dominant_ext = sorted_types[0][0]
                 # Map extension to palette
                 ext_map = {
-                    '.py': 'python', '.js': 'javascript', '.php': 'php',
+                    '.py': 'python', '.js': 'javascript', '.jsx': 'javascript', '.php': 'php',
                     '.java': 'java', '.rb': 'ruby', '.go': 'systems',
                     '.rs': 'systems', '.c': 'cpp', '.cpp': 'cpp',
-                    '.swift': 'mobile', '.md': 'documentation'
+                    '.swift': 'mobile', '.kt': 'mobile', '.dart': 'mobile',
+                    '.html': 'frontend', '.css': 'frontend', '.scss': 'frontend',
+                    '.md': 'documentation'
                 }
                 palette_name = ext_map.get(dominant_ext, 'documentation')
             else:
