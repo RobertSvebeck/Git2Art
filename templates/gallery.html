@@ -162,6 +162,8 @@
         // Global state for search
         let allCards = [];
         let filteredCards = [];
+        let searchDebounceTimer = null;
+        let cardEventListenersAttached = false;
 
         // Extract searchable data from cards
         function extractSearchData() {
@@ -186,19 +188,27 @@
             filteredCards = [...allCards];
         }
 
-        // Perform search/filter
+        // Perform search/filter with debouncing
         function performSearch(query) {
-            const searchTerm = query.toLowerCase().trim();
-
-            if (!searchTerm) {
-                filteredCards = [...allCards];
-            } else {
-                filteredCards = allCards.filter(card => card.searchText.includes(searchTerm));
+            // Clear existing debounce timer
+            if (searchDebounceTimer) {
+                clearTimeout(searchDebounceTimer);
             }
 
-            // Update display
-            updateMasonryDisplay();
-            updateSearchResultsCount(searchTerm);
+            // Debounce search by 300ms to avoid excessive updates
+            searchDebounceTimer = setTimeout(() => {
+                const searchTerm = query.toLowerCase().trim();
+
+                if (!searchTerm) {
+                    filteredCards = [...allCards];
+                } else {
+                    filteredCards = allCards.filter(card => card.searchText.includes(searchTerm));
+                }
+
+                // Update display
+                updateMasonryDisplay();
+                updateSearchResultsCount(searchTerm);
+            }, 300);
         }
 
         // Update search results count
@@ -222,18 +232,17 @@
             }
         }
 
-        // Update masonry layout with filtered cards
+        // Update masonry layout with filtered cards - optimized version
         function updateMasonryDisplay() {
             const column1 = document.getElementById('column-1');
             const column2 = document.getElementById('column-2');
 
             if (!column1 || !column2) return;
 
-            // Clear columns
+            // Clear columns first
             column1.innerHTML = '';
             column2.innerHTML = '';
 
-            // Check if we're on mobile
             const isMobile = window.innerWidth <= 600;
 
             if (isMobile) {
@@ -244,44 +253,48 @@
                 });
                 column2.style.display = 'none';
             } else {
-                // Desktop: distribute filtered cards to balance column heights
+                // Desktop: distribute filtered cards using batch height reads
                 column2.style.display = 'flex';
-                filteredCards.forEach(cardData => {
+
+                // Batch: read all heights at once, then append
+                const heights = [];
+                filteredCards.forEach((cardData, index) => {
                     const clonedCard = cardData.element.cloneNode(true);
 
-                    // Determine which column is shorter
-                    const col1Height = column1.offsetHeight;
-                    const col2Height = column2.offsetHeight;
+                    // Append temporarily to measure, then move to correct column
+                    column1.appendChild(clonedCard);
 
-                    if (col1Height <= col2Height) {
-                        column1.appendChild(clonedCard);
-                    } else {
-                        column2.appendChild(clonedCard);
+                    // Only read offsetHeight every N cards to reduce layout thrashing
+                    if (index % 3 === 0 || index === filteredCards.length - 1) {
+                        const col1Height = column1.offsetHeight;
+                        const col2Height = column2.offsetHeight;
+
+                        // Move card to shorter column if needed
+                        if (col2Height < col1Height && clonedCard.parentElement === column1) {
+                            column1.removeChild(clonedCard);
+                            column2.appendChild(clonedCard);
+                        }
                     }
                 });
             }
-
-            // Re-attach event listeners
-            attachCardEventListeners();
         }
 
-        // Attach event listeners to cards in the display
+        // Attach event listeners to cards in the display (single attachment)
         function attachCardEventListeners() {
+            if (cardEventListenersAttached) return;
+
             const images = document.querySelectorAll('.card-image img');
             images.forEach(img => {
+                // Only attach error handler - single attachment
                 img.addEventListener('error', function() {
                     const card = this.closest('.gallery-card');
                     if (card) {
                         card.style.display = 'none';
                     }
                 });
-
-                img.addEventListener('load', function() {
-                    updateMasonryDisplay();
-                });
             });
 
-            // Initialize like states
+            // Initialize like states (only check visible ones)
             setTimeout(() => {
                 const likeButtons = document.querySelectorAll('.btn-like');
                 likeButtons.forEach(button => {
@@ -289,6 +302,8 @@
                     checkHasLiked(artworkId);
                 });
             }, 100);
+
+            cardEventListenersAttached = true;
         }
 
         // Version history functions
@@ -397,42 +412,47 @@
             column1.innerHTML = '';
             column2.innerHTML = '';
 
-            // Check if we're on mobile (single column)
             const isMobile = window.innerWidth <= 600;
 
             if (isMobile) {
-                // On mobile, put all cards in column 1, hide column 2
+                // On mobile, put all cards in column 1
                 cards.forEach(card => {
                     const clonedCard = card.cloneNode(true);
                     column1.appendChild(clonedCard);
                 });
                 column2.style.display = 'none';
             } else {
-                // Desktop: distribute cards to balance column heights
+                // Desktop: distribute cards with optimized height reads
                 column2.style.display = 'flex';
-                cards.forEach(card => {
+
+                cards.forEach((card, index) => {
                     const clonedCard = card.cloneNode(true);
+                    column1.appendChild(clonedCard);
 
-                    // Determine which column is shorter
-                    const col1Height = column1.offsetHeight;
-                    const col2Height = column2.offsetHeight;
+                    // Only read offsetHeight every N cards to reduce layout thrashing
+                    if (index % 3 === 0 || index === cards.length - 1) {
+                        const col1Height = column1.offsetHeight;
+                        const col2Height = column2.offsetHeight;
 
-                    if (col1Height <= col2Height) {
-                        column1.appendChild(clonedCard);
-                    } else {
-                        column2.appendChild(clonedCard);
+                        if (col2Height < col1Height && clonedCard.parentElement === column1) {
+                            column1.removeChild(clonedCard);
+                            column2.appendChild(clonedCard);
+                        }
                     }
                 });
             }
         }
 
-        // Hide cards with missing images
+        // Initialize page on load
         document.addEventListener('DOMContentLoaded', function() {
             // Extract searchable data from all cards
             extractSearchData();
 
             // Distribute cards into masonry columns
             distributeMasonryCards();
+
+            // Attach event listeners once (prevents duplicates)
+            attachCardEventListeners();
 
             // Setup search functionality
             const searchInput = document.getElementById('search-input');
@@ -457,30 +477,6 @@
                 clearTimeout(resizeTimeout);
                 resizeTimeout = setTimeout(distributeMasonryCards, 250);
             });
-
-            const images = document.querySelectorAll('.card-image img');
-            images.forEach(img => {
-                img.addEventListener('error', function() {
-                    const card = this.closest('.gallery-card');
-                    if (card) {
-                        card.style.display = 'none';
-                    }
-                });
-
-                // Re-distribute when images load (affects column heights)
-                img.addEventListener('load', function() {
-                    distributeMasonryCards();
-                });
-            });
-
-            // Initialize like states when page loads
-            setTimeout(() => {
-                const likeButtons = document.querySelectorAll('.btn-like');
-                likeButtons.forEach(button => {
-                    const artworkId = button.dataset.artworkId;
-                    checkHasLiked(artworkId);
-                });
-            }, 100);
         });
 
         async function checkHasLiked(artworkId) {
