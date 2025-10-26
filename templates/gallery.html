@@ -41,23 +41,22 @@
                 <a href="{{ url_for('main.index') }}" class="nav-link">Generate Art</a>
                 <a href="{{ url_for('main.about') }}" class="nav-link">About</a>
             </nav>
+            <!-- Search bar -->
+            <div class="search-container">
+                <input
+                    type="text"
+                    id="search-input"
+                    class="search-field"
+                    placeholder="Search repositories... (repo name, type, developer...)"
+                    aria-label="Search repositories"
+                >
+                <span class="search-icon">🔍</span>
+                <div id="search-results-count" class="search-results-count" style="display: none;"></div>
+            </div>
         </header>
 
         <main>
             {% if artworks %}
-                <!-- Search bar -->
-                <div class="search-container">
-                    <input
-                        type="text"
-                        id="search-input"
-                        class="search-field"
-                        placeholder="Search repositories... (repo name, type, developer...)"
-                        aria-label="Search repositories"
-                    >
-                    <span class="search-icon">🔍</span>
-                    <div id="search-results-count" class="search-results-count" style="display: none;"></div>
-                </div>
-
                 <!-- Hidden container for cards (will be distributed by JS) -->
                 <div id="cards-source" style="display: none;">
                     {% for artwork in artworks %}
