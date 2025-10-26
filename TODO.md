@@ -223,7 +223,6 @@
 ## Repository Status
 
 ✅ **Public Release Ready**
-- Sensitive data (.env credentials) removed from git history
 - Documentation organized (public in root, research in /research)
 - README updated with clear usage instructions (CLI and Flask options)
 - .env.example template provided for easy setup
