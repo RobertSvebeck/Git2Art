@@ -37,3 +37,8 @@ Thumbs.db
 # Project specific
 database.db
 *.db
+
+# Development & Legacy
+old/
+.claude/
+.playwright-mcp/
