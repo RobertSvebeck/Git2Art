@@ -31,7 +31,7 @@ main {
     color: var(--charcoal);
     background: var(--pure-white);
     border: 1px solid var(--warm-grey);
-    border-radius: 6px;
+    border-radius: 20px !important;
     font-family: inherit;
     letter-spacing: 0.5px;
     transition: all 0.3s ease;

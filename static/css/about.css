@@ -157,6 +157,22 @@
     display: inline-block;
 }
 
+.contact-link {
+    display: inline-block;
+    font-size: 1.2rem;
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 500;
+    border-bottom: 2px solid #667eea;
+    padding-bottom: 2px;
+    transition: all 0.3s ease;
+}
+
+.contact-link:hover {
+    color: #764ba2;
+    border-bottom-color: #764ba2;
+}
+
 @media (max-width: 768px) {
     .about-content {
         padding: 1rem;
