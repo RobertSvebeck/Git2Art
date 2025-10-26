@@ -45,6 +45,19 @@
 
         <main>
             {% if artworks %}
+                <!-- Search bar -->
+                <div class="search-container">
+                    <input
+                        type="text"
+                        id="search-input"
+                        class="search-field"
+                        placeholder="Search repositories... (repo name, type, developer...)"
+                        aria-label="Search repositories"
+                    >
+                    <span class="search-icon">🔍</span>
+                    <div id="search-results-count" class="search-results-count" style="display: none;"></div>
+                </div>
+
                 <!-- Hidden container for cards (will be distributed by JS) -->
                 <div id="cards-source" style="display: none;">
                     {% for artwork in artworks %}
@@ -77,7 +90,7 @@
                                 </button>
                                 <a href="{{ url_for('main.artwork_view', artwork_id=artwork.id) }}" class="btn btn-view">View Full Size</a>
                                 {% if artwork.version_count > 1 %}
-                                <button class="btn btn-versions" onclick="openVersionHistory('{{ artwork.repo_url }}', '{{ artwork.repo_name }}')">
+                                <button class="btn btn-versions" data-repo-url="{{ artwork.repo_url }}" data-repo-name="{{ artwork.repo_name }}" onclick="openVersionHistory('{{ artwork.repo_url }}', '{{ artwork.repo_name }}')">
                                     <span class="version-icon">📖</span> Versions
                                 </button>
                                 {% endif %}
@@ -147,6 +160,138 @@
             repoUrl: null,
             repoName: null
         };
+
+        // Global state for search
+        let allCards = [];
+        let filteredCards = [];
+
+        // Extract searchable data from cards
+        function extractSearchData() {
+            const source = document.getElementById('cards-source');
+            if (!source) return;
+
+            allCards = Array.from(source.querySelectorAll('.gallery-card')).map(card => {
+                const repoName = card.querySelector('.repo-name')?.textContent?.trim() || '';
+                const repoUrl = card.dataset.repoUrl || '';
+                const commitHash = card.querySelector('.commit-hash')?.textContent?.trim() || '';
+                const text = `${repoName} ${repoUrl} ${commitHash}`.toLowerCase();
+
+                return {
+                    element: card,
+                    repoName,
+                    repoUrl,
+                    commitHash,
+                    searchText: text
+                };
+            });
+
+            filteredCards = [...allCards];
+        }
+
+        // Perform search/filter
+        function performSearch(query) {
+            const searchTerm = query.toLowerCase().trim();
+
+            if (!searchTerm) {
+                filteredCards = [...allCards];
+            } else {
+                filteredCards = allCards.filter(card => card.searchText.includes(searchTerm));
+            }
+
+            // Update display
+            updateMasonryDisplay();
+            updateSearchResultsCount(searchTerm);
+        }
+
+        // Update search results count
+        function updateSearchResultsCount(query) {
+            const countElement = document.getElementById('search-results-count');
+            if (!countElement) return;
+
+            if (!query.trim()) {
+                countElement.style.display = 'none';
+                return;
+            }
+
+            const total = allCards.length;
+            const shown = filteredCards.length;
+
+            if (shown === total) {
+                countElement.style.display = 'none';
+            } else {
+                countElement.style.display = 'block';
+                countElement.textContent = `Showing ${shown} of ${total} repositories`;
+            }
+        }
+
+        // Update masonry layout with filtered cards
+        function updateMasonryDisplay() {
+            const column1 = document.getElementById('column-1');
+            const column2 = document.getElementById('column-2');
+
+            if (!column1 || !column2) return;
+
+            // Clear columns
+            column1.innerHTML = '';
+            column2.innerHTML = '';
+
+            // Check if we're on mobile
+            const isMobile = window.innerWidth <= 600;
+
+            if (isMobile) {
+                // On mobile, put filtered cards in column 1
+                filteredCards.forEach(cardData => {
+                    const clonedCard = cardData.element.cloneNode(true);
+                    column1.appendChild(clonedCard);
+                });
+                column2.style.display = 'none';
+            } else {
+                // Desktop: distribute filtered cards to balance column heights
+                column2.style.display = 'flex';
+                filteredCards.forEach(cardData => {
+                    const clonedCard = cardData.element.cloneNode(true);
+
+                    // Determine which column is shorter
+                    const col1Height = column1.offsetHeight;
+                    const col2Height = column2.offsetHeight;
+
+                    if (col1Height <= col2Height) {
+                        column1.appendChild(clonedCard);
+                    } else {
+                        column2.appendChild(clonedCard);
+                    }
+                });
+            }
+
+            // Re-attach event listeners
+            attachCardEventListeners();
+        }
+
+        // Attach event listeners to cards in the display
+        function attachCardEventListeners() {
+            const images = document.querySelectorAll('.card-image img');
+            images.forEach(img => {
+                img.addEventListener('error', function() {
+                    const card = this.closest('.gallery-card');
+                    if (card) {
+                        card.style.display = 'none';
+                    }
+                });
+
+                img.addEventListener('load', function() {
+                    updateMasonryDisplay();
+                });
+            });
+
+            // Initialize like states
+            setTimeout(() => {
+                const likeButtons = document.querySelectorAll('.btn-like');
+                likeButtons.forEach(button => {
+                    const artworkId = button.dataset.artworkId;
+                    checkHasLiked(artworkId);
+                });
+            }, 100);
+        }
 
         // Version history functions
         function encodeRepoUrl(url) {
@@ -285,8 +430,28 @@
 
         // Hide cards with missing images
         document.addEventListener('DOMContentLoaded', function() {
+            // Extract searchable data from all cards
+            extractSearchData();
+
             // Distribute cards into masonry columns
             distributeMasonryCards();
+
+            // Setup search functionality
+            const searchInput = document.getElementById('search-input');
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    performSearch(this.value);
+                });
+
+                // Clear search on Escape key
+                searchInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        this.value = '';
+                        performSearch('');
+                        this.blur();
+                    }
+                });
+            }
 
             // Re-distribute on window resize
             let resizeTimeout;
