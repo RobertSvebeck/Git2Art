@@ -59,9 +59,9 @@ class WatercolorPalette:
         r, g, b = [x / 255.0 for x in rgb]
         h, l, s = colorsys.rgb_to_hls(r, g, b)
 
-        # Lighter and less saturated for watercolor effect
-        l = 0.75 + (l * 0.15)
-        s = 0.35 + (s * 0.15)
+        # More vibrant watercolor: medium lightness and saturation
+        l = 0.50 + (l * 0.25)
+        s = 0.55 + (s * 0.30)
 
         r, g, b = colorsys.hls_to_rgb(h, l, s)
         return (int(r * 255), int(g * 255), int(b * 255))
@@ -151,8 +151,8 @@ class WatercolorStyleGenerator(BaseArtGenerator):
             color = colors[i % len(colors)]
             size = min(self.width, self.height) * DeterministicRandom.uniform(str(total_lines), i * 3 + 2, 0.3, 0.6)
 
-            # Very transparent wash
-            opacity = DeterministicRandom.randint(str(total_lines), i * 4, 20, 40)
+            # Transparent wash with better visibility
+            opacity = DeterministicRandom.randint(str(total_lines), i * 4, 35, 65)
 
             draw.ellipse(
                 [x - size/2, y - size/2, x + size/2, y + size/2],
@@ -186,7 +186,7 @@ class WatercolorStyleGenerator(BaseArtGenerator):
                 offset_y = DeterministicRandom.uniform(file_hash, layer * 5 + 1, -size * 0.2, size * 0.2)
 
                 layer_size = size * (1 - layer * 0.1)
-                opacity = DeterministicRandom.randint(file_hash, layer * 6, 30, 60)
+                opacity = DeterministicRandom.randint(file_hash, layer * 6, 50, 85)
 
                 # Vary the shape slightly
                 shape_type = DeterministicRandom.randint(file_hash, layer * 7, 0, 2)
@@ -225,7 +225,7 @@ class WatercolorStyleGenerator(BaseArtGenerator):
 
             size = DeterministicRandom.uniform(str(total_lines), i * 10 + 2, 20, 60)
             color = colors[i % len(colors)]
-            opacity = DeterministicRandom.randint(str(total_lines), i * 11, 15, 35)
+            opacity = DeterministicRandom.randint(str(total_lines), i * 11, 30, 55)
 
             draw.ellipse(
                 [x - size/2, y - size/2, x + size/2, y + size/2],
