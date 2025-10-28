@@ -94,7 +94,15 @@ def clone_or_update_repo(github_url, temp_dir):
         commit_hash = get_repo_commit_hash(repo_path)
         return repo_path, commit_hash, False
     except subprocess.CalledProcessError as e:
-        raise Exception(f"Failed to clone repository: {e.stderr}")
+        error_msg = e.stderr
+
+        # Check for authentication/private repo errors
+        if "could not read Username" in error_msg or "Authentication failed" in error_msg:
+            raise Exception("This repository is private or requires authentication. Please use a public GitHub repository.")
+        elif "not found" in error_msg.lower() or "repository not found" in error_msg.lower():
+            raise Exception("Repository not found. Please check the URL and ensure the repository exists.")
+        else:
+            raise Exception(f"Failed to clone repository: {error_msg}")
 
 
 def cleanup_repo(repo_path):
