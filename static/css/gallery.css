@@ -33,7 +33,7 @@ main {
     color: var(--charcoal);
     background: var(--pure-white);
     border: 1px solid var(--warm-grey);
-    border-radius: 20px !important;
+    border-radius: 20px;
     font-family: inherit;
     letter-spacing: 0.5px;
     transition: all 0.3s ease;
@@ -44,7 +44,11 @@ main {
     outline: none;
     border-color: var(--charcoal);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    background: var(--pure-white);
+    background-color: var(--pure-white);
+}
+
+.search-field:hover {
+    border-color: #BABABA;
 }
 
 .search-field::placeholder {
@@ -695,29 +699,40 @@ main {
 /* Style Filter */
 .style-filter {
     width: 100%;
-    padding: 10px 14px;
+    padding: 10px 35px 10px 14px;
     font-size: 0.85em;
     color: var(--charcoal);
     background: var(--pure-white);
     border: 1px solid var(--warm-grey);
-    border-radius: 20px !important;
+    border-radius: 20px;
     font-family: inherit;
     letter-spacing: 0.5px;
     transition: all 0.3s ease;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     margin-top: 12px;
     cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232E2E2E' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 16px;
 }
 
 .style-filter:focus {
     outline: none;
     border-color: var(--charcoal);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    background: var(--pure-white);
+    background-color: var(--pure-white);
 }
 
 .style-filter:hover {
     border-color: var(--accent-sage);
+}
+
+.style-filter option {
+    padding: 10px;
+    background: var(--pure-white);
+    color: var(--charcoal);
 }
 
 /* Regenerate Button */
@@ -760,19 +775,37 @@ main {
 
 .style-select {
     width: 100%;
-    padding: 12px;
+    padding: 14px 45px 14px 16px;
     font-size: 0.95em;
     color: var(--charcoal);
     background: var(--pure-white);
-    border: 1px solid var(--warm-grey);
-    border-radius: 4px;
+    border: 2px solid var(--warm-grey);
+    border-radius: 20px;
     font-family: inherit;
     cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232E2E2E' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+    background-size: 18px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .style-select:focus {
     outline: none;
     border-color: var(--accent-sage);
+    box-shadow: 0 0 0 3px rgba(139, 154, 140, 0.1);
+}
+
+.style-select:hover {
+    border-color: #BABABA;
+}
+
+.style-select option {
+    padding: 10px;
+    background: var(--pure-white);
+    color: var(--charcoal);
 }
 
 .modal-actions {

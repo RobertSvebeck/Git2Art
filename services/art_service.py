@@ -12,19 +12,19 @@ from utils.watermark import add_watermark
 from models.artwork import Artwork
 
 
-def get_cache_info_path(images_dir, repo_name):
-    """Get path to cache info JSON file."""
-    return os.path.join(images_dir, f'.{repo_name}_cache.json')
+def get_cache_info_path(images_dir, repo_name, art_style='default'):
+    """Get path to cache info JSON file with art style."""
+    return os.path.join(images_dir, f'.{repo_name}_{art_style}_cache.json')
 
 
-def get_cached_art_info(images_dir, repo_name, commit_hash):
+def get_cached_art_info(images_dir, repo_name, commit_hash, art_style='default'):
     """
-    Check if artwork exists for this repo/commit combination.
+    Check if artwork exists for this repo/commit/style combination.
 
     Returns:
-        dict or None: Cache info if exists and matches commit hash
+        dict or None: Cache info if exists and matches commit hash and style
     """
-    cache_path = get_cache_info_path(images_dir, repo_name)
+    cache_path = get_cache_info_path(images_dir, repo_name, art_style)
 
     if not os.path.exists(cache_path):
         return None
@@ -33,7 +33,7 @@ def get_cached_art_info(images_dir, repo_name, commit_hash):
         with open(cache_path, 'r') as f:
             cache_info = json.load(f)
 
-        if cache_info.get('commit_hash') == commit_hash:
+        if cache_info.get('commit_hash') == commit_hash and cache_info.get('art_style') == art_style:
             # Verify image file still exists
             image_path = os.path.join(images_dir, cache_info['filename'])
             if os.path.exists(image_path):
@@ -45,14 +45,15 @@ def get_cached_art_info(images_dir, repo_name, commit_hash):
     return None
 
 
-def save_cache_info(images_dir, repo_name, commit_hash, filename):
-    """Save cache information for generated artwork."""
-    cache_path = get_cache_info_path(images_dir, repo_name)
+def save_cache_info(images_dir, repo_name, commit_hash, filename, art_style='default'):
+    """Save cache information for generated artwork with art style."""
+    cache_path = get_cache_info_path(images_dir, repo_name, art_style)
 
     cache_info = {
         'commit_hash': commit_hash,
         'filename': filename,
-        'repo_name': repo_name
+        'repo_name': repo_name,
+        'art_style': art_style
     }
 
     with open(cache_path, 'w') as f:
@@ -98,13 +99,14 @@ def generate_art_from_github(github_url, temp_dir, images_dir, force=False, art_
                 pass
 
             # Fallback: Check filesystem cache
-            cache_info = get_cached_art_info(images_dir, repo_name, commit_hash)
+            cache_info = get_cached_art_info(images_dir, repo_name, commit_hash, art_style)
             if cache_info:
                 return {
                     'image_url': f'/static/generated/{cache_info["filename"]}',
                     'repo_name': repo_name,
                     'artwork_id': None,
                     'like_count': 0,
+                    'art_style': art_style,
                     'cached': True
                 }
 
@@ -161,7 +163,7 @@ def generate_art_from_github(github_url, temp_dir, images_dir, force=False, art_
             print(f"Warning: Failed to save to database: {e}")
 
         # Save filesystem cache as backup
-        save_cache_info(images_dir, repo_name, commit_hash, output_filename)
+        save_cache_info(images_dir, repo_name, commit_hash, output_filename, art_style)
 
         return {
             'image_url': f'/static/generated/{output_filename}',
@@ -261,6 +263,10 @@ def get_all_gallery_artworks(images_dir):
 
                 scale = 1.0
 
+                # Get art style from cache or filename
+                art_style = cache_info.get('art_style', 'default')
+                art_style_name = art_style.replace('_', ' ').title()
+
                 artworks.append({
                     'id': None,
                     'repo_name': cache_info['repo_name'],
@@ -268,6 +274,8 @@ def get_all_gallery_artworks(images_dir):
                     'image_url': f'/static/generated/{cache_info["filename"]}',
                     'image_filename': cache_info['filename'],
                     'commit_hash': cache_info['commit_hash'],
+                    'art_style': art_style,
+                    'art_style_name': art_style_name,
                     'created_at': created_at,
                     'created_at_formatted': created_at.strftime('%b %d, %Y at %I:%M %p'),
                     'like_count': 0,

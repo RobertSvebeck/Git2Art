@@ -130,7 +130,8 @@ input[type="text"] {
     transition: all 0.3s;
     color: var(--charcoal);
     font-family: var(--body-font);
-    border-radius: 4px;
+    border-radius: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 input[type="text"]:focus {
@@ -138,6 +139,10 @@ input[type="text"]:focus {
     border-color: var(--accent-sage);
     background: var(--pure-white);
     box-shadow: 0 0 0 3px rgba(139, 154, 140, 0.1);
+}
+
+input[type="text"]:hover {
+    border-color: #BABABA;
 }
 
 input[type="text"]::placeholder {
@@ -455,4 +460,41 @@ footer .footer-links a:last-child {
         display: block;
         margin: 0.5rem 0;
     }
+}
+
+/* Select/Dropdown Styling */
+select {
+    width: 100%;
+    padding: 16px 45px 16px 18px;
+    font-size: 15px;
+    border: 2px solid var(--warm-grey);
+    background: #FAFAFA;
+    transition: all 0.3s;
+    color: var(--charcoal);
+    font-family: var(--body-font);
+    border-radius: 20px;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232E2E2E' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+    background-size: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+select:focus {
+    outline: none;
+    border-color: var(--accent-sage);
+    background: var(--pure-white);
+    box-shadow: 0 0 0 3px rgba(139, 154, 140, 0.1);
+}
+
+select:hover {
+    border-color: #BABABA;
+}
+
+select option {
+    padding: 12px;
+    background: var(--pure-white);
+    color: var(--charcoal);
 }
