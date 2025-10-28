@@ -215,6 +215,10 @@ def get_all_gallery_artworks(images_dir):
                 for v in versions
             ]
 
+            # Get art style display name
+            art_style = latest.get('art_style', 'default')
+            art_style_name = art_style.replace('_', ' ').title()
+
             scale = 1.0
             artworks.append({
                 'id': latest['id'],
@@ -223,6 +227,8 @@ def get_all_gallery_artworks(images_dir):
                 'image_url': latest['image_path'],
                 'image_filename': latest['image_filename'],
                 'commit_hash': latest['commit_hash'],
+                'art_style': art_style,
+                'art_style_name': art_style_name,
                 'created_at': latest['created_at'],
                 'created_at_formatted': latest['created_at'].strftime('%b %d, %Y at %I:%M %p'),
                 'like_count': latest['like_count'],

@@ -1,6 +1,22 @@
 -- Git2Art Database Schema
 -- MariaDB/MySQL compatible
 
+-- Table for managing available art styles
+CREATE TABLE IF NOT EXISTS art_styles (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    style_id VARCHAR(50) NOT NULL UNIQUE,
+    display_name VARCHAR(100) NOT NULL,
+    description TEXT,
+    class_name VARCHAR(100) NOT NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    sort_order INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_style_id (style_id),
+    INDEX idx_is_active (is_active),
+    INDEX idx_sort_order (sort_order)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Table for storing generated artwork metadata
 CREATE TABLE IF NOT EXISTS artworks (
     id INT AUTO_INCREMENT PRIMARY KEY,

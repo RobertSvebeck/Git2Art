@@ -69,6 +69,17 @@
                             required
                         >
                     </div>
+                    <div class="form-group">
+                        <label for="artStyle">Art Style</label>
+                        <p class="form-hint">Choose the artistic style for your artwork</p>
+                        <select id="artStyle" name="artStyle">
+                            {% for style in art_styles %}
+                            <option value="{{ style.style_id }}" {% if style.style_id == 'default' %}selected{% endif %}>
+                                {{ style.display_name }} - {{ style.description }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
                     <div class="form-group checkbox-group">
                         <label class="checkbox-label">
                             <input type="checkbox" id="forceRegenerate" name="forceRegenerate">

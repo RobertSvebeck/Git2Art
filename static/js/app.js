@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const githubUrl = document.getElementById('githubUrl').value.trim();
         const forceRegenerate = document.getElementById('forceRegenerate').checked;
+        const artStyle = document.getElementById('artStyle').value;
 
         // Clear the input box as soon as processing starts
         document.getElementById('githubUrl').value = '';
@@ -30,7 +31,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                 body: JSON.stringify({
                     github_url: githubUrl,
-                    force_regenerate: forceRegenerate
+                    force_regenerate: forceRegenerate,
+                    art_style: artStyle
                 }),
             });
 

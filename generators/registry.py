@@ -1,10 +1,12 @@
 """Style registry and factory for art generators."""
 
 from .default_style import DefaultStyleGenerator
+from .impressionist_style import ImpressionistStyleGenerator
 
 # Registry of all available art styles
 STYLE_REGISTRY = {
     'default': DefaultStyleGenerator,
+    'impressionist': ImpressionistStyleGenerator,
     # Future styles will be added here:
     # 'minimalist': MinimalistStyleGenerator,
     # 'geometric': GeometricStyleGenerator,

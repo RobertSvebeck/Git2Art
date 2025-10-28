@@ -4,6 +4,7 @@ from flask import Blueprint, render_template, request, jsonify, send_file, curre
 from services.art_service import generate_art_from_github, get_all_gallery_artworks
 from services.git_service import validate_github_url
 from models.artwork import ArtworkLike, Artwork
+from models import ArtStyle
 from datetime import datetime
 import os
 import hashlib
@@ -15,7 +16,8 @@ bp = Blueprint('main', __name__)
 @bp.route('/')
 def index():
     """Render the main page with the art generation form."""
-    return render_template('index.html')
+    art_styles = ArtStyle.get_active_styles()
+    return render_template('index.html', art_styles=art_styles)
 
 
 @bp.route('/about')
@@ -40,7 +42,8 @@ def terms():
 def gallery():
     """Display gallery of all generated artworks."""
     artworks = get_all_gallery_artworks(current_app.config['GENERATED_IMAGES_DIR'])
-    return render_template('gallery.html', artworks=artworks)
+    art_styles = ArtStyle.get_active_styles()
+    return render_template('gallery.html', artworks=artworks, art_styles=art_styles)
 
 
 @bp.route('/artwork/<int:artwork_id>')
@@ -73,6 +76,7 @@ def generate():
     """Generate artwork from a GitHub repository URL."""
     github_url = request.json.get('github_url')
     force_regenerate = request.json.get('force_regenerate', False)
+    art_style = request.json.get('art_style', 'default')
 
     if not github_url:
         return jsonify({'error': 'GitHub URL is required'}), 400
@@ -82,20 +86,26 @@ def generate():
     if not is_valid:
         return jsonify({'error': error_msg}), 400
 
+    # Validate art style
+    if not ArtStyle.is_active(art_style):
+        return jsonify({'error': f'Invalid or inactive art style: {art_style}'}), 400
+
     try:
         # Generate artwork
         result = generate_art_from_github(
             github_url,
             current_app.config['TEMP_REPOS_DIR'],
             current_app.config['GENERATED_IMAGES_DIR'],
-            force=force_regenerate
+            force=force_regenerate,
+            art_style=art_style
         )
 
         return jsonify({
             'success': True,
             'image_url': result['image_url'],
             'repo_name': result['repo_name'],
-            'cached': result['cached']
+            'cached': result['cached'],
+            'art_style': art_style
         })
 
     except Exception as e:

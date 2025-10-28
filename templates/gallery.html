@@ -41,7 +41,7 @@
                 <a href="{{ url_for('main.index') }}" class="nav-link">Generate Art</a>
                 <a href="{{ url_for('main.about') }}" class="nav-link">About</a>
             </nav>
-            <!-- Search bar -->
+            <!-- Search and Filter bar -->
             <div class="search-container">
                 <input
                     type="text"
@@ -50,6 +50,12 @@
                     placeholder="Search by repo name or commit hash..."
                     aria-label="Search repositories"
                 >
+                <select id="style-filter" class="style-filter" aria-label="Filter by art style">
+                    <option value="">All Styles</option>
+                    {% for style in art_styles %}
+                    <option value="{{ style.style_id }}">{{ style.display_name }}</option>
+                    {% endfor %}
+                </select>
                 <div id="search-results-count" class="search-results-count" style="display: none;"></div>
             </div>
         </header>
@@ -59,7 +65,7 @@
                 <!-- Hidden container for cards (will be distributed by JS) -->
                 <div id="cards-source" style="display: none;">
                     {% for artwork in artworks %}
-                    <div class="gallery-card" style="--card-scale: {{ artwork.scale }}; transform: scale({{ artwork.scale }});" data-repo-url="{{ artwork.repo_url }}">
+                    <div class="gallery-card" style="--card-scale: {{ artwork.scale }}; transform: scale({{ artwork.scale }});" data-repo-url="{{ artwork.repo_url }}" data-art-style="{{ artwork.art_style }}">
                         <div class="card-frame">
                             <div class="card-passepartout">
                                 <div class="card-image">
@@ -75,6 +81,7 @@
                                 {{ artwork.repo_name }}
                                 {% endif %}
                             </h3>
+                            <span class="art-style-badge" data-style="{{ artwork.art_style }}">{{ artwork.art_style_name }}</span>
                             <p class="commit-hash">Commit: {{ artwork.commit_hash[:8] }}</p>
                             <p class="created-date">{{ artwork.created_at_formatted }}</p>
                             {% if artwork.version_count > 1 %}
@@ -87,6 +94,9 @@
                                     <span class="like-count">{{ artwork.like_count }}</span>
                                 </button>
                                 <a href="{{ url_for('main.artwork_view', artwork_id=artwork.id) }}" class="btn btn-view">View Full Size</a>
+                                <button class="btn btn-regenerate" data-repo-url="{{ artwork.repo_url }}" data-repo-name="{{ artwork.repo_name }}" data-commit-hash="{{ artwork.commit_hash }}" onclick="openRegenerateModal('{{ artwork.repo_url }}', '{{ artwork.repo_name }}', '{{ artwork.commit_hash }}')">
+                                    <span class="regenerate-icon">🎨</span> Regenerate
+                                </button>
                                 {% if artwork.version_count > 1 %}
                                 <button class="btn btn-versions" data-repo-url="{{ artwork.repo_url }}" data-repo-name="{{ artwork.repo_name }}" onclick="openVersionHistory('{{ artwork.repo_url }}', '{{ artwork.repo_name }}')">
                                     <span class="version-icon">📖</span> Versions
@@ -150,6 +160,35 @@
         </div>
     </div>
 
+    <!-- Regenerate Modal -->
+    <div id="regenerate-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Regenerate Artwork</h2>
+                <button class="modal-close" onclick="closeRegenerateModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Regenerate artwork for <strong id="regenerate-repo-name"></strong></p>
+                <div class="form-group">
+                    <label for="regenerate-style">Choose Art Style:</label>
+                    <select id="regenerate-style" class="style-select">
+                        {% for style in art_styles %}
+                        <option value="{{ style.style_id }}">{{ style.display_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-primary" onclick="regenerateArtwork()">
+                        <span id="regenerate-spinner" class="spinner" style="display: none;"></span>
+                        <span id="regenerate-text">Generate</span>
+                    </button>
+                    <button class="btn btn-secondary" onclick="closeRegenerateModal()">Cancel</button>
+                </div>
+                <div id="regenerate-status" class="status hidden"></div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Global state for version history modal
         let versionState = {
@@ -159,11 +198,19 @@
             repoName: null
         };
 
+        // Global state for regenerate modal
+        let regenerateState = {
+            repoUrl: null,
+            repoName: null,
+            commitHash: null
+        };
+
         // Global state for search
         let allCards = [];
         let filteredCards = [];
         let searchDebounceTimer = null;
         let cardEventListenersAttached = false;
+        let selectedStyle = '';
 
         // Extract searchable data from cards
         function extractSearchData() {
@@ -174,6 +221,7 @@
                 const repoName = card.querySelector('.repo-name')?.textContent?.trim() || '';
                 const repoUrl = card.dataset.repoUrl || '';
                 const commitHash = card.querySelector('.commit-hash')?.textContent?.trim() || '';
+                const artStyle = card.dataset.artStyle || '';
                 const text = `${repoName} ${repoUrl} ${commitHash}`.toLowerCase();
 
                 return {
@@ -181,6 +229,7 @@
                     repoName,
                     repoUrl,
                     commitHash,
+                    artStyle,
                     searchText: text
                 };
             });
@@ -199,16 +248,24 @@
             searchDebounceTimer = setTimeout(() => {
                 const searchTerm = query.toLowerCase().trim();
 
-                if (!searchTerm) {
-                    filteredCards = [...allCards];
-                } else {
-                    filteredCards = allCards.filter(card => card.searchText.includes(searchTerm));
-                }
+                // Apply both search and style filter
+                filteredCards = allCards.filter(card => {
+                    const matchesSearch = !searchTerm || card.searchText.includes(searchTerm);
+                    const matchesStyle = !selectedStyle || card.artStyle === selectedStyle;
+                    return matchesSearch && matchesStyle;
+                });
 
                 // Update display
                 updateMasonryDisplay();
                 updateSearchResultsCount(searchTerm);
             }, 300);
+        }
+
+        // Filter by style
+        function filterByStyle(style) {
+            selectedStyle = style;
+            const searchInput = document.getElementById('search-input');
+            performSearch(searchInput ? searchInput.value : '');
         }
 
         // Update search results count
@@ -390,11 +447,79 @@
             }
         }
 
+        // Regenerate modal functions
+        function openRegenerateModal(repoUrl, repoName, commitHash) {
+            regenerateState.repoUrl = repoUrl;
+            regenerateState.repoName = repoName;
+            regenerateState.commitHash = commitHash;
+
+            document.getElementById('regenerate-repo-name').textContent = repoName;
+            document.getElementById('regenerate-modal').style.display = 'block';
+            document.getElementById('regenerate-status').classList.add('hidden');
+        }
+
+        function closeRegenerateModal() {
+            document.getElementById('regenerate-modal').style.display = 'none';
+        }
+
+        async function regenerateArtwork() {
+            const artStyle = document.getElementById('regenerate-style').value;
+            const spinner = document.getElementById('regenerate-spinner');
+            const text = document.getElementById('regenerate-text');
+            const status = document.getElementById('regenerate-status');
+            const generateBtn = event.target;
+
+            generateBtn.disabled = true;
+            spinner.style.display = 'inline-block';
+            text.textContent = 'Generating...';
+            status.classList.add('hidden');
+
+            try {
+                const response = await fetch('/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        github_url: regenerateState.repoUrl,
+                        art_style: artStyle,
+                        force_regenerate: true
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to generate artwork');
+                }
+
+                status.textContent = 'Artwork generated successfully! Refreshing page...';
+                status.className = 'status success';
+                status.classList.remove('hidden');
+
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+
+            } catch (error) {
+                status.textContent = `Error: ${error.message}`;
+                status.className = 'status error';
+                status.classList.remove('hidden');
+                generateBtn.disabled = false;
+                spinner.style.display = 'none';
+                text.textContent = 'Generate';
+            }
+        }
+
         // Close modal on background click
         document.addEventListener('click', function(event) {
-            const modal = document.getElementById('version-modal');
-            if (event.target === modal) {
+            const versionModal = document.getElementById('version-modal');
+            const regenerateModal = document.getElementById('regenerate-modal');
+            if (event.target === versionModal) {
                 closeVersionHistory();
+            }
+            if (event.target === regenerateModal) {
+                closeRegenerateModal();
             }
         });
 
@@ -468,6 +593,14 @@
                         performSearch('');
                         this.blur();
                     }
+                });
+            }
+
+            // Setup style filter
+            const styleFilter = document.getElementById('style-filter');
+            if (styleFilter) {
+                styleFilter.addEventListener('change', function() {
+                    filterByStyle(this.value);
                 });
             }
 
