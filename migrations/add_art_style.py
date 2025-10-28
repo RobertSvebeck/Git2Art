@@ -1,5 +1,11 @@
 """Migration: Add art_style field to artworks table and mark existing art as 'default'."""
 
+import sys
+import os
+
+# Add parent directory to path so we can import utils
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from utils.db import get_db_cursor, get_db_connection
 
 def migrate():
