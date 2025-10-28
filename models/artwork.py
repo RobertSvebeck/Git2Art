@@ -7,27 +7,27 @@ class Artwork:
     """Model for artwork database operations."""
 
     @staticmethod
-    def create(repo_url, repo_name, commit_hash, image_path, image_filename):
+    def create(repo_url, repo_name, commit_hash, image_path, image_filename, art_style='default'):
         """Create or update artwork record."""
         with get_db_cursor(commit=True) as cursor:
             cursor.execute("""
-                INSERT INTO artworks (repo_url, repo_name, commit_hash, image_path, image_filename)
-                VALUES (%s, %s, %s, %s, %s)
+                INSERT INTO artworks (repo_url, repo_name, commit_hash, art_style, image_path, image_filename)
+                VALUES (%s, %s, %s, %s, %s, %s)
                 ON DUPLICATE KEY UPDATE
                     image_path = VALUES(image_path),
                     image_filename = VALUES(image_filename),
                     updated_at = CURRENT_TIMESTAMP
-            """, (repo_url, repo_name, commit_hash, image_path, image_filename))
+            """, (repo_url, repo_name, commit_hash, art_style, image_path, image_filename))
             return cursor.lastrowid
 
     @staticmethod
-    def get_by_repo_and_commit(repo_url, commit_hash):
-        """Get artwork by repository URL and commit hash."""
+    def get_by_repo_and_commit(repo_url, commit_hash, art_style='default'):
+        """Get artwork by repository URL, commit hash, and art style."""
         with get_db_cursor(commit=False) as cursor:
             cursor.execute("""
                 SELECT * FROM artworks
-                WHERE repo_url = %s AND commit_hash = %s
-            """, (repo_url, commit_hash))
+                WHERE repo_url = %s AND commit_hash = %s AND art_style = %s
+            """, (repo_url, commit_hash, art_style))
             return cursor.fetchone()
 
     @staticmethod
@@ -109,6 +109,30 @@ class Artwork:
                 GROUP BY repo_url, repo_name
                 ORDER BY MAX(created_at) DESC
             """)
+            return cursor.fetchall()
+
+    @staticmethod
+    def get_by_repo_and_style(repo_url, art_style='default'):
+        """Get all artworks for a repository in a specific style."""
+        with get_db_cursor(commit=False) as cursor:
+            cursor.execute("""
+                SELECT * FROM artworks
+                WHERE repo_url = %s AND art_style = %s
+                ORDER BY created_at DESC
+            """, (repo_url, art_style))
+            return cursor.fetchall()
+
+    @staticmethod
+    def get_styles_for_repo(repo_url):
+        """Get all unique styles available for a repository."""
+        with get_db_cursor(commit=False) as cursor:
+            cursor.execute("""
+                SELECT DISTINCT art_style, COUNT(*) as count
+                FROM artworks
+                WHERE repo_url = %s
+                GROUP BY art_style
+                ORDER BY count DESC
+            """, (repo_url,))
             return cursor.fetchall()
 
 

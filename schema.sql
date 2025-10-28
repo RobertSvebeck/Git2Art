@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS artworks (
     repo_url VARCHAR(512) NOT NULL,
     repo_name VARCHAR(255) NOT NULL,
     commit_hash VARCHAR(40) NOT NULL,
+    art_style VARCHAR(50) NOT NULL DEFAULT 'default',
     image_path VARCHAR(512) NOT NULL,
     image_filename VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -14,9 +15,10 @@ CREATE TABLE IF NOT EXISTS artworks (
     like_count INT DEFAULT 0,
     INDEX idx_repo_url (repo_url),
     INDEX idx_commit_hash (commit_hash),
+    INDEX idx_art_style (art_style),
     INDEX idx_created_at (created_at),
     INDEX idx_like_count (like_count),
-    UNIQUE KEY unique_repo_commit (repo_url, commit_hash)
+    UNIQUE KEY unique_repo_commit_style (repo_url, commit_hash, art_style)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Table for tracking artwork likes

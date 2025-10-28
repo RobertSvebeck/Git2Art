@@ -59,7 +59,7 @@ def save_cache_info(images_dir, repo_name, commit_hash, filename):
         json.dump(cache_info, f, indent=2)
 
 
-def generate_art_from_github(github_url, temp_dir, images_dir, force=False):
+def generate_art_from_github(github_url, temp_dir, images_dir, force=False, art_style='default'):
     """
     Generate artwork from a GitHub repository.
 
@@ -68,6 +68,7 @@ def generate_art_from_github(github_url, temp_dir, images_dir, force=False):
         temp_dir: Temporary directory for cloning repos
         images_dir: Directory for generated images
         force: If True, bypass cache and force regeneration
+        art_style: Art style to use ('default', 'minimalist', etc.)
 
     Returns:
         dict: Result with image_url, repo_name, artwork_id, and cached flag
@@ -81,7 +82,7 @@ def generate_art_from_github(github_url, temp_dir, images_dir, force=False):
         if not force:
             # Check database first for cached art
             try:
-                db_artwork = Artwork.get_by_repo_and_commit(github_url, commit_hash)
+                db_artwork = Artwork.get_by_repo_and_commit(github_url, commit_hash, art_style)
                 if db_artwork:
                     image_path = os.path.join(images_dir, db_artwork['image_filename'])
                     if os.path.exists(image_path):
@@ -90,6 +91,7 @@ def generate_art_from_github(github_url, temp_dir, images_dir, force=False):
                             'repo_name': repo_name,
                             'artwork_id': db_artwork['id'],
                             'like_count': db_artwork['like_count'],
+                            'art_style': art_style,
                             'cached': True
                         }
             except Exception:
@@ -107,7 +109,7 @@ def generate_art_from_github(github_url, temp_dir, images_dir, force=False):
                 }
 
         # Generate new artwork
-        output_filename = f'{repo_name}_{commit_hash[:8]}.png'
+        output_filename = f'{repo_name}_{commit_hash[:8]}_{art_style}.png'
         output_path = os.path.join(images_dir, output_filename)
 
         # Get absolute path to git2art.py (should be in parent directory of services)
@@ -122,7 +124,8 @@ def generate_art_from_github(github_url, temp_dir, images_dir, force=False):
                     '--repo', repo_path,
                     '--output', output_path,
                     '--size', '1600',
-                    '--aspect', 'auto'
+                    '--aspect', 'auto',
+                    '--style', art_style
                 ],
                 capture_output=True,
                 text=True,
@@ -153,7 +156,7 @@ def generate_art_from_github(github_url, temp_dir, images_dir, force=False):
         artwork_id = None
         try:
             relative_path = f'/static/generated/{output_filename}'
-            artwork_id = Artwork.create(github_url, repo_name, commit_hash, relative_path, output_filename)
+            artwork_id = Artwork.create(github_url, repo_name, commit_hash, relative_path, output_filename, art_style)
         except Exception as e:
             print(f"Warning: Failed to save to database: {e}")
 
@@ -165,6 +168,7 @@ def generate_art_from_github(github_url, temp_dir, images_dir, force=False):
             'repo_name': repo_name,
             'artwork_id': artwork_id,
             'like_count': 0,
+            'art_style': art_style,
             'cached': False
         }
     finally:

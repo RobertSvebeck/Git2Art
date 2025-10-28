@@ -1,0 +1,99 @@
+"""Style registry and factory for art generators."""
+
+from .default_style import DefaultStyleGenerator
+
+# Registry of all available art styles
+STYLE_REGISTRY = {
+    'default': DefaultStyleGenerator,
+    # Future styles will be added here:
+    # 'minimalist': MinimalistStyleGenerator,
+    # 'geometric': GeometricStyleGenerator,
+    # 'watercolor': WatercolorStyleGenerator,
+}
+
+# Default style to use when none is specified
+DEFAULT_STYLE = 'default'
+
+
+def get_generator(style='default', **kwargs):
+    """Factory function to get an art generator by style name.
+
+    Args:
+        style: Name of the art style ('default', 'minimalist', etc.)
+        **kwargs: Additional parameters to pass to the generator constructor
+                  (repo_path, width, height, aspect_ratio, etc.)
+
+    Returns:
+        An instance of the requested art generator
+
+    Raises:
+        ValueError: If the requested style doesn't exist
+
+    Example:
+        >>> generator = get_generator('default', repo_path='/path/to/repo', width=1600)
+        >>> generator.generate_art('output.png')
+    """
+    if style not in STYLE_REGISTRY:
+        available = ', '.join(STYLE_REGISTRY.keys())
+        raise ValueError(f"Unknown art style: '{style}'. Available styles: {available}")
+
+    generator_class = STYLE_REGISTRY[style]
+    return generator_class(**kwargs)
+
+
+def list_available_styles():
+    """Get information about all available art styles.
+
+    Returns:
+        List of dictionaries with style information:
+        [
+            {
+                'name': 'default',
+                'description': 'Bold expressionist style...',
+                'class': 'DefaultStyleGenerator'
+            },
+            ...
+        ]
+    """
+    styles = []
+    for style_name, generator_class in STYLE_REGISTRY.items():
+        # Create temporary instance to get info (no repo needed)
+        try:
+            info = {
+                'name': generator_class.STYLE_NAME,
+                'description': generator_class.STYLE_DESCRIPTION,
+                'class': generator_class.__name__,
+                'id': style_name
+            }
+            styles.append(info)
+        except Exception:
+            # If we can't get info, provide basic details
+            styles.append({
+                'name': style_name,
+                'description': 'No description available',
+                'class': generator_class.__name__,
+                'id': style_name
+            })
+
+    return styles
+
+
+def is_valid_style(style):
+    """Check if a style name is valid.
+
+    Args:
+        style: Style name to check
+
+    Returns:
+        True if style exists, False otherwise
+    """
+    return style in STYLE_REGISTRY
+
+
+def get_default_style():
+    """Get the default style name.
+
+    Returns:
+        String name of the default style
+    """
+    return DEFAULT_STYLE
