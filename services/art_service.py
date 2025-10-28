@@ -1,63 +1,12 @@
 """Art generation service integrating with git2art.py."""
 
 import os
-import json
 import subprocess
-import glob
-import random
 import sys
 from datetime import datetime
 from services.git_service import clone_or_update_repo, extract_repo_name, cleanup_repo
 from utils.watermark import add_watermark
 from models.artwork import Artwork
-
-
-def get_cache_info_path(images_dir, repo_name, art_style='default'):
-    """Get path to cache info JSON file with art style."""
-    return os.path.join(images_dir, f'.{repo_name}_{art_style}_cache.json')
-
-
-def get_cached_art_info(images_dir, repo_name, commit_hash, art_style='default'):
-    """
-    Check if artwork exists for this repo/commit/style combination.
-
-    Returns:
-        dict or None: Cache info if exists and matches commit hash and style
-    """
-    cache_path = get_cache_info_path(images_dir, repo_name, art_style)
-
-    if not os.path.exists(cache_path):
-        return None
-
-    try:
-        with open(cache_path, 'r') as f:
-            cache_info = json.load(f)
-
-        if cache_info.get('commit_hash') == commit_hash and cache_info.get('art_style') == art_style:
-            # Verify image file still exists
-            image_path = os.path.join(images_dir, cache_info['filename'])
-            if os.path.exists(image_path):
-                return cache_info
-
-    except (json.JSONDecodeError, KeyError):
-        pass
-
-    return None
-
-
-def save_cache_info(images_dir, repo_name, commit_hash, filename, art_style='default'):
-    """Save cache information for generated artwork with art style."""
-    cache_path = get_cache_info_path(images_dir, repo_name, art_style)
-
-    cache_info = {
-        'commit_hash': commit_hash,
-        'filename': filename,
-        'repo_name': repo_name,
-        'art_style': art_style
-    }
-
-    with open(cache_path, 'w') as f:
-        json.dump(cache_info, f, indent=2)
 
 
 def generate_art_from_github(github_url, temp_dir, images_dir, force=False, art_style='default'):
@@ -81,34 +30,19 @@ def generate_art_from_github(github_url, temp_dir, images_dir, force=False, art_
     try:
         # Skip cache checks if force regeneration requested
         if not force:
-            # Check database first for cached art
-            try:
-                db_artwork = Artwork.get_by_repo_and_commit(github_url, commit_hash, art_style)
-                if db_artwork:
-                    image_path = os.path.join(images_dir, db_artwork['image_filename'])
-                    if os.path.exists(image_path):
-                        return {
-                            'image_url': f'/static/generated/{db_artwork["image_filename"]}',
-                            'repo_name': repo_name,
-                            'artwork_id': db_artwork['id'],
-                            'like_count': db_artwork['like_count'],
-                            'art_style': art_style,
-                            'cached': True
-                        }
-            except Exception:
-                pass
-
-            # Fallback: Check filesystem cache
-            cache_info = get_cached_art_info(images_dir, repo_name, commit_hash, art_style)
-            if cache_info:
-                return {
-                    'image_url': f'/static/generated/{cache_info["filename"]}',
-                    'repo_name': repo_name,
-                    'artwork_id': None,
-                    'like_count': 0,
-                    'art_style': art_style,
-                    'cached': True
-                }
+            # Check database for cached art
+            db_artwork = Artwork.get_by_repo_and_commit(github_url, commit_hash, art_style)
+            if db_artwork:
+                image_path = os.path.join(images_dir, db_artwork['image_filename'])
+                if os.path.exists(image_path):
+                    return {
+                        'image_url': f'/static/generated/{db_artwork["image_filename"]}',
+                        'repo_name': repo_name,
+                        'artwork_id': db_artwork['id'],
+                        'like_count': db_artwork['like_count'],
+                        'art_style': art_style,
+                        'cached': True
+                    }
 
         # Generate new artwork
         output_filename = f'{repo_name}_{commit_hash[:8]}_{art_style}.png'
@@ -161,9 +95,7 @@ def generate_art_from_github(github_url, temp_dir, images_dir, force=False, art_
             artwork_id = Artwork.create(github_url, repo_name, commit_hash, relative_path, output_filename, art_style)
         except Exception as e:
             print(f"Warning: Failed to save to database: {e}")
-
-        # Save filesystem cache as backup
-        save_cache_info(images_dir, repo_name, commit_hash, output_filename, art_style)
+            raise Exception(f"Database save failed: {e}")
 
         return {
             'image_url': f'/static/generated/{output_filename}',
@@ -180,16 +112,14 @@ def generate_art_from_github(github_url, temp_dir, images_dir, force=False, art_
 
 def get_all_gallery_artworks(images_dir):
     """
-    Load all generated artworks grouped by repository (one entry per repo with version history).
+    Load all generated artworks from database grouped by repository.
 
     Returns:
         list: List of artwork dicts with id, repo_name, image_url, commit_hash, created_at,
               like_count, scale, and versions list
     """
     artworks = []
-    repos_seen = set()
 
-    # Try to fetch from database first
     try:
         unique_repos = Artwork.get_unique_repos()
         for repo_info in unique_repos:
@@ -238,55 +168,8 @@ def get_all_gallery_artworks(images_dir):
                 'version_count': version_count,
                 'versions': version_list
             })
-            repos_seen.add(repo_url)
 
         return artworks
     except Exception as e:
-        print(f"Warning: Database fetch failed, falling back to filesystem: {e}")
-
-    # Fallback: filesystem-based gallery
-    if not os.path.exists(images_dir):
-        return artworks
-
-    cache_files = glob.glob(os.path.join(images_dir, '.*_cache.json'))
-
-    for cache_path in cache_files:
-        try:
-            with open(cache_path, 'r') as f:
-                cache_info = json.load(f)
-
-            image_path = os.path.join(images_dir, cache_info['filename'])
-
-            if os.path.exists(image_path):
-                file_stat = os.stat(image_path)
-                created_at = datetime.fromtimestamp(file_stat.st_mtime)
-
-                scale = 1.0
-
-                # Get art style from cache or filename
-                art_style = cache_info.get('art_style', 'default')
-                art_style_name = art_style.replace('_', ' ').title()
-
-                artworks.append({
-                    'id': None,
-                    'repo_name': cache_info['repo_name'],
-                    'repo_url': None,
-                    'image_url': f'/static/generated/{cache_info["filename"]}',
-                    'image_filename': cache_info['filename'],
-                    'commit_hash': cache_info['commit_hash'],
-                    'art_style': art_style,
-                    'art_style_name': art_style_name,
-                    'created_at': created_at,
-                    'created_at_formatted': created_at.strftime('%b %d, %Y at %I:%M %p'),
-                    'like_count': 0,
-                    'scale': scale,
-                    'version_count': 1,
-                    'versions': []
-                })
-
-        except (json.JSONDecodeError, KeyError, OSError):
-            continue
-
-    artworks.sort(key=lambda x: x['created_at'], reverse=True)
-
-    return artworks
+        print(f"Error: Failed to fetch gallery artworks from database: {e}")
+        return []

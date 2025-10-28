@@ -2,15 +2,18 @@
 
 from .default_style import DefaultStyleGenerator
 from .impressionist_style import ImpressionistStyleGenerator
+from .watercolor_style import WatercolorStyleGenerator
+from .pixel_style import PixelStyleGenerator
 
 # Registry of all available art styles
 STYLE_REGISTRY = {
     'default': DefaultStyleGenerator,
     'impressionist': ImpressionistStyleGenerator,
+    'watercolor': WatercolorStyleGenerator,
+    'pixel': PixelStyleGenerator,
     # Future styles will be added here:
     # 'minimalist': MinimalistStyleGenerator,
     # 'geometric': GeometricStyleGenerator,
-    # 'watercolor': WatercolorStyleGenerator,
 }
 
 # Default style to use when none is specified

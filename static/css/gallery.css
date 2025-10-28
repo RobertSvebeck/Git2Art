@@ -689,7 +689,15 @@ main {
 }
 
 .art-style-badge[data-style="impressionist"] {
-    background: #9B7EBD;
+    background: #9B7EBD;  /* Purple for impressionist */
+}
+
+.art-style-badge[data-style="watercolor"] {
+    background: #5DADE2;  /* Soft blue for watercolor */
+}
+
+.art-style-badge[data-style="pixel"] {
+    background: #E74C3C;  /* Retro red for pixel art */
 }
 
 .art-style-badge[data-style="minimalist"] {

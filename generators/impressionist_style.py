@@ -60,10 +60,10 @@ class ImpressionistPalette:
         r, g, b = [x / 255.0 for x in rgb]
         h, l, s = colorsys.rgb_to_hls(r, g, b)
 
-        # Increase lightness (70-85% range for pastels)
-        l = 0.70 + (l * 0.15)
-        # Moderate saturation (40-60% for soft colors)
-        s = 0.40 + (s * 0.20)
+        # Moderate lightness (55-70% for visible color)
+        l = 0.55 + (l * 0.15)
+        # Good saturation (50-70% for vibrant but soft)
+        s = 0.50 + (s * 0.20)
 
         r, g, b = colorsys.hls_to_rgb(h, l, s)
         return (int(r * 255), int(g * 255), int(b * 255))
@@ -98,10 +98,10 @@ class ImpressionistPalette:
         expanded = []
         for color in pastel_colors:
             expanded.append(color)
-            # Add even lighter tint
+            # Add slightly lighter tint
             r, g, b = [x / 255.0 for x in color]
             h, l, s = colorsys.rgb_to_hls(r, g, b)
-            l = min(0.92, l + 0.10)
+            l = min(0.80, l + 0.08)
             r, g, b = colorsys.hls_to_rgb(h, l, s)
             expanded.append((int(r * 255), int(g * 255), int(b * 255)))
 
@@ -111,16 +111,16 @@ class ImpressionistPalette:
     def get_background_color(palette_name):
         """Get soft background color for the canvas."""
         backgrounds = {
-            'python': (240, 248, 252),
-            'javascript': (255, 252, 245),
-            'php': (250, 245, 252),
-            'java': (255, 248, 245),
-            'ruby': (255, 248, 250),
-            'systems': (245, 250, 252),
-            'data': (245, 252, 248),
-            'cpp': (248, 250, 252),
+            'python': (220, 235, 242),
+            'javascript': (242, 235, 220),
+            'php': (235, 225, 240),
+            'java': (242, 230, 225),
+            'ruby': (242, 225, 230),
+            'systems': (225, 235, 240),
+            'data': (225, 240, 230),
+            'cpp': (230, 232, 235),
         }
-        return backgrounds.get(palette_name, (250, 250, 250))
+        return backgrounds.get(palette_name, (230, 230, 230))
 
 
 class ImpressionistStyleGenerator(BaseArtGenerator):
@@ -184,7 +184,7 @@ class ImpressionistStyleGenerator(BaseArtGenerator):
 
             # Paint with decreasing opacity
             for radius in range(int(max_radius), 0, -int(max_radius / 20)):
-                opacity = int(20 + (radius / max_radius) * 15)
+                opacity = int(40 + (radius / max_radius) * 60)
                 draw.ellipse(
                     [x - radius, y - radius, x + radius, y + radius],
                     fill=color + (opacity,)
@@ -226,7 +226,7 @@ class ImpressionistStyleGenerator(BaseArtGenerator):
                 color = self._vary_color(base_color, file_hash, i)
 
                 # Vary opacity for depth
-                opacity = DeterministicRandom.randint(file_hash, i * 4, 100, 200)
+                opacity = DeterministicRandom.randint(file_hash, i * 4, 150, 230)
 
                 # Draw dab (small ellipse)
                 draw.ellipse(
@@ -235,34 +235,35 @@ class ImpressionistStyleGenerator(BaseArtGenerator):
                 )
 
     def _paint_light_accents(self, img, colors, fingerprint):
-        """Add bright accents to simulate sunlight and highlights."""
+        """Add vibrant color accents for important files."""
         draw = ImageDraw.Draw(img, 'RGBA')
 
         # Identify important files (largest)
         files = sorted(fingerprint['files'].items(), key=lambda x: x[1]['lines'], reverse=True)[:5]
 
-        for file_path, file_data in files:
+        for idx, (file_path, file_data) in enumerate(files):
             file_hash = file_data['hash']
 
-            # Position for light accent
+            # Position for color accent
             x = DeterministicRandom.uniform(file_hash, 100, self.width * 0.2, self.width * 0.8)
             y = DeterministicRandom.uniform(file_hash, 101, self.height * 0.2, self.height * 0.8)
 
-            # Very light, almost white color with hint of palette color
-            base_color = colors[0]
-            r, g, b = base_color
-            light_color = (
-                min(255, r + 100),
-                min(255, g + 100),
-                min(255, b + 100)
-            )
+            # Use vibrant palette color instead of white
+            accent_color = colors[idx % len(colors)]
+            r, g, b = [x / 255.0 for x in accent_color]
+            h, l, s = colorsys.rgb_to_hls(r, g, b)
+            # Slightly brighter and more saturated
+            l = min(0.75, l + 0.10)
+            s = min(0.80, s + 0.10)
+            r, g, b = colorsys.hls_to_rgb(h, l, s)
+            bright_color = (int(r * 255), int(g * 255), int(b * 255))
 
-            # Paint with decreasing size and opacity (light halo)
+            # Paint with decreasing size and opacity (color halo)
             for radius in range(50, 10, -5):
-                opacity = int(30 - (50 - radius) * 0.4)
+                opacity = int(50 - (50 - radius) * 0.8)
                 draw.ellipse(
                     [x - radius, y - radius, x + radius, y + radius],
-                    fill=light_color + (opacity,)
+                    fill=bright_color + (opacity,)
                 )
 
     def _vary_color(self, base_color, hash_string, index):

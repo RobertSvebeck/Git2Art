@@ -22,6 +22,8 @@ def seed_art_styles():
     sort_order_map = {
         'default': 0,
         'impressionist': 1,
+        'watercolor': 2,
+        'pixel': 3,
         # Add more styles here as they're created
     }
 
