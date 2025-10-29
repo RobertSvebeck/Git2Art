@@ -9,7 +9,7 @@ from utils.watermark import add_watermark
 from models.artwork import Artwork
 
 
-def generate_art_from_github(github_url, temp_dir, images_dir, force=False, art_style='default'):
+def generate_art_from_github(github_url, temp_dir, images_dir, force=False, art_style='expressionist'):
     """
     Generate artwork from a GitHub repository.
 
@@ -18,7 +18,7 @@ def generate_art_from_github(github_url, temp_dir, images_dir, force=False, art_
         temp_dir: Temporary directory for cloning repos
         images_dir: Directory for generated images
         force: If True, bypass cache and force regeneration
-        art_style: Art style to use ('default', 'minimalist', etc.)
+        art_style: Art style to use ('expressionist', 'minimalist', etc.)
 
     Returns:
         dict: Result with image_url, repo_name, artwork_id, and cached flag
@@ -121,18 +121,18 @@ def get_all_gallery_artworks(images_dir):
     artworks = []
 
     try:
-        all_artworks = Artwork.get_all(order_by='created_at', order_dir='DESC')
+        all_artworks = Artwork.get_latest_per_repo_and_style()
 
         for artwork in all_artworks:
             repo_url = artwork['repo_url']
             repo_name = artwork['repo_name']
+            art_style = artwork.get('art_style', 'expressionist')
 
-            # Get version count for this repo
-            versions = Artwork.get_versions_by_repo(repo_url)
+            # Get version count for this repo+style combination
+            versions = Artwork.get_by_repo_and_style(repo_url, art_style)
             version_count = len(versions)
 
             # Get art style display name
-            art_style = artwork.get('art_style', 'default')
             art_style_name = art_style.replace('_', ' ').title()
 
             scale = 1.0

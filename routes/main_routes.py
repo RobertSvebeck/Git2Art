@@ -58,6 +58,9 @@ def artwork_view(artwork_id):
     # Build image URL from filename
     image_url = f'/static/generated/{artwork["image_filename"]}'
 
+    art_style = artwork.get('art_style', 'expressionist')
+    art_style_name = art_style.replace('_', ' ').title()
+
     artwork_data = {
         'id': artwork['id'],
         'repo_name': artwork['repo_name'],
@@ -65,6 +68,8 @@ def artwork_view(artwork_id):
         'commit_hash': artwork['commit_hash'],
         'image_url': image_url,
         'like_count': artwork['like_count'],
+        'art_style': art_style,
+        'art_style_name': art_style_name,
         'created_at_formatted': artwork['created_at'].strftime('%B %d, %Y') if artwork.get('created_at') else 'Unknown'
     }
 
@@ -76,7 +81,7 @@ def generate():
     """Generate artwork from a GitHub repository URL."""
     github_url = request.json.get('github_url')
     force_regenerate = request.json.get('force_regenerate', False)
-    art_style = request.json.get('art_style', 'default')
+    art_style = request.json.get('art_style', 'expressionist')
 
     if not github_url:
         return jsonify({'error': 'GitHub URL is required'}), 400

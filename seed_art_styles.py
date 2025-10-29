@@ -20,7 +20,7 @@ def seed_art_styles():
 
     # Define sort order (you can customize this)
     sort_order_map = {
-        'default': 0,
+        'expressionist': 0,
         'impressionist': 1,
         'watercolor': 2,
         'pixel': 3,

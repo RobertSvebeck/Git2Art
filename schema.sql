@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS artworks (
     repo_url VARCHAR(512) NOT NULL,
     repo_name VARCHAR(255) NOT NULL,
     commit_hash VARCHAR(40) NOT NULL,
-    art_style VARCHAR(50) NOT NULL DEFAULT 'default',
+    art_style VARCHAR(50) NOT NULL DEFAULT 'expressionist',
     image_path VARCHAR(512) NOT NULL,
     image_filename VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

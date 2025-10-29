@@ -1,13 +1,13 @@
 """Style registry and factory for art generators."""
 
-from .default_style import DefaultStyleGenerator
+from .expressionist_style import ExpressionistStyleGenerator
 from .impressionist_style import ImpressionistStyleGenerator
 from .watercolor_style import WatercolorStyleGenerator
 from .pixel_style import PixelStyleGenerator
 
 # Registry of all available art styles
 STYLE_REGISTRY = {
-    'default': DefaultStyleGenerator,
+    'expressionist': ExpressionistStyleGenerator,
     'impressionist': ImpressionistStyleGenerator,
     'watercolor': WatercolorStyleGenerator,
     'pixel': PixelStyleGenerator,
@@ -17,14 +17,14 @@ STYLE_REGISTRY = {
 }
 
 # Default style to use when none is specified
-DEFAULT_STYLE = 'default'
+DEFAULT_STYLE = 'expressionist'
 
 
-def get_generator(style='default', **kwargs):
+def get_generator(style='expressionist', **kwargs):
     """Factory function to get an art generator by style name.
 
     Args:
-        style: Name of the art style ('default', 'minimalist', etc.)
+        style: Name of the art style ('expressionist', 'minimalist', etc.)
         **kwargs: Additional parameters to pass to the generator constructor
                   (repo_path, width, height, aspect_ratio, etc.)
 
@@ -35,7 +35,7 @@ def get_generator(style='default', **kwargs):
         ValueError: If the requested style doesn't exist
 
     Example:
-        >>> generator = get_generator('default', repo_path='/path/to/repo', width=1600)
+        >>> generator = get_generator('expressionist', repo_path='/path/to/repo', width=1600)
         >>> generator.generate_art('output.png')
     """
     if style not in STYLE_REGISTRY:
@@ -53,9 +53,9 @@ def list_available_styles():
         List of dictionaries with style information:
         [
             {
-                'name': 'default',
+                'name': 'expressionist',
                 'description': 'Bold expressionist style...',
-                'class': 'DefaultStyleGenerator'
+                'class': 'ExpressionistStyleGenerator'
             },
             ...
         ]

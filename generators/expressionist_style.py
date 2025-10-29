@@ -1,4 +1,4 @@
-"""Default art style - Bold expressionist with organic shapes.
+"""Expressionist art style - Bold expressionist with organic shapes.
 
 This is the original Git2Art style featuring:
 - Repository-driven color palettes
@@ -478,14 +478,14 @@ class OrganicShapes:
         return lines
 
 
-class DefaultStyleGenerator(BaseArtGenerator):
-    """Default Git2Art style - Bold expressionist with organic shapes."""
+class ExpressionistStyleGenerator(BaseArtGenerator):
+    """Expressionist Git2Art style - Bold expressionist with organic shapes."""
 
-    STYLE_NAME = "default"
+    STYLE_NAME = "expressionist"
     STYLE_DESCRIPTION = "Bold expressionist style with organic shapes, thick strokes, and vibrant colors"
 
     def __init__(self, repo_path='.', width=1600, height=1200, aspect_ratio='auto', contrast='high', **kwargs):
-        """Initialize default style generator.
+        """Initialize expressionist style generator.
 
         Args:
             contrast: Color contrast level ('low', 'medium', 'high')

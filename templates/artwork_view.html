@@ -31,6 +31,7 @@
                     {{ artwork.repo_name }}
                     {% endif %}
                 </h1>
+                <span class="art-style-badge" data-style="{{ artwork.art_style }}">{{ artwork.art_style_name }}</span>
                 <p class="artwork-commit">Commit: {{ artwork.commit_hash[:8] }}</p>
                 <p class="artwork-date">{{ artwork.created_at_formatted }}</p>
 

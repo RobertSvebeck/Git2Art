@@ -7,7 +7,7 @@ class Artwork:
     """Model for artwork database operations."""
 
     @staticmethod
-    def create(repo_url, repo_name, commit_hash, image_path, image_filename, art_style='default'):
+    def create(repo_url, repo_name, commit_hash, image_path, image_filename, art_style='expressionist'):
         """Create or update artwork record."""
         with get_db_cursor(commit=True) as cursor:
             cursor.execute("""
@@ -21,7 +21,7 @@ class Artwork:
             return cursor.lastrowid
 
     @staticmethod
-    def get_by_repo_and_commit(repo_url, commit_hash, art_style='default'):
+    def get_by_repo_and_commit(repo_url, commit_hash, art_style='expressionist'):
         """Get artwork by repository URL, commit hash, and art style."""
         with get_db_cursor(commit=False) as cursor:
             cursor.execute("""
@@ -33,7 +33,7 @@ class Artwork:
     @staticmethod
     def get_all(order_by='created_at', order_dir='DESC', limit=None):
         """Get all artworks with optional ordering and limit."""
-        allowed_orders = ['created_at', 'like_count', 'repo_name']
+        allowed_orders = ['created_at', 'like_count', 'repo_name', 'art_style']
         allowed_dirs = ['ASC', 'DESC']
 
         if order_by not in allowed_orders:
@@ -112,7 +112,7 @@ class Artwork:
             return cursor.fetchall()
 
     @staticmethod
-    def get_by_repo_and_style(repo_url, art_style='default'):
+    def get_by_repo_and_style(repo_url, art_style='expressionist'):
         """Get all artworks for a repository in a specific style."""
         with get_db_cursor(commit=False) as cursor:
             cursor.execute("""
@@ -133,6 +133,25 @@ class Artwork:
                 GROUP BY art_style
                 ORDER BY count DESC
             """, (repo_url,))
+            return cursor.fetchall()
+
+    @staticmethod
+    def get_latest_per_repo_and_style():
+        """Get the latest artwork for each unique (repo_url, art_style) combination."""
+        with get_db_cursor(commit=False) as cursor:
+            cursor.execute("""
+                SELECT a.*
+                FROM artworks a
+                INNER JOIN (
+                    SELECT repo_url, art_style, MAX(created_at) as max_created_at
+                    FROM artworks
+                    GROUP BY repo_url, art_style
+                ) latest
+                ON a.repo_url = latest.repo_url
+                AND a.art_style = latest.art_style
+                AND a.created_at = latest.max_created_at
+                ORDER BY a.art_style ASC, a.created_at DESC
+            """)
             return cursor.fetchall()
 
 

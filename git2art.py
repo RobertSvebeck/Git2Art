@@ -30,8 +30,8 @@ def main():
     parser.add_argument('--contrast', default='high',
                        choices=['low', 'medium', 'high'],
                        help='Color contrast level: low (subtle), medium (balanced), high (dramatic). Default: high')
-    parser.add_argument('--style', default='default',
-                       help='Art style to use (default, minimalist, etc.). Use --list-styles to see all available')
+    parser.add_argument('--style', default='expressionist',
+                       help='Art style to use (expressionist, minimalist, etc.). Use --list-styles to see all available')
     parser.add_argument('--list-styles', action='store_true',
                        help='List all available art styles and exit')
 

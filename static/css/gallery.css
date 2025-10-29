@@ -669,7 +669,7 @@ main {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.art-style-badge[data-style="default"] {
+.art-style-badge[data-style="expressionist"] {
     background: var(--charcoal);
 }
 

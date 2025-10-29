@@ -74,7 +74,7 @@
                         <p class="form-hint">Choose the artistic style for your artwork</p>
                         <select id="artStyle" name="artStyle">
                             {% for style in art_styles %}
-                            <option value="{{ style.style_id }}" {% if style.style_id == 'default' %}selected{% endif %}>
+                            <option value="{{ style.style_id }}" {% if style.style_id == 'expressionist' %}selected{% endif %}>
                                 {{ style.display_name }} - {{ style.description }}
                             </option>
                             {% endfor %}

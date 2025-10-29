@@ -112,9 +112,10 @@ class PixelStyleGenerator(BaseArtGenerator):
         """Initialize pixel art generator."""
         super().__init__(repo_path, width, height, aspect_ratio, **kwargs)
 
-        self.pixel_size = kwargs.get('pixel_size', 16)  # Size of each "pixel" block
-        self.grid_cols = self.width // self.pixel_size
-        self.grid_rows = self.height // self.pixel_size
+        self.base_pixel_size = kwargs.get('pixel_size', 16)
+        self.pixel_sizes = [8, 12, 16, 24, 32]  # Available pixel sizes
+        self.grid_cols = self.width // self.base_pixel_size
+        self.grid_rows = self.height // self.base_pixel_size
 
     def generate_art(self, output_path='repo_art.png'):
         """Generate pixel art."""
@@ -145,21 +146,24 @@ class PixelStyleGenerator(BaseArtGenerator):
         return output_path
 
     def _draw_background_pattern(self, draw, colors, fingerprint):
-        """Draw subtle pixel pattern in background."""
+        """Draw subtle pixel pattern in background with varied sizes."""
         total_lines = fingerprint['total_lines']
 
-        # Create a subtle background pattern
-        for i in range(0, self.grid_cols, 4):
-            for j in range(0, self.grid_rows, 4):
-                # Deterministic pattern
-                pattern_seed = f"{total_lines}_{i}_{j}"
-                if DeterministicRandom.uniform(pattern_seed, 0, 0, 1) < 0.1:
-                    # Draw a faint pixel
-                    x = i * self.pixel_size
-                    y = j * self.pixel_size
-                    color = colors[-1]  # Use last color (usually gray/dark)
+        # Use smaller pixels for background (8px and 12px)
+        small_sizes = [8, 12]
 
-                    # Make it very dark
+        for i in range(0, self.grid_cols, 2):
+            for j in range(0, self.grid_rows, 2):
+                pattern_seed = f"{total_lines}_{i}_{j}"
+                if DeterministicRandom.uniform(pattern_seed, 0, 0, 1) < 0.15:
+                    # Choose pixel size deterministically
+                    size_idx = DeterministicRandom.randint(pattern_seed, 1, 0, len(small_sizes) - 1)
+                    pixel_size = small_sizes[size_idx]
+
+                    x = i * self.base_pixel_size
+                    y = j * self.base_pixel_size
+                    color = colors[-1]
+
                     r, g, b = color
                     dark_color = (
                         max(20, r // 4),
@@ -167,119 +171,148 @@ class PixelStyleGenerator(BaseArtGenerator):
                         max(20, b // 4)
                     )
 
-                    self._draw_pixel(draw, x, y, dark_color)
+                    self._draw_pixel(draw, x, y, dark_color, pixel_size)
 
     def _draw_pixel_sprites(self, draw, colors, fingerprint):
-        """Draw pixel sprites representing files."""
+        """Draw pixel sprites with varied pixel sizes based on importance."""
         files = sorted(fingerprint['files'].items(), key=lambda x: x[1]['lines'], reverse=True)
+
+        # Calculate margins (in pixels, not grid units)
+        margin = 80  # Consistent margin on all sides
 
         for idx, (file_path, file_data) in enumerate(files):
             file_hash = file_data['hash']
             lines = file_data['lines']
 
-            # Position on grid
-            grid_x = DeterministicRandom.randint(file_hash, 0, 2, self.grid_cols - 10)
-            grid_y = DeterministicRandom.randint(file_hash, 1, 2, self.grid_rows - 10)
+            importance = lines / fingerprint['total_lines']
 
-            # Size based on lines of code (in grid units)
-            sprite_size = max(2, min(8, int(lines / fingerprint['total_lines'] * 20) + 2))
+            # Larger files get chunkier pixels
+            if importance > 0.15:
+                pixel_size = 32
+            elif importance > 0.08:
+                pixel_size = 24
+            elif importance > 0.04:
+                pixel_size = 16
+            else:
+                pixel_size = 12
 
-            # Color selection
+            # Sprite size in grid units
+            sprite_size = max(2, min(10, int(importance * 25) + 2))
+
+            # Calculate max sprite dimension in actual pixels
+            max_sprite_pixels = sprite_size * pixel_size
+
+            # Position in actual pixel coordinates with proper margins
+            x = int(DeterministicRandom.uniform(file_hash, 0, margin,
+                                                self.width - margin - max_sprite_pixels))
+            y = int(DeterministicRandom.uniform(file_hash, 1, margin,
+                                                self.height - margin - max_sprite_pixels))
+
+            # Convert back to grid coordinates for drawing functions
+            grid_x = x // self.base_pixel_size
+            grid_y = y // self.base_pixel_size
+
             color_idx = DeterministicRandom.randint(file_hash, 2, 0, len(colors) - 1)
             color = colors[color_idx]
 
-            # Draw sprite shape (box or cross pattern)
             sprite_type = DeterministicRandom.randint(file_hash, 3, 0, 2)
 
             if sprite_type == 0:
-                # Filled box
-                self._draw_pixel_box(draw, grid_x, grid_y, sprite_size, color)
+                self._draw_pixel_box(draw, grid_x, grid_y, sprite_size, color, pixel_size)
             elif sprite_type == 1:
-                # Hollow box
-                self._draw_pixel_box_outline(draw, grid_x, grid_y, sprite_size, color)
+                self._draw_pixel_box_outline(draw, grid_x, grid_y, sprite_size, color, pixel_size)
             else:
-                # Cross/Plus shape
-                self._draw_pixel_cross(draw, grid_x, grid_y, sprite_size, color)
+                self._draw_pixel_cross(draw, grid_x, grid_y, sprite_size, color, pixel_size)
 
     def _draw_pixel_borders(self, draw, colors, fingerprint):
-        """Draw decorative pixel borders."""
-        total_lines = fingerprint['total_lines']
+        """Draw decorative pixel borders with mixed sizes."""
         border_color = colors[0]
-
-        # Draw corner decorations
         corner_size = 5
+        pixel_size = 16  # Medium size for borders
 
         # Top-left corner
         for i in range(corner_size):
             for j in range(corner_size - i):
-                self._draw_pixel(draw, i * self.pixel_size, j * self.pixel_size, border_color)
+                self._draw_pixel(draw, i * pixel_size, j * pixel_size, border_color, pixel_size)
 
         # Top-right corner
         for i in range(corner_size):
             for j in range(corner_size - i):
-                x = (self.grid_cols - i - 1) * self.pixel_size
-                y = j * self.pixel_size
-                self._draw_pixel(draw, x, y, border_color)
+                x = self.width - (i + 1) * pixel_size
+                y = j * pixel_size
+                self._draw_pixel(draw, x, y, border_color, pixel_size)
 
         # Bottom-left corner
         for i in range(corner_size):
             for j in range(corner_size - i):
-                x = i * self.pixel_size
-                y = (self.grid_rows - j - 1) * self.pixel_size
-                self._draw_pixel(draw, x, y, border_color)
+                x = i * pixel_size
+                y = self.height - (j + 1) * pixel_size
+                self._draw_pixel(draw, x, y, border_color, pixel_size)
 
         # Bottom-right corner
         for i in range(corner_size):
             for j in range(corner_size - i):
-                x = (self.grid_cols - i - 1) * self.pixel_size
-                y = (self.grid_rows - j - 1) * self.pixel_size
-                self._draw_pixel(draw, x, y, border_color)
+                x = self.width - (i + 1) * pixel_size
+                y = self.height - (j + 1) * pixel_size
+                self._draw_pixel(draw, x, y, border_color, pixel_size)
 
-    def _draw_pixel(self, draw, x, y, color):
-        """Draw a single pixel block."""
+    def _draw_pixel(self, draw, x, y, color, pixel_size=None):
+        """Draw a single pixel block with specified size."""
+        if pixel_size is None:
+            pixel_size = self.base_pixel_size
+
         draw.rectangle(
-            [x, y, x + self.pixel_size - 1, y + self.pixel_size - 1],
+            [x, y, x + pixel_size - 1, y + pixel_size - 1],
             fill=color
         )
 
-    def _draw_pixel_box(self, draw, grid_x, grid_y, size, color):
-        """Draw a filled box of pixels."""
+    def _draw_pixel_box(self, draw, grid_x, grid_y, size, color, pixel_size=None):
+        """Draw a filled box of pixels with specified pixel size."""
+        if pixel_size is None:
+            pixel_size = self.base_pixel_size
+
         for i in range(size):
             for j in range(size):
-                x = (grid_x + i) * self.pixel_size
-                y = (grid_y + j) * self.pixel_size
-                self._draw_pixel(draw, x, y, color)
+                x = grid_x * self.base_pixel_size + i * pixel_size
+                y = grid_y * self.base_pixel_size + j * pixel_size
+                self._draw_pixel(draw, x, y, color, pixel_size)
 
-    def _draw_pixel_box_outline(self, draw, grid_x, grid_y, size, color):
-        """Draw a hollow box outline."""
+    def _draw_pixel_box_outline(self, draw, grid_x, grid_y, size, color, pixel_size=None):
+        """Draw a hollow box outline with specified pixel size."""
+        if pixel_size is None:
+            pixel_size = self.base_pixel_size
+
         for i in range(size):
             # Top and bottom edges
-            x = (grid_x + i) * self.pixel_size
-            y_top = grid_y * self.pixel_size
-            y_bottom = (grid_y + size - 1) * self.pixel_size
-            self._draw_pixel(draw, x, y_top, color)
-            self._draw_pixel(draw, x, y_bottom, color)
+            x = grid_x * self.base_pixel_size + i * pixel_size
+            y_top = grid_y * self.base_pixel_size
+            y_bottom = grid_y * self.base_pixel_size + (size - 1) * pixel_size
+            self._draw_pixel(draw, x, y_top, color, pixel_size)
+            self._draw_pixel(draw, x, y_bottom, color, pixel_size)
 
         for j in range(1, size - 1):
             # Left and right edges
-            x_left = grid_x * self.pixel_size
-            x_right = (grid_x + size - 1) * self.pixel_size
-            y = (grid_y + j) * self.pixel_size
-            self._draw_pixel(draw, x_left, y, color)
-            self._draw_pixel(draw, x_right, y, color)
+            x_left = grid_x * self.base_pixel_size
+            x_right = grid_x * self.base_pixel_size + (size - 1) * pixel_size
+            y = grid_y * self.base_pixel_size + j * pixel_size
+            self._draw_pixel(draw, x_left, y, color, pixel_size)
+            self._draw_pixel(draw, x_right, y, color, pixel_size)
 
-    def _draw_pixel_cross(self, draw, grid_x, grid_y, size, color):
-        """Draw a cross/plus shape."""
+    def _draw_pixel_cross(self, draw, grid_x, grid_y, size, color, pixel_size=None):
+        """Draw a cross/plus shape with specified pixel size."""
+        if pixel_size is None:
+            pixel_size = self.base_pixel_size
+
         center = size // 2
 
         # Vertical line
         for j in range(size):
-            x = (grid_x + center) * self.pixel_size
-            y = (grid_y + j) * self.pixel_size
-            self._draw_pixel(draw, x, y, color)
+            x = grid_x * self.base_pixel_size + center * pixel_size
+            y = grid_y * self.base_pixel_size + j * pixel_size
+            self._draw_pixel(draw, x, y, color, pixel_size)
 
         # Horizontal line
         for i in range(size):
-            x = (grid_x + i) * self.pixel_size
-            y = (grid_y + center) * self.pixel_size
-            self._draw_pixel(draw, x, y, color)
+            x = grid_x * self.base_pixel_size + i * pixel_size
+            y = grid_y * self.base_pixel_size + center * pixel_size
+            self._draw_pixel(draw, x, y, color, pixel_size)

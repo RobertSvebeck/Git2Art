@@ -309,27 +309,20 @@
                 });
                 column2.style.display = 'none';
             } else {
-                // Desktop: distribute filtered cards using batch height reads
+                // Desktop: distribute filtered cards to shorter column
                 column2.style.display = 'flex';
 
-                // Batch: read all heights at once, then append
-                const heights = [];
-                filteredCards.forEach((cardData, index) => {
+                filteredCards.forEach((cardData) => {
                     const clonedCard = cardData.element.cloneNode(true);
 
-                    // Append temporarily to measure, then move to correct column
-                    column1.appendChild(clonedCard);
+                    // Check which column is shorter and add card there
+                    const col1Height = column1.offsetHeight;
+                    const col2Height = column2.offsetHeight;
 
-                    // Only read offsetHeight every N cards to reduce layout thrashing
-                    if (index % 3 === 0 || index === filteredCards.length - 1) {
-                        const col1Height = column1.offsetHeight;
-                        const col2Height = column2.offsetHeight;
-
-                        // Move card to shorter column if needed
-                        if (col2Height < col1Height && clonedCard.parentElement === column1) {
-                            column1.removeChild(clonedCard);
-                            column2.appendChild(clonedCard);
-                        }
+                    if (col2Height <= col1Height) {
+                        column2.appendChild(clonedCard);
+                    } else {
+                        column1.appendChild(clonedCard);
                     }
                 });
             }
@@ -546,22 +539,20 @@
                 });
                 column2.style.display = 'none';
             } else {
-                // Desktop: distribute cards with optimized height reads
+                // Desktop: distribute cards to shorter column
                 column2.style.display = 'flex';
 
-                cards.forEach((card, index) => {
+                cards.forEach((card) => {
                     const clonedCard = card.cloneNode(true);
-                    column1.appendChild(clonedCard);
 
-                    // Only read offsetHeight every N cards to reduce layout thrashing
-                    if (index % 3 === 0 || index === cards.length - 1) {
-                        const col1Height = column1.offsetHeight;
-                        const col2Height = column2.offsetHeight;
+                    // Check which column is shorter and add card there
+                    const col1Height = column1.offsetHeight;
+                    const col2Height = column2.offsetHeight;
 
-                        if (col2Height < col1Height && clonedCard.parentElement === column1) {
-                            column1.removeChild(clonedCard);
-                            column2.appendChild(clonedCard);
-                        }
+                    if (col2Height <= col1Height) {
+                        column2.appendChild(clonedCard);
+                    } else {
+                        column1.appendChild(clonedCard);
                     }
                 });
             }
