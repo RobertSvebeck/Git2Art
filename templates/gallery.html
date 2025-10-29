@@ -90,16 +90,15 @@
                             <div class="card-actions">
                                 {% if artwork.id %}
                                 <button class="btn btn-like" data-artwork-id="{{ artwork.id }}" onclick="toggleLike({{ artwork.id }})">
-                                    <span class="like-icon">♡</span>
-                                    <span class="like-count">{{ artwork.like_count }}</span>
+                                    <span class="like-count">{{ artwork.like_count }}</span> Likes
                                 </button>
                                 <a href="{{ url_for('main.artwork_view', artwork_id=artwork.id) }}" class="btn btn-view">View Full Size</a>
                                 <button class="btn btn-regenerate" data-repo-url="{{ artwork.repo_url }}" data-repo-name="{{ artwork.repo_name }}" data-commit-hash="{{ artwork.commit_hash }}" onclick="openRegenerateModal('{{ artwork.repo_url }}', '{{ artwork.repo_name }}', '{{ artwork.commit_hash }}')">
-                                    <span class="regenerate-icon">🎨</span> Regenerate
+                                    Regenerate
                                 </button>
                                 {% if artwork.version_count > 1 %}
                                 <button class="btn btn-versions" data-repo-url="{{ artwork.repo_url }}" data-repo-name="{{ artwork.repo_name }}" onclick="openVersionHistory('{{ artwork.repo_url }}', '{{ artwork.repo_name }}')">
-                                    <span class="version-icon">📖</span> Versions
+                                    Versions
                                 </button>
                                 {% endif %}
                                 {% endif %}
@@ -616,19 +615,22 @@
             try {
                 const response = await fetch(`/api/artwork/${artworkId}/has_liked`);
                 const data = await response.json();
-                const button = document.querySelector(`[data-artwork-id="${artworkId}"]`);
-                if (button && data.has_liked) {
-                    button.classList.add('liked');
-                    button.querySelector('.like-icon').textContent = '♥';
-                }
+                // Update all buttons with this artwork ID (both hidden source and visible clones)
+                const buttons = document.querySelectorAll(`[data-artwork-id="${artworkId}"]`);
+                buttons.forEach(button => {
+                    if (data.has_liked) {
+                        button.classList.add('liked');
+                    }
+                });
             } catch (error) {
                 console.error('Error checking like status:', error);
             }
         }
 
         async function toggleLike(artworkId) {
-            const button = document.querySelector(`[data-artwork-id="${artworkId}"]`);
-            if (!button) return;
+            // Find all buttons with this artwork ID (both hidden source and visible clones)
+            const buttons = document.querySelectorAll(`[data-artwork-id="${artworkId}"]`);
+            if (buttons.length === 0) return;
 
             try {
                 const response = await fetch(`/api/artwork/${artworkId}/like`, {
@@ -641,18 +643,20 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    const likeIcon = button.querySelector('.like-icon');
-                    const likeCount = button.querySelector('.like-count');
+                    // Update all instances of this button (both hidden and visible)
+                    buttons.forEach(button => {
+                        const likeCount = button.querySelector('.like-count');
 
-                    if (data.action === 'liked') {
-                        button.classList.add('liked');
-                        likeIcon.textContent = '♥';
-                    } else {
-                        button.classList.remove('liked');
-                        likeIcon.textContent = '♡';
-                    }
+                        if (data.action === 'liked') {
+                            button.classList.add('liked');
+                        } else {
+                            button.classList.remove('liked');
+                        }
 
-                    likeCount.textContent = data.like_count;
+                        if (likeCount) {
+                            likeCount.textContent = data.like_count;
+                        }
+                    });
                 }
             } catch (error) {
                 console.error('Error toggling like:', error);
