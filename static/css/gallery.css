@@ -622,23 +622,25 @@ main {
 
     .gallery-column {
         gap: 40px;
+        width: 100%;
     }
 
     .gallery-card {
-        max-width: 400px;
+        max-width: 100%;
+        width: 100%;
         margin: 0 auto;
     }
 
     main {
-        padding: 40px 20px 50px !important;
+        padding: 40px 15px 50px !important;
     }
 
     .card-frame {
-        padding: 5px;
+        padding: 4px;
     }
 
     .card-passepartout {
-        padding: 6%;
+        padding: 5%;
     }
 
     .search-container {
