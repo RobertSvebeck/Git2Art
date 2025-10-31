@@ -399,6 +399,7 @@ https://github.com/RobertSvebeck/Git2Art
 5. **Bold is better**: Thick strokes and filled areas = more impact
 6. **Layering creates depth**: Multiple passes build sophistication
 7. **Performance vs. beauty**: Balance micro-details with generation time
+8. **No emojis in code**: Emojis cause Unicode encoding errors in Flask/web environments - use plain ASCII text only
 
 ## Code Quality
 
@@ -421,6 +422,7 @@ https://github.com/RobertSvebeck/Git2Art
 - **Self-documenting**: Use clear variable and function names instead of comments
 - **DRY principle**: Always reuse existing functions/subs instead of creating duplicates
 - **Delete dead code**: Remove unused code immediately, don't comment it out
+- **NO EMOJIS**: Never use emojis in code (print statements, comments, strings). They cause Unicode encoding errors in Flask and other environments. Use plain ASCII text only.
 
 ### Project Maintenance
 - **Update TODO.md**: Mark tasks as completed immediately after finishing
