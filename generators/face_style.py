@@ -227,134 +227,310 @@ class FaceStyleGenerator(BaseArtGenerator):
             draw.polygon(plane['points'], fill=plane['color'])
 
     def _draw_cubist_eyes(self, draw, cx, cy, fw, fh):
-        """Draw eyes with Picasso-style multiple viewpoints."""
+        """Draw eyes with varied organic shapes and positions."""
         file_count = len(self.fingerprint['files'])
 
-        # Eye size and style based on file count
-        eye_size = int(fw * 0.08)
-        eye_y = cy - fh // 6
+        # Eye size based on file count
+        eye_size = int(fw * 0.08 * min(1.5, 0.7 + file_count / 50))
 
-        # LEFT EYE - Profile view (almond shaped)
-        left_x = cx - fw // 4
-        # Almond shape for left eye
-        points = [
-            (left_x - eye_size, eye_y),
-            (left_x, eye_y - eye_size//2),
-            (left_x + eye_size, eye_y),
-            (left_x, eye_y + eye_size//2)
-        ]
-        draw.polygon(points, fill=(50, 50, 60))
-        # Highlight
-        draw.ellipse([left_x - eye_size//3, eye_y - eye_size//3,
-                     left_x + eye_size//3, eye_y + eye_size//3],
-                    fill=(255, 255, 255))
+        # Base eye positions with variations
+        base_eye_y = cy - fh // 6
+        base_spacing = fw // 4
 
-        # RIGHT EYE - Frontal view (round)
-        right_x = cx + fw // 4
-        # Full round eye (no border)
-        draw.ellipse([right_x - eye_size, eye_y - eye_size,
-                     right_x + eye_size, eye_y + eye_size],
-                    fill=(255, 255, 255))
-        # Iris
-        iris_size = eye_size // 2
-        iris_color = self.palette[1]
-        draw.ellipse([right_x - iris_size, eye_y - iris_size,
-                     right_x + iris_size, eye_y + iris_size],
-                    fill=iris_color)
-        # Pupil
-        pupil_size = eye_size // 4
-        draw.ellipse([right_x - pupil_size, eye_y - pupil_size,
-                     right_x + pupil_size, eye_y + pupil_size],
-                    fill=(30, 30, 40))
+        # Determine eye styles based on repo characteristics
+        left_style = DeterministicRandom.randint(self.seed, 5000, 0, 4)
+        right_style = DeterministicRandom.randint(self.seed, 5001, 0, 4)
+
+        # VARIED POSITIONS for asymmetry
+        # Eye spacing variation (closer or farther apart)
+        spacing_mult = DeterministicRandom.uniform(self.seed, 5010, 0.7, 1.3)
+
+        # Left eye position (horizontal and vertical offsets)
+        left_x = int(cx - base_spacing * spacing_mult + DeterministicRandom.randint(self.seed, 5011, -fw//15, fw//15))
+        left_y = int(base_eye_y + DeterministicRandom.randint(self.seed, 5012, -fh//10, fh//10))
+
+        # Right eye position (independent offsets for asymmetry)
+        right_x = int(cx + base_spacing * spacing_mult + DeterministicRandom.randint(self.seed, 5013, -fw//15, fw//15))
+        right_y = int(base_eye_y + DeterministicRandom.randint(self.seed, 5014, -fh//10, fh//10))
+
+        # LEFT EYE - Multiple possible shapes
+        self._draw_varied_eye(draw, left_x, left_y, eye_size, left_style, self.palette[1])
+
+        # RIGHT EYE - Different shape and position
+        self._draw_varied_eye(draw, right_x, right_y, eye_size, right_style, self.palette[2])
+
+    def _draw_varied_eye(self, draw, x, y, size, style, color):
+        """Draw eye with one of several possible shapes."""
+        if style == 0:
+            # Circular eye
+            draw.ellipse([x - size, y - size, x + size, y + size], fill=(255, 255, 255))
+            draw.ellipse([x - size//2, y - size//2, x + size//2, y + size//2], fill=color)
+            draw.ellipse([x - size//4, y - size//4, x + size//4, y + size//4], fill=(40, 40, 50))
+
+        elif style == 1:
+            # Almond/diamond shape
+            points = [
+                (x - size, y),
+                (x, y - size//2),
+                (x + size, y),
+                (x, y + size//2)
+            ]
+            draw.polygon(points, fill=color)
+            draw.ellipse([x - size//3, y - size//3, x + size//3, y + size//3], fill=(255, 255, 255))
+
+        elif style == 2:
+            # Organic blob eye
+            blob_points = self._create_organic_blob(x, y, size, self.seed, 5100)
+            draw.polygon(blob_points, fill=color)
+            draw.ellipse([x - size//3, y - size//3, x + size//3, y + size//3], fill=(255, 255, 255))
+
+        elif style == 3:
+            # Square/rectangular eye
+            draw.rectangle([x - size, y - size//2, x + size, y + size//2], fill=color)
+            draw.ellipse([x - size//3, y - size//3, x + size//3, y + size//3], fill=(255, 255, 255))
+
+        else:
+            # Curved crescent shape
+            points = []
+            for i in range(10):
+                angle = -math.pi/2 + (i / 9) * math.pi
+                radius = size
+                px = x + math.cos(angle) * radius
+                py = y + math.sin(angle) * radius
+                points.append((px, py))
+            for i in range(10):
+                angle = math.pi/2 - (i / 9) * math.pi
+                radius = size * 0.6
+                px = x + math.cos(angle) * radius
+                py = y + math.sin(angle) * radius
+                points.append((px, py))
+            draw.polygon(points, fill=color)
 
     def _draw_nose_profile(self, draw, cx, cy, fw, fh):
-        """Draw nose as simple bold shape."""
-        # Simple triangular or L-shaped nose (profile + frontal)
-        nose_color = self._darken_color(self._lighten_color(self.palette[0], 0.6), 0.15)
+        """Draw nose with varied shapes and positions."""
+        commit_count = self.fingerprint['commit_count']
 
-        # Triangle for nose
-        nose_size = int(fw * 0.12)
-        points = [
-            (cx, cy),
-            (cx - nose_size//3, cy + nose_size),
-            (cx + nose_size//3, cy + nose_size)
-        ]
-        draw.polygon(points, fill=nose_color)
+        # Nose size based on commits
+        nose_size = int(fw * 0.10 * min(1.5, 0.7 + commit_count / 100))
+        nose_color = self.palette[2]
 
-        # Add nostril dots for character
-        nostril_y = cy + nose_size * 0.8
-        nostril_size = nose_size // 8
-        draw.ellipse([cx - nose_size//4 - nostril_size, nostril_y - nostril_size,
-                     cx - nose_size//4 + nostril_size, nostril_y + nostril_size],
-                    fill=(60, 60, 70))
-        draw.ellipse([cx + nose_size//4 - nostril_size, nostril_y - nostril_size,
-                     cx + nose_size//4 + nostril_size, nostril_y + nostril_size],
-                    fill=(60, 60, 70))
+        # VARIED POSITION for nose
+        nose_x = int(cx + DeterministicRandom.randint(self.seed, 5900, -fw//12, fw//12))
+        nose_y = int(cy + DeterministicRandom.randint(self.seed, 5901, -fh//12, fh//12))
+
+        # Determine nose style
+        nose_style = DeterministicRandom.randint(self.seed, 6000, 0, 4)
+
+        if nose_style == 0:
+            # Triangle nose
+            points = [
+                (nose_x, nose_y),
+                (nose_x - nose_size//3, nose_y + nose_size),
+                (nose_x + nose_size//3, nose_y + nose_size)
+            ]
+            draw.polygon(points, fill=nose_color)
+
+        elif nose_style == 1:
+            # Vertical rectangle
+            draw.rectangle([nose_x - nose_size//4, nose_y, nose_x + nose_size//4, nose_y + nose_size],
+                          fill=nose_color)
+
+        elif nose_style == 2:
+            # L-shaped profile nose
+            points = [
+                (nose_x - nose_size//3, nose_y + nose_size//3),
+                (nose_x, nose_y),
+                (nose_x + nose_size//4, nose_y + nose_size//2),
+                (nose_x + nose_size//4, nose_y + nose_size),
+                (nose_x - nose_size//3, nose_y + nose_size)
+            ]
+            draw.polygon(points, fill=nose_color)
+
+        elif nose_style == 3:
+            # Organic blob nose
+            blob_points = self._create_organic_blob(nose_x, nose_y + nose_size//2, nose_size, self.seed, 6100)
+            draw.polygon(blob_points, fill=nose_color)
+
+        else:
+            # Curved hook nose
+            points = []
+            for i in range(8):
+                t = i / 7
+                x = nose_x - nose_size//4 + math.sin(t * math.pi) * nose_size//3
+                y = nose_y + t * nose_size
+                points.append((x, y))
+            for i in range(4):
+                t = i / 3
+                x = nose_x - nose_size//4 + nose_size//3 - t * nose_size//3
+                y = nose_y + nose_size - t * nose_size//4
+                points.append((x, y))
+            draw.polygon(points, fill=nose_color)
 
     def _draw_expressive_mouth(self, draw, cx, cy, fw, fh):
-        """Draw bold expressive mouth with personality."""
+        """Draw mouth with varied shapes and positions."""
         author_count = len(self.fingerprint['authors'])
 
-        mouth_y = cy + fh // 3
-        mouth_width = int(fw * 0.35)
+        # VARIED POSITION for mouth
+        base_mouth_y = cy + fh // 3
+        mouth_x = int(cx + DeterministicRandom.randint(self.seed, 6900, -fw//15, fw//15))
+        mouth_y = int(base_mouth_y + DeterministicRandom.randint(self.seed, 6901, -fh//12, fh//12))
 
-        # More authors = happier smile
-        if author_count > 2:
-            # Big smile - curve upward
-            curve_strength = 30 + author_count * 5
+        mouth_width = int(fw * 0.35 * min(1.5, 0.8 + author_count / 5))
+        mouth_color = self.palette[3] if len(self.palette) > 3 else self.palette[2]
+
+        # Determine mouth style
+        mouth_style = DeterministicRandom.randint(self.seed, 7000, 0, 4)
+
+        # More authors = happier expression
+        happiness = min(1.0, 0.3 + author_count / 10)
+
+        if mouth_style == 0:
+            # Curved smile line
+            curve_strength = 20 + int(happiness * 40)
+            points = []
+            for i in range(20):
+                t = i / 19
+                x = mouth_x - mouth_width // 2 + t * mouth_width
+                y = mouth_y + math.sin(t * math.pi) * curve_strength
+                points.append((x, y))
+            for i in range(len(points) - 1):
+                draw.line([points[i], points[i + 1]], fill=mouth_color, width=6)
+
+        elif mouth_style == 1:
+            # Open mouth (ellipse)
+            height = int(mouth_width * 0.3 * happiness)
+            draw.ellipse([mouth_x - mouth_width//2, mouth_y - height//2,
+                         mouth_x + mouth_width//2, mouth_y + height//2],
+                        fill=mouth_color)
+
+        elif mouth_style == 2:
+            # Wavy organic mouth
+            points = []
+            for i in range(15):
+                t = i / 14
+                x = mouth_x - mouth_width // 2 + t * mouth_width
+                y = mouth_y + math.sin(t * math.pi * 3) * 10 + happiness * 20
+                points.append((x, y))
+            for i in range(len(points) - 1):
+                draw.line([points[i], points[i + 1]], fill=mouth_color, width=8)
+
+        elif mouth_style == 3:
+            # Geometric angular mouth
+            height = int(15 + happiness * 25)
+            points = [
+                (mouth_x - mouth_width//2, mouth_y),
+                (mouth_x - mouth_width//4, mouth_y + height),
+                (mouth_x, mouth_y + height * 0.7),
+                (mouth_x + mouth_width//4, mouth_y + height),
+                (mouth_x + mouth_width//2, mouth_y)
+            ]
+            for i in range(len(points) - 1):
+                draw.line([points[i], points[i + 1]], fill=mouth_color, width=6)
+
         else:
-            # Neutral or slight smile
-            curve_strength = 15
-
-        # Bold curved line for mouth
-        mouth_color = self.palette[2]
-        points = []
-        num_points = 20
-        for i in range(num_points):
-            t = i / (num_points - 1)
-            x = cx - mouth_width // 2 + t * mouth_width
-            y = mouth_y + math.sin(t * math.pi) * curve_strength
-            points.append((x, y))
-
-        # Draw thick mouth line
-        for i in range(len(points) - 1):
-            draw.line([points[i], points[i + 1]], fill=mouth_color, width=6)
-
-        # Add lip detail
-        lip_y = mouth_y - 5
-        draw.ellipse([cx - mouth_width//6, lip_y - 8,
-                     cx + mouth_width//6, lip_y + 8],
-                    fill=self._darken_color(mouth_color, 0.2))
+            # Organic blob mouth
+            blob_width = mouth_width * 0.8
+            blob_height = int(20 + happiness * 30)
+            blob_points = []
+            for i in range(12):
+                angle = (i / 12) * 2 * math.pi
+                r_x = blob_width / 2 * (0.8 + DeterministicRandom.uniform(self.seed, 7100 + i, 0, 0.4))
+                r_y = blob_height / 2 * (0.8 + DeterministicRandom.uniform(self.seed, 7200 + i, 0, 0.4))
+                px = mouth_x + math.cos(angle) * r_x
+                py = mouth_y + math.sin(angle) * r_y
+                blob_points.append((px, py))
+            draw.polygon(blob_points, fill=mouth_color)
 
     def _draw_playful_details(self, draw, cx, cy, fw, fh):
-        """Add playful Matisse-style decorative elements."""
-        # Hair/crown as bold shapes above head
+        """Add varied hair styles and decorative elements."""
+        file_types = self.fingerprint['file_types']
+        primary_ext = max(file_types.items(), key=lambda x: x[1])[0] if file_types else '.py'
+
+        # Determine hair style
+        hair_style = DeterministicRandom.randint(self.seed, 8000, 0, 4)
         hair_color = self.palette[0]
 
-        # Simple curved shapes for hair
-        hair_top = cy - fh // 2
-        num_hair_elements = 5
+        # VARIED POSITION for hair
+        base_hair_top = cy - fh // 2
+        hair_top = int(base_hair_top + DeterministicRandom.randint(self.seed, 7950, -fh//15, fh//20))
+        hair_x_offset = DeterministicRandom.randint(self.seed, 7951, -fw//12, fw//12)
 
-        for i in range(num_hair_elements):
-            x_pos = cx - fw//3 + i * (fw * 0.666 / num_hair_elements)
-            size = DeterministicRandom.uniform(self.seed, 2700 + i, 20, 40)
+        if hair_style == 0:
+            # Circular tufts (classic)
+            num_tufts = DeterministicRandom.randint(self.seed, 8100, 4, 7)
+            for i in range(num_tufts):
+                x_pos = cx + hair_x_offset - fw//3 + i * (fw * 0.666 / num_tufts)
+                size = DeterministicRandom.uniform(self.seed, 8200 + i, 20, 40)
+                draw.ellipse([x_pos - size, hair_top - size, x_pos + size, hair_top + size],
+                            fill=hair_color)
 
-            # Circle for hair tuft
-            draw.ellipse([x_pos - size, hair_top - size,
-                         x_pos + size, hair_top + size],
-                        fill=hair_color)
+        elif hair_style == 1:
+            # Spiky triangles
+            num_spikes = DeterministicRandom.randint(self.seed, 8300, 5, 9)
+            for i in range(num_spikes):
+                x_pos = cx + hair_x_offset - fw//3 + i * (fw * 0.666 / num_spikes)
+                spike_height = DeterministicRandom.uniform(self.seed, 8400 + i, 30, 60)
+                spike_width = DeterministicRandom.uniform(self.seed, 8500 + i, 20, 35)
+                points = [
+                    (x_pos, hair_top - spike_height),
+                    (x_pos - spike_width/2, hair_top),
+                    (x_pos + spike_width/2, hair_top)
+                ]
+                draw.polygon(points, fill=hair_color)
 
-        # Add some playful decorative circles around face (like Matisse)
-        for i in range(4):
-            angle = (i / 4) * 2 * math.pi
-            distance = fw * 0.7
+        elif hair_style == 2:
+            # Organic blobs
+            num_blobs = DeterministicRandom.randint(self.seed, 8600, 4, 8)
+            for i in range(num_blobs):
+                x_pos = cx + hair_x_offset - fw//2 + DeterministicRandom.uniform(self.seed, 8700 + i, 0, fw)
+                y_pos = hair_top + DeterministicRandom.uniform(self.seed, 8800 + i, -30, 20)
+                size = DeterministicRandom.uniform(self.seed, 8900 + i, 25, 45)
+                blob_points = self._create_organic_blob(x_pos, y_pos, size, self.seed, 9000 + i)
+                draw.polygon(blob_points, fill=hair_color)
+
+        elif hair_style == 3:
+            # Wavy lines
+            num_waves = 3
+            for w in range(num_waves):
+                points = []
+                y_offset = hair_top - w * 15
+                for i in range(20):
+                    t = i / 19
+                    x = cx + hair_x_offset - fw//2 + t * fw
+                    y = y_offset + math.sin(t * math.pi * 4) * 15
+                    points.append((x, y))
+                for i in range(len(points) - 1):
+                    draw.line([points[i], points[i + 1]], fill=hair_color, width=8)
+
+        else:
+            # Square/rectangular blocks
+            num_blocks = DeterministicRandom.randint(self.seed, 9100, 4, 7)
+            for i in range(num_blocks):
+                x_pos = cx + hair_x_offset - fw//3 + i * (fw * 0.666 / num_blocks)
+                w = DeterministicRandom.uniform(self.seed, 9200 + i, 15, 30)
+                h = DeterministicRandom.uniform(self.seed, 9300 + i, 25, 50)
+                draw.rectangle([x_pos - w, hair_top - h, x_pos + w, hair_top],
+                              fill=hair_color)
+
+        # Decorative elements around face
+        num_decorations = DeterministicRandom.randint(self.seed, 9400, 3, 6)
+        for i in range(num_decorations):
+            angle = (i / num_decorations) * 2 * math.pi + DeterministicRandom.uniform(self.seed, 9500 + i, -0.5, 0.5)
+            distance = fw * DeterministicRandom.uniform(self.seed, 9600 + i, 0.6, 0.8)
             x = int(cx + math.cos(angle) * distance)
             y = int(cy + math.sin(angle) * distance)
-            size = DeterministicRandom.uniform(self.seed, 3200 + i, 15, 30)
+            size = DeterministicRandom.uniform(self.seed, 9700 + i, 15, 35)
             color = self.palette[(i + 2) % len(self.palette)]
 
-            draw.ellipse([x - size, y - size, x + size, y + size],
-                        fill=color)
+            # Varied decoration shapes
+            deco_type = DeterministicRandom.randint(self.seed, 9800 + i, 0, 2)
+            if deco_type == 0:
+                draw.ellipse([x - size, y - size, x + size, y + size], fill=color)
+            elif deco_type == 1:
+                draw.rectangle([x - size, y - size, x + size, y + size], fill=color)
+            else:
+                blob_points = self._create_organic_blob(x, y, size, self.seed, 9900 + i)
+                draw.polygon(blob_points, fill=color)
 
     # Helper methods
 
