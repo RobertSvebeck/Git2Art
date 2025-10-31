@@ -598,7 +598,7 @@
             let resizeTimeout;
             window.addEventListener('resize', function() {
                 clearTimeout(resizeTimeout);
-                resizeTimeout = setTimeout(distributeMasonryCards, 250);
+                resizeTimeout = setTimeout(updateMasonryDisplay, 250);
             });
         });
 
