@@ -1,15 +1,17 @@
-"""Face art style - human face built from repository code.
+"""Cubist Face art style - playful abstract faces from repository code.
 
-Creates abstract human faces where facial features are determined by code metrics:
-- Face shape based on repository size
-- Eyes, nose, mouth based on file counts, commits, authors
-- Hair style based on primary language
-- Colors derived from repository palette
-- Deterministic: same repo = same face
+Creates expressive faces inspired by Picasso and Matisse:
+- Multiple viewpoints in one face (profile + frontal combined)
+- Bold, vibrant color blocks (not transparent)
+- Simple shapes with strong contrasts
+- Playful asymmetry and personality
+- Eyes, nose, mouth distributed creatively
+- Warm, human, joyful energy
+- Inspired by Picasso's cubism + Matisse's cutouts
 """
 
 from .base import BaseArtGenerator
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFilter
 import colorsys
 import hashlib
 import math
@@ -80,7 +82,7 @@ class FaceStyleGenerator(BaseArtGenerator):
     """Generate human face art from repository code metrics."""
 
     STYLE_NAME = "face"
-    STYLE_DESCRIPTION = "Human face built from repository code - features determined by metrics"
+    STYLE_DESCRIPTION = "Expressionist face built from code - bold strokes and distorted features"
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -89,271 +91,288 @@ class FaceStyleGenerator(BaseArtGenerator):
         self.seed = str(self.fingerprint['total_lines'])
 
     def generate_art(self, output_path='repo_art.png'):
-        """Generate face artwork."""
-        img = Image.new('RGB', (self.width, self.height), 'white')
+        """Generate cubist face artwork."""
+        # Base color from palette (will be covered by organic shapes)
+        base = self.palette[0]
+        base_color = tuple(min(255, int(c + (255 - c) * 0.7)) for c in base)
+        img = Image.new('RGB', (self.width, self.height), base_color)
         draw = ImageDraw.Draw(img, 'RGBA')
 
-        print(f"Generating face art...")
-        print(f"Aspect ratio: {self.aspect_ratio} ({self.width}x{self.height})")
-        print(f"Repository metrics:")
-        print(f"   Total lines: {self.fingerprint['total_lines']}")
-        print(f"   Files: {len(self.fingerprint['files'])}")
-        print(f"   Commits: {self.fingerprint['commit_count']}")
-        print(f"   Authors: {len(self.fingerprint['authors'])}")
+        print(f"Generating playful cubist face art...")
+        print(f"Canvas: {self.width}x{self.height}")
+        print(f"Style: Picasso + Matisse inspired")
+        print(f"Features from code:")
+        print(f"   {self.fingerprint['total_lines']} lines -> complexity")
+        print(f"   {len(self.fingerprint['files'])} files -> eye style")
+        print(f"   {self.fingerprint['commit_count']} commits -> expression")
+        print(f"   {len(self.fingerprint['authors'])} authors -> mood")
 
         # Calculate face proportions
         center_x = self.width // 2
         center_y = self.height // 2
-        face_height = int(self.height * 0.7)
-        face_width = int(face_height * 0.75)
+        face_height = int(self.height * 0.65)
+        face_width = int(face_height * 0.8)
 
-        # Draw layers
-        self._draw_background(draw)
-        self._draw_face_base(draw, center_x, center_y, face_width, face_height)
-        self._draw_eyes(draw, center_x, center_y, face_width, face_height)
-        self._draw_nose(draw, center_x, center_y, face_width, face_height)
-        self._draw_mouth(draw, center_x, center_y, face_width, face_height)
-        self._draw_hair(draw, center_x, center_y, face_width, face_height)
+        # Draw solid, bold shapes
+        self._draw_background_shapes(draw)
+        self._draw_face_planes(draw, center_x, center_y, face_width, face_height)
+        self._draw_cubist_eyes(draw, center_x, center_y, face_width, face_height)
+        self._draw_nose_profile(draw, center_x, center_y, face_width, face_height)
+        self._draw_expressive_mouth(draw, center_x, center_y, face_width, face_height)
+        self._draw_playful_details(draw, center_x, center_y, face_width, face_height)
+
+        # Light blur to soften edges slightly (not ghostly)
+        img = img.filter(ImageFilter.GaussianBlur(radius=2))
 
         img.save(output_path, 'PNG')
-        print(f"Face art saved to {output_path}")
+        print(f"Cubist face saved to {output_path}")
 
-    def _draw_background(self, draw):
-        """Draw gradient background."""
-        bg_color = self._lighten_color(self.palette[0], 0.8)
-        draw.rectangle([0, 0, self.width, self.height], fill=bg_color)
+    def _draw_background_shapes(self, draw):
+        """Draw organic flowing background shapes - full coverage."""
+        # Fill entire canvas with organic flowing shapes
+        num_large_shapes = 6
 
-    def _draw_face_base(self, draw, cx, cy, fw, fh):
-        """Draw face outline and skin."""
-        # Determine face shape based on total lines
-        total_lines = self.fingerprint['total_lines']
+        for i in range(num_large_shapes):
+            color = self.palette[i % len(self.palette)]
 
-        if total_lines < 1000:
-            # Small repo = round face
-            draw.ellipse([cx - fw//2, cy - fh//2, cx + fw//2, cy + fh//2],
-                        fill=self._get_skin_tone(), outline=None)
-        elif total_lines < 5000:
-            # Medium repo = oval face
-            draw.ellipse([cx - fw//2, cy - fh//2, cx + fw//2, cy + fh//2],
-                        fill=self._get_skin_tone(), outline=None)
-        else:
-            # Large repo = angular face (rounded rectangle)
-            self._draw_rounded_rectangle(draw,
-                                        [cx - fw//2, cy - fh//2, cx + fw//2, cy + fh//2],
-                                        radius=50, fill=self._get_skin_tone())
+            # Large organic flowing shapes
+            x = DeterministicRandom.uniform(self.seed, 400 + i, -self.width * 0.2, self.width * 1.2)
+            y = DeterministicRandom.uniform(self.seed, 410 + i, -self.height * 0.2, self.height * 1.2)
+            size = DeterministicRandom.uniform(self.seed, 420 + i, self.width * 0.4, self.width * 0.8)
 
-    def _draw_eyes(self, draw, cx, cy, fw, fh):
-        """Draw eyes based on file count."""
+            # Create flowing organic blob
+            points = self._create_organic_blob(x, y, size, self.seed, 430 + i)
+            draw.polygon(points, fill=color)
+
+        # Add more smaller shapes to fill gaps
+        for i in range(8):
+            color = self.palette[i % len(self.palette)]
+            x = DeterministicRandom.uniform(self.seed, 500 + i, 0, self.width)
+            y = DeterministicRandom.uniform(self.seed, 510 + i, 0, self.height)
+            size = DeterministicRandom.uniform(self.seed, 520 + i, self.width * 0.15, self.width * 0.35)
+
+            points = self._create_organic_blob(x, y, size, self.seed, 530 + i)
+            draw.polygon(points, fill=color)
+
+    def _draw_face_planes(self, draw, cx, cy, fw, fh):
+        """Draw face as bold flat planes like Picasso cubism."""
+        # Face built entirely from angular planes (no base ellipse)
+        # Use lighter versions of palette for skin-like tones
+
+        # More planes for a complete face structure
+        planes = [
+            # Left cheek (large)
+            {
+                'points': [
+                    (cx - fw//2, cy - fh//4),
+                    (cx - fw//6, cy - fh//3),
+                    (cx - fw//6, cy + fh//4),
+                    (cx - fw//2, cy + fh//5)
+                ],
+                'color': self._lighten_color(self.palette[0], 0.5)
+            },
+            # Right cheek (large)
+            {
+                'points': [
+                    (cx + fw//6, cy - fh//3),
+                    (cx + fw//2, cy - fh//4),
+                    (cx + fw//2, cy + fh//5),
+                    (cx + fw//6, cy + fh//4)
+                ],
+                'color': self._lighten_color(self.palette[1], 0.5)
+            },
+            # Forehead plane
+            {
+                'points': [
+                    (cx - fw//3, cy - fh//2),
+                    (cx + fw//3, cy - fh//2),
+                    (cx + fw//4, cy - fh//6),
+                    (cx - fw//4, cy - fh//6)
+                ],
+                'color': self.palette[0]
+            },
+            # Center face plane
+            {
+                'points': [
+                    (cx - fw//6, cy - fh//4),
+                    (cx + fw//6, cy - fh//4),
+                    (cx + fw//5, cy + fh//5),
+                    (cx - fw//5, cy + fh//5)
+                ],
+                'color': self._lighten_color(self.palette[2], 0.6)
+            },
+            # Chin plane
+            {
+                'points': [
+                    (cx - fw//4, cy + fh//4),
+                    (cx + fw//4, cy + fh//4),
+                    (cx + fw//5, cy + fh//2),
+                    (cx - fw//5, cy + fh//2)
+                ],
+                'color': self.palette[1]
+            },
+            # Side profile plane
+            {
+                'points': [
+                    (cx - fw//3, cy - fh//6),
+                    (cx - fw//8, cy - fh//4),
+                    (cx - fw//8, cy + fh//6),
+                    (cx - fw//3, cy + fh//8)
+                ],
+                'color': self.palette[2]
+            }
+        ]
+
+        for plane in planes:
+            draw.polygon(plane['points'], fill=plane['color'])
+
+    def _draw_cubist_eyes(self, draw, cx, cy, fw, fh):
+        """Draw eyes with Picasso-style multiple viewpoints."""
         file_count = len(self.fingerprint['files'])
 
-        # Eye size based on file count
-        eye_size = min(fw // 10, max(20, file_count * 2))
+        # Eye size and style based on file count
+        eye_size = int(fw * 0.08)
+        eye_y = cy - fh // 6
 
-        # Eye positions (at 50% height, 30% from center)
-        eye_y = cy - fh // 8
-        eye_spacing = fw // 4
-
-        left_eye_x = cx - eye_spacing
-        right_eye_x = cx + eye_spacing
-
-        # Eye color from palette
-        eye_color = self.palette[1]
-
-        # Determine eye shape based on file types
-        web_ratio = self._get_file_type_ratio(['.html', '.css', '.js', '.jsx', '.ts', '.tsx'])
-
-        if web_ratio > 0.3:
-            # Round eyes for frontend-heavy repos
-            self._draw_round_eye(draw, left_eye_x, eye_y, eye_size, eye_color)
-            self._draw_round_eye(draw, right_eye_x, eye_y, eye_size, eye_color)
-        else:
-            # Almond eyes for backend-heavy repos
-            self._draw_almond_eye(draw, left_eye_x, eye_y, eye_size, eye_color)
-            self._draw_almond_eye(draw, right_eye_x, eye_y, eye_size, eye_color)
-
-    def _draw_nose(self, draw, cx, cy, fw, fh):
-        """Draw nose based on commit count."""
-        commit_count = self.fingerprint['commit_count']
-
-        # Nose size based on commits
-        nose_height = min(fh // 6, max(30, commit_count * 2))
-        nose_width = nose_height // 3
-
-        # Nose position (at 60% height)
-        nose_y = cy
-
-        # Simple triangular nose
-        nose_color = self._darken_color(self._get_skin_tone(), 0.1)
+        # LEFT EYE - Profile view (almond shaped)
+        left_x = cx - fw // 4
+        # Almond shape for left eye
         points = [
-            (cx, nose_y - nose_height // 2),
-            (cx - nose_width // 2, nose_y + nose_height // 2),
-            (cx + nose_width // 2, nose_y + nose_height // 2)
+            (left_x - eye_size, eye_y),
+            (left_x, eye_y - eye_size//2),
+            (left_x + eye_size, eye_y),
+            (left_x, eye_y + eye_size//2)
+        ]
+        draw.polygon(points, fill=(50, 50, 60))
+        # Highlight
+        draw.ellipse([left_x - eye_size//3, eye_y - eye_size//3,
+                     left_x + eye_size//3, eye_y + eye_size//3],
+                    fill=(255, 255, 255))
+
+        # RIGHT EYE - Frontal view (round)
+        right_x = cx + fw // 4
+        # Full round eye (no border)
+        draw.ellipse([right_x - eye_size, eye_y - eye_size,
+                     right_x + eye_size, eye_y + eye_size],
+                    fill=(255, 255, 255))
+        # Iris
+        iris_size = eye_size // 2
+        iris_color = self.palette[1]
+        draw.ellipse([right_x - iris_size, eye_y - iris_size,
+                     right_x + iris_size, eye_y + iris_size],
+                    fill=iris_color)
+        # Pupil
+        pupil_size = eye_size // 4
+        draw.ellipse([right_x - pupil_size, eye_y - pupil_size,
+                     right_x + pupil_size, eye_y + pupil_size],
+                    fill=(30, 30, 40))
+
+    def _draw_nose_profile(self, draw, cx, cy, fw, fh):
+        """Draw nose as simple bold shape."""
+        # Simple triangular or L-shaped nose (profile + frontal)
+        nose_color = self._darken_color(self._lighten_color(self.palette[0], 0.6), 0.15)
+
+        # Triangle for nose
+        nose_size = int(fw * 0.12)
+        points = [
+            (cx, cy),
+            (cx - nose_size//3, cy + nose_size),
+            (cx + nose_size//3, cy + nose_size)
         ]
         draw.polygon(points, fill=nose_color)
 
-    def _draw_mouth(self, draw, cx, cy, fw, fh):
-        """Draw mouth based on author count."""
+        # Add nostril dots for character
+        nostril_y = cy + nose_size * 0.8
+        nostril_size = nose_size // 8
+        draw.ellipse([cx - nose_size//4 - nostril_size, nostril_y - nostril_size,
+                     cx - nose_size//4 + nostril_size, nostril_y + nostril_size],
+                    fill=(60, 60, 70))
+        draw.ellipse([cx + nose_size//4 - nostril_size, nostril_y - nostril_size,
+                     cx + nose_size//4 + nostril_size, nostril_y + nostril_size],
+                    fill=(60, 60, 70))
+
+    def _draw_expressive_mouth(self, draw, cx, cy, fw, fh):
+        """Draw bold expressive mouth with personality."""
         author_count = len(self.fingerprint['authors'])
 
-        # More authors = bigger smile
-        smile_width = min(fw // 3, max(40, author_count * 10))
-        mouth_y = cy + fh // 4
+        mouth_y = cy + fh // 3
+        mouth_width = int(fw * 0.35)
 
-        # Draw smile curve
+        # More authors = happier smile
+        if author_count > 2:
+            # Big smile - curve upward
+            curve_strength = 30 + author_count * 5
+        else:
+            # Neutral or slight smile
+            curve_strength = 15
+
+        # Bold curved line for mouth
         mouth_color = self.palette[2]
-
-        if author_count > 3:
-            # Happy face - upward curve
-            self._draw_smile(draw, cx, mouth_y, smile_width, mouth_color, happy=True)
-        elif author_count > 1:
-            # Neutral face - straight line
-            draw.line([cx - smile_width // 2, mouth_y, cx + smile_width // 2, mouth_y],
-                     fill=mouth_color, width=4)
-        else:
-            # Solo developer - slight smile
-            self._draw_smile(draw, cx, mouth_y, smile_width // 2, mouth_color, happy=True)
-
-    def _draw_hair(self, draw, cx, cy, fw, fh):
-        """Draw hair based on primary language and file diversity."""
-        # Hair color from palette
-        hair_color = self.palette[0]
-
-        # Hair style based on primary language
-        file_types = self.fingerprint['file_types']
-        primary_ext = max(file_types.items(), key=lambda x: x[1])[0] if file_types else '.py'
-
-        # Hair region (top 40% of head)
-        hair_top = cy - fh // 2
-        hair_bottom = cy - fh // 4
-
-        # Different hair styles for different languages
-        if primary_ext in ['.py', '.rb']:
-            # Curly hair (multiple arcs)
-            self._draw_curly_hair(draw, cx, hair_top, fw, hair_color)
-        elif primary_ext in ['.js', '.ts', '.jsx', '.tsx']:
-            # Spiky hair (triangles)
-            self._draw_spiky_hair(draw, cx, hair_top, fw, hair_color)
-        elif primary_ext in ['.java', '.cpp', '.c']:
-            # Short straight hair (rectangle)
-            draw.rectangle([cx - fw // 2, hair_top, cx + fw // 2, hair_bottom],
-                          fill=hair_color)
-        else:
-            # Wavy hair (sine waves)
-            self._draw_wavy_hair(draw, cx, hair_top, fw, hair_color)
-
-    # Helper methods for drawing specific elements
-
-    def _draw_round_eye(self, draw, x, y, size, color):
-        """Draw round eye."""
-        # White of eye
-        draw.ellipse([x - size, y - size, x + size, y + size], fill='white', outline='black')
-        # Iris
-        draw.ellipse([x - size // 2, y - size // 2, x + size // 2, y + size // 2],
-                    fill=color, outline=None)
-        # Pupil
-        draw.ellipse([x - size // 4, y - size // 4, x + size // 4, y + size // 4],
-                    fill='black', outline=None)
-
-    def _draw_almond_eye(self, draw, x, y, size, color):
-        """Draw almond-shaped eye."""
-        points = [
-            (x - size, y),
-            (x - size // 2, y - size // 2),
-            (x + size, y),
-            (x + size // 2, y + size // 2)
-        ]
-        draw.polygon(points, fill='white', outline='black')
-        # Iris
-        draw.ellipse([x - size // 3, y - size // 3, x + size // 3, y + size // 3],
-                    fill=color, outline=None)
-        # Pupil
-        draw.ellipse([x - size // 6, y - size // 6, x + size // 6, y + size // 6],
-                    fill='black', outline=None)
-
-    def _draw_smile(self, draw, cx, cy, width, color, happy=True):
-        """Draw smile curve."""
-        curve_height = width // 4
-        control_y = cy + curve_height if happy else cy - curve_height
-
-        # Draw arc using multiple line segments
         points = []
-        for i in range(20):
-            t = i / 19.0
-            # Quadratic bezier curve
-            x = cx - width // 2 + t * width
-            y = cy + 2 * (1 - t) * t * (control_y - cy)
+        num_points = 20
+        for i in range(num_points):
+            t = i / (num_points - 1)
+            x = cx - mouth_width // 2 + t * mouth_width
+            y = mouth_y + math.sin(t * math.pi) * curve_strength
             points.append((x, y))
 
+        # Draw thick mouth line
         for i in range(len(points) - 1):
-            draw.line([points[i], points[i + 1]], fill=color, width=4)
+            draw.line([points[i], points[i + 1]], fill=mouth_color, width=6)
 
-    def _draw_curly_hair(self, draw, cx, top_y, width, color):
-        """Draw curly hair with overlapping circles."""
-        num_curls = DeterministicRandom.randint(self.seed, 100, 8, 12)
-        curl_size = width // 8
+        # Add lip detail
+        lip_y = mouth_y - 5
+        draw.ellipse([cx - mouth_width//6, lip_y - 8,
+                     cx + mouth_width//6, lip_y + 8],
+                    fill=self._darken_color(mouth_color, 0.2))
 
-        for i in range(num_curls):
-            x = DeterministicRandom.uniform(self.seed, 100 + i, cx - width // 2, cx + width // 2)
-            y = DeterministicRandom.uniform(self.seed, 200 + i, top_y, top_y + width // 4)
-            draw.ellipse([x - curl_size, y - curl_size, x + curl_size, y + curl_size],
-                        fill=color, outline=None)
+    def _draw_playful_details(self, draw, cx, cy, fw, fh):
+        """Add playful Matisse-style decorative elements."""
+        # Hair/crown as bold shapes above head
+        hair_color = self.palette[0]
 
-    def _draw_spiky_hair(self, draw, cx, top_y, width, color):
-        """Draw spiky hair with triangles."""
-        num_spikes = DeterministicRandom.randint(self.seed, 300, 6, 10)
-        spike_height = width // 6
-        spike_width = width // num_spikes
+        # Simple curved shapes for hair
+        hair_top = cy - fh // 2
+        num_hair_elements = 5
 
-        for i in range(num_spikes):
-            x = cx - width // 2 + i * spike_width
-            points = [
-                (x, top_y + spike_height),
-                (x + spike_width // 2, top_y),
-                (x + spike_width, top_y + spike_height)
-            ]
-            draw.polygon(points, fill=color, outline=None)
+        for i in range(num_hair_elements):
+            x_pos = cx - fw//3 + i * (fw * 0.666 / num_hair_elements)
+            size = DeterministicRandom.uniform(self.seed, 2700 + i, 20, 40)
 
-    def _draw_wavy_hair(self, draw, cx, top_y, width, color):
-        """Draw wavy hair with sine curves."""
-        # Draw base rectangle
-        draw.rectangle([cx - width // 2, top_y, cx + width // 2, top_y + width // 4],
-                      fill=color)
+            # Circle for hair tuft
+            draw.ellipse([x_pos - size, hair_top - size,
+                         x_pos + size, hair_top + size],
+                        fill=hair_color)
 
-        # Add waves on top
-        wave_color = self._lighten_color(color, 0.2)
-        num_waves = 3
-        for w in range(num_waves):
-            points = []
-            y_offset = top_y + w * 20
-            for i in range(50):
-                x = cx - width // 2 + (i / 49.0) * width
-                y = y_offset + math.sin(i * 0.3) * 10
-                points.append((x, y))
+        # Add some playful decorative circles around face (like Matisse)
+        for i in range(4):
+            angle = (i / 4) * 2 * math.pi
+            distance = fw * 0.7
+            x = int(cx + math.cos(angle) * distance)
+            y = int(cy + math.sin(angle) * distance)
+            size = DeterministicRandom.uniform(self.seed, 3200 + i, 15, 30)
+            color = self.palette[(i + 2) % len(self.palette)]
 
-            for i in range(len(points) - 1):
-                draw.line([points[i], points[i + 1]], fill=wave_color, width=3)
+            draw.ellipse([x - size, y - size, x + size, y + size],
+                        fill=color)
 
-    def _draw_rounded_rectangle(self, draw, bbox, radius, fill):
-        """Draw rectangle with rounded corners."""
-        x1, y1, x2, y2 = bbox
-        draw.rectangle([x1 + radius, y1, x2 - radius, y2], fill=fill)
-        draw.rectangle([x1, y1 + radius, x2, y2 - radius], fill=fill)
-        draw.ellipse([x1, y1, x1 + 2*radius, y1 + 2*radius], fill=fill)
-        draw.ellipse([x2 - 2*radius, y1, x2, y1 + 2*radius], fill=fill)
-        draw.ellipse([x1, y2 - 2*radius, x1 + 2*radius, y2], fill=fill)
-        draw.ellipse([x2 - 2*radius, y2 - 2*radius, x2, y2], fill=fill)
+    # Helper methods
 
-    def _get_skin_tone(self):
-        """Generate skin tone from palette."""
-        base_color = self.palette[0]
-        # Lighten and desaturate for skin-like tone
-        h, s, v = colorsys.rgb_to_hsv(base_color[0]/255, base_color[1]/255, base_color[2]/255)
-        # Shift to warm tones and lighten
-        h = 0.08  # Orange-ish hue for skin
-        s = 0.3   # Low saturation
-        v = 0.85  # High brightness
-        r, g, b = colorsys.hsv_to_rgb(h, s, v)
-        return (int(r * 255), int(g * 255), int(b * 255))
+    def _create_organic_blob(self, cx, cy, size, seed, offset):
+        """Create irregular organic blob shape."""
+        points = []
+        num_points = 12
+
+        for i in range(num_points):
+            angle = (i / num_points) * 2 * math.pi
+            radius_var = DeterministicRandom.uniform(seed, offset + i, 0.7, 1.3)
+            radius = size / 2 * radius_var
+
+            px = cx + math.cos(angle) * radius
+            py = cy + math.sin(angle) * radius
+            points.append((px, py))
+
+        return points
 
     def _lighten_color(self, color, factor=0.5):
         """Lighten a color."""
@@ -362,11 +381,3 @@ class FaceStyleGenerator(BaseArtGenerator):
     def _darken_color(self, color, factor=0.1):
         """Darken a color."""
         return tuple(max(0, int(c * (1 - factor))) for c in color)
-
-    def _get_file_type_ratio(self, extensions):
-        """Get ratio of files with given extensions."""
-        total = self.fingerprint['total_lines']
-        if total == 0:
-            return 0
-        matching = sum(self.fingerprint['file_types'].get(ext, 0) for ext in extensions)
-        return matching / total
