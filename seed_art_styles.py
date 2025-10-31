@@ -1,6 +1,5 @@
 """Seed art_styles table from the generator registry."""
 
-import sys
 from models import ArtStyle
 from generators import list_available_styles
 
@@ -24,7 +23,7 @@ def seed_art_styles():
         'impressionist': 1,
         'watercolor': 2,
         'pixel': 3,
-        # Add more styles here as they're created
+        'face': 4,
     }
 
     success_count = 0
