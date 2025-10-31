@@ -93,9 +93,9 @@ class FaceStyleGenerator(BaseArtGenerator):
         img = Image.new('RGB', (self.width, self.height), 'white')
         draw = ImageDraw.Draw(img, 'RGBA')
 
-        print(f"🎨 Generating face art...")
-        print(f"📐 Aspect ratio: {self.aspect_ratio} ({self.width}x{self.height})")
-        print(f"📊 Repository metrics:")
+        print(f"Generating face art...")
+        print(f"Aspect ratio: {self.aspect_ratio} ({self.width}x{self.height})")
+        print(f"Repository metrics:")
         print(f"   Total lines: {self.fingerprint['total_lines']}")
         print(f"   Files: {len(self.fingerprint['files'])}")
         print(f"   Commits: {self.fingerprint['commit_count']}")
@@ -116,7 +116,7 @@ class FaceStyleGenerator(BaseArtGenerator):
         self._draw_hair(draw, center_x, center_y, face_width, face_height)
 
         img.save(output_path, 'PNG')
-        print(f"✅ Face art saved to {output_path}")
+        print(f"Face art saved to {output_path}")
 
     def _draw_background(self, draw):
         """Draw gradient background."""
