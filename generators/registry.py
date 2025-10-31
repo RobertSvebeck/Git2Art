@@ -4,6 +4,7 @@ from .expressionist_style import ExpressionistStyleGenerator
 from .impressionist_style import ImpressionistStyleGenerator
 from .watercolor_style import WatercolorStyleGenerator
 from .pixel_style import PixelStyleGenerator
+from .face_style import FaceStyleGenerator
 
 # Registry of all available art styles
 STYLE_REGISTRY = {
@@ -11,6 +12,7 @@ STYLE_REGISTRY = {
     'impressionist': ImpressionistStyleGenerator,
     'watercolor': WatercolorStyleGenerator,
     'pixel': PixelStyleGenerator,
+    'face': FaceStyleGenerator,
     # Future styles will be added here:
     # 'minimalist': MinimalistStyleGenerator,
     # 'geometric': GeometricStyleGenerator,

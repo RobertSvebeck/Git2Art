@@ -250,9 +250,11 @@ Add to `generators/registry.py`:
 from .watercolor_style import WatercolorStyleGenerator
 
 STYLE_REGISTRY = {
-    'default': DefaultStyleGenerator,
+    'expressionist': ExpressionistStyleGenerator,
     'impressionist': ImpressionistStyleGenerator,
     'watercolor': WatercolorStyleGenerator,  # Add new style
+    'pixel': PixelStyleGenerator,
+    'face': FaceStyleGenerator,
 }
 ```
 

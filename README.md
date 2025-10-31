@@ -11,6 +11,16 @@ Git2Art creates deterministic abstract art from your codebase:
 - **Big changes** in many files = **big changes** in the artwork
 - Same code always generates the same art
 
+## Art Styles
+
+Git2Art offers multiple art styles to visualize your code:
+
+- **🎨 Expressionist** - Bold strokes, vibrant colors, organic shapes (default)
+- **🌸 Impressionist** - Soft brush dabs, pastel colors, luminous atmosphere
+- **💧 Watercolor** - Transparent washes, flowing blends, soft edges
+- **🎮 Pixel** - Retro 8-bit aesthetic, blocky shapes, limited palette
+- **👤 Face** - Human face where features are built from code metrics
+
 ## Features
 
 - 🎨 **Advanced Color Theory**: Complementary, triadic, split-complementary, and tetradic color schemes
@@ -42,6 +52,28 @@ Generate art from current repository (auto-named file):
 ```bash
 python git2art.py
 ```
+
+#### Art Style Selection
+
+```bash
+# List all available art styles
+python git2art.py --list-styles
+
+# Generate with specific style
+python git2art.py --style expressionist  # Bold abstract (default)
+python git2art.py --style impressionist  # Soft pastel brushwork
+python git2art.py --style watercolor     # Flowing transparent washes
+python git2art.py --style pixel          # Retro 8-bit aesthetic
+python git2art.py --style face           # Human face from code metrics
+```
+
+**Face Style Details:**
+The face style creates a unique human face where each feature is determined by repository metrics:
+- **Face shape**: Repository size (round → oval → angular)
+- **Eyes**: File count and type distribution
+- **Nose**: Commit count
+- **Mouth**: Author count (more authors = bigger smile!)
+- **Hair**: Primary language (curly for Python/Ruby, spiky for JS/TS, etc.)
 
 #### Common Options
 
@@ -83,7 +115,7 @@ python git2art.py --repo /path/to/any/git/repo
 #### Combine Options
 
 ```bash
-python git2art.py --repo /path/to/repo --aspect 16:9 --size 1920 --contrast medium --output my_art.png
+python git2art.py --repo /path/to/repo --style face --aspect 16:9 --size 1920 --contrast medium --output my_art.png
 ```
 
 #### Smart Filenames

@@ -107,7 +107,7 @@ Git2Art transforms git repositories into beautiful, unique abstract art. Each re
 4. **Color Mixing**: Blend 2-3 palette colors per element
 5. **Abstract Expressionist**: De Kooning/Kandinsky style
 
-### Automatic Aspect Ratio Detection (Session 9 - Current)
+### Automatic Aspect Ratio Detection (Session 9)
 **Goal**: Make canvas shape meaningful - let repository type determine aspect ratio
 
 **Motivation**:
@@ -142,6 +142,51 @@ Git2Art transforms git repositories into beautiful, unique abstract art. Each re
 - Git2Art (Python backend) → square (1200x1200)
 - React (JavaScript frontend) → 16:9 landscape (1200x675)
 - Rails (Ruby backend) → square (1200x1200)
+
+### Face Art Style (Session 10 - Current)
+**Goal**: Create a human face where facial features are built from repository code metrics
+
+**Motivation**:
+- Unique visual representation: each repo gets a literal "face"
+- Intuitive mapping: code characteristics → facial characteristics
+- Personal connection: code becomes a portrait
+- Evolution over time: face changes as codebase grows
+
+**Implementation**:
+1. **Feature Mapping Logic**:
+   - **Face shape**: Total line count (small=round, medium=oval, large=angular)
+   - **Eyes**: Size from file count, shape from file type distribution (round for frontend, almond for backend)
+   - **Nose**: Size based on commit count
+   - **Mouth**: Expression based on author count (more authors = bigger smile)
+   - **Hair**: Style from primary language (curly for Python/Ruby, spiky for JS/TS, straight for Java/C++, wavy for others)
+   - **Skin tone**: Derived from repository palette (lightened and desaturated)
+   - **Colors**: All features use harmonious palette based on primary language
+
+2. **Technical Features**:
+   - Fully deterministic (same repo = same face, byte-for-byte)
+   - Scales to any canvas size (800px to 2400px+)
+   - All aspect ratios supported (portrait, landscape, square)
+   - Integrated into style registry system
+
+3. **Drawing Techniques**:
+   - Round eyes: White sclera, colored iris, black pupil
+   - Almond eyes: Polygon-based with gradient iris
+   - Triangular nose with subtle shading
+   - Bezier curve smiles with happiness based on collaboration
+   - Hair styles: curly (overlapping circles), spiky (triangles), wavy (sine curves)
+   - Rounded rectangle face for large repositories
+
+4. **Evolution Examples**:
+   - Solo project → Small smile, single-developer features
+   - Add collaborators → Smile grows wider
+   - Add more files → Eyes get larger
+   - More commits → Nose becomes more prominent
+   - Change primary language → Hair style changes
+
+**Example Results**:
+- Git2Art (15k lines, Python, solo) → Angular face, curly blue hair, small smile
+- React (large, JavaScript, many authors) → Big smile, spiky orange hair
+- Small hobby project → Round face, simple features
 
 ## Technical Architecture
 
@@ -221,6 +266,7 @@ https://github.com/RobertSvebeck/Git2Art
 
 ✅ **Repository-driven palettes** (10 curated schemes based on language)
 ✅ **Automatic aspect ratio** (canvas shape matches repo type: mobile=portrait, web=landscape, backend=square)
+✅ **Multiple art styles** (expressionist, impressionist, watercolor, pixel, face)
 ✅ **Deterministic** (same code = same art)
 ✅ **Incremental changes** (small changes = small differences)
 ✅ **Art theory-based** (golden ratio, color harmony)
@@ -229,7 +275,7 @@ https://github.com/RobertSvebeck/Git2Art
 ✅ **Professional quality** (gallery-worthy output)
 ✅ **Web application** (Flask-based UI with smart caching)
 
-### Flask Web Application (Session 10)
+### Flask Web Application (Session 11)
 **Goal**: Create web interface for public access to Git2Art
 
 **Phase 1 Implementation** (✅ COMPLETED Oct 19, 2025):
