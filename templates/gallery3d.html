@@ -1,0 +1,629 @@
+{% extends "base.html" %}
+
+{% block title %}Git2Art 3D Gallery - Immersive Art Experience{% endblock %}
+
+{% block meta_description %}Explore the Git2Art gallery in immersive 3D. Experience repository artworks displayed on a massive sphere.{% endblock %}
+
+{% block meta_keywords %}git2art 3d gallery, immersive art experience, three.js gallery, 3d visualization{% endblock %}
+
+{% block og_title %}Git2Art 3D Gallery - Immersive Art Experience{% endblock %}
+
+{% block og_description %}Experience repository art in stunning 3D on a massive sphere.{% endblock %}
+
+{% block og_url %}/gallery3d{% endblock %}
+
+{% block twitter_title %}Git2Art 3D Gallery - Immersive Experience{% endblock %}
+
+{% block canonical_url %}/gallery3d{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/gallery3d.css') }}">
+{% endblock %}
+
+{% block content %}
+<div id="gallery3d-container">
+    <div id="loading-screen">
+        <div class="loading-content">
+            <h2>Loading 3D Gallery...</h2>
+            <div class="loading-spinner"></div>
+            <p id="loading-status">Initializing...</p>
+        </div>
+    </div>
+
+    <div id="canvas-container"></div>
+
+    <div id="controls-overlay">
+        <div class="control-panel">
+            <h3>Controls</h3>
+            <p><strong>Click artwork</strong> to center and zoom</p>
+            <p><strong>Click again</strong> to zoom out</p>
+            <p><strong>Drag</strong> to rotate</p>
+            <p><strong>W/S or ↑/↓</strong> to zoom</p>
+            <p><strong>+/-</strong> to zoom</p>
+            <button id="reset-view" class="btn btn-primary">Reset View</button>
+            <a href="{{ url_for('main.gallery') }}" class="btn btn-secondary">2D Gallery</a>
+            <a href="{{ url_for('main.index') }}" class="btn btn-secondary">Home</a>
+        </div>
+    </div>
+
+    <div id="artwork-info" class="artwork-info hidden">
+        <h3 id="info-repo-name"></h3>
+        <p id="info-style"></p>
+        <p id="info-commit"></p>
+        <p id="info-date"></p>
+        <button id="info-close" class="btn btn-small">Close</button>
+    </div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const artworksData = {{ artworks | tojson }};
+
+let scene, camera, renderer, controls;
+let artworkMeshes = [];
+let labelSprites = [];
+let isDragging = false;
+let previousMousePosition = { x: 0, y: 0 };
+let velocity = { x: 0, y: 0 };
+let friction = 0.95;
+let isAutoRotating = false;
+let raycaster = new THREE.Raycaster();
+let mouse = new THREE.Vector2();
+let isZoomedToArtwork = false;
+let zoomedArtwork = null;
+let savedCameraPosition = new THREE.Vector3();
+let savedControlsTarget = new THREE.Vector3();
+let targetCameraPosition = null;
+let targetControlsTarget = null;
+let animationProgress = 0;
+let startCameraPosition = new THREE.Vector3();
+let startControlsTarget = new THREE.Vector3();
+let isRotatingToArtwork = false;
+let rotationTarget = null;
+let cameraLights = [];
+let artworkSpotlight = null;
+
+const BASE_SPHERE_RADIUS = 80;
+let SPHERE_RADIUS = BASE_SPHERE_RADIUS;
+const MIN_ARTWORKS_VISIBLE = 12;
+
+function init() {
+    updateLoadingStatus('Setting up 3D scene...');
+
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0a0a0a);
+
+    camera = new THREE.PerspectiveCamera(
+        75,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        1000
+    );
+    camera.position.set(0, 0, 0);
+
+    renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+    controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.rotateSpeed = 0.5;
+    controls.enablePan = false;
+    controls.minDistance = 0;
+    controls.maxDistance = 0;
+    controls.target.set(1, 0, 0);
+
+    const sphereGeometry = new THREE.SphereGeometry(SPHERE_RADIUS, 64, 64);
+    const sphereMaterial = new THREE.MeshStandardMaterial({
+        color: 0x808080,
+        side: THREE.BackSide,
+        roughness: 0.85,
+        metalness: 0.0,
+        emissive: 0x000000,
+        emissiveIntensity: 0.0
+    });
+    const sphereMesh = new THREE.Mesh(sphereGeometry, sphereMaterial);
+    sphereMesh.name = 'gallerySphere';
+    sphereMesh.receiveShadow = true;
+    scene.add(sphereMesh);
+
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambientLight);
+
+    const mainCameraLight = new THREE.SpotLight(0xffffff, 20.0);
+    mainCameraLight.angle = Math.PI / 2.5;
+    mainCameraLight.penumbra = 0.3;
+    mainCameraLight.distance = SPHERE_RADIUS * 2;
+    mainCameraLight.decay = 1;
+    mainCameraLight.castShadow = true;
+    mainCameraLight.shadow.mapSize.width = 2048;
+    mainCameraLight.shadow.mapSize.height = 2048;
+    mainCameraLight.position.set(0, 0, 0);
+    mainCameraLight.target.position.set(0, 0, SPHERE_RADIUS);
+    camera.add(mainCameraLight);
+    camera.add(mainCameraLight.target);
+    scene.add(camera);
+    cameraLights.push(mainCameraLight);
+
+    const fillCameraLight = new THREE.PointLight(0xffffff, 3.0);
+    fillCameraLight.distance = SPHERE_RADIUS * 1.5;
+    fillCameraLight.decay = 1;
+    camera.add(fillCameraLight);
+    cameraLights.push(fillCameraLight);
+
+    const leftAccentLight = new THREE.PointLight(0xffd4a3, 2.5);
+    leftAccentLight.position.set(-8, 3, 5);
+    leftAccentLight.distance = SPHERE_RADIUS * 1.2;
+    leftAccentLight.decay = 1;
+    camera.add(leftAccentLight);
+    cameraLights.push(leftAccentLight);
+
+    const rightAccentLight = new THREE.PointLight(0xa3d4ff, 2.5);
+    rightAccentLight.position.set(8, 3, 5);
+    rightAccentLight.distance = SPHERE_RADIUS * 1.2;
+    rightAccentLight.decay = 1;
+    camera.add(rightAccentLight);
+    cameraLights.push(rightAccentLight);
+
+    window.addEventListener('resize', onWindowResize);
+    window.addEventListener('keydown', onKeyDown);
+    renderer.domElement.addEventListener('click', onCanvasClick);
+    renderer.domElement.addEventListener('mousemove', onMouseMove);
+
+    document.getElementById('reset-view').addEventListener('click', resetView);
+
+    loadArtworks();
+}
+
+function onMouseMove(event) {
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObjects(artworkMeshes, true);
+
+    if (intersects.length > 0) {
+        renderer.domElement.style.cursor = 'pointer';
+    } else {
+        renderer.domElement.style.cursor = 'grab';
+    }
+}
+
+function onCanvasClick(event) {
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+    raycaster.setFromCamera(mouse, camera);
+
+    const intersects = raycaster.intersectObjects(artworkMeshes, true);
+
+    if (intersects.length > 0) {
+        let artworkGroup = intersects[0].object;
+
+        while (artworkGroup.parent && !artworkMeshes.includes(artworkGroup)) {
+            artworkGroup = artworkGroup.parent;
+        }
+
+        if (artworkMeshes.includes(artworkGroup)) {
+            toggleArtworkZoom(artworkGroup);
+        }
+    } else if (isZoomedToArtwork) {
+        zoomOut();
+    }
+}
+
+function toggleArtworkZoom(artworkGroup) {
+    if (isZoomedToArtwork) {
+        zoomOut();
+    } else {
+        zoomToArtwork(artworkGroup);
+    }
+}
+
+function zoomToArtwork(artworkGroup) {
+    savedCameraPosition.copy(camera.position);
+    savedControlsTarget.copy(controls.target);
+
+    startCameraPosition.copy(camera.position);
+    startControlsTarget.copy(controls.target);
+
+    const artworkPosition = artworkGroup.position.clone();
+    const directionToArtwork = artworkPosition.clone().normalize();
+
+    const zoomedCameraDistance = SPHERE_RADIUS - 25;
+    targetCameraPosition = directionToArtwork.clone().multiplyScalar(zoomedCameraDistance);
+    targetControlsTarget = artworkPosition.clone();
+
+    zoomedArtwork = artworkGroup;
+    isRotatingToArtwork = true;
+    animationProgress = 0;
+    controls.enabled = false;
+
+    rotationTarget = targetControlsTarget.clone();
+
+    if (artworkSpotlight) {
+        scene.remove(artworkSpotlight);
+    }
+    artworkSpotlight = new THREE.SpotLight(0xffffff, 1.5);
+    artworkSpotlight.position.copy(artworkPosition).multiplyScalar(0.8);
+    artworkSpotlight.target.position.copy(artworkPosition);
+    artworkSpotlight.angle = Math.PI / 8;
+    artworkSpotlight.penumbra = 0.2;
+    artworkSpotlight.distance = 30;
+    artworkSpotlight.castShadow = true;
+    artworkSpotlight.shadow.mapSize.width = 1024;
+    artworkSpotlight.shadow.mapSize.height = 1024;
+    scene.add(artworkSpotlight);
+    scene.add(artworkSpotlight.target);
+}
+
+function zoomOut() {
+    startCameraPosition.copy(camera.position);
+    startControlsTarget.copy(controls.target);
+
+    targetCameraPosition = savedCameraPosition.clone();
+    targetControlsTarget = savedControlsTarget.clone();
+
+    zoomedArtwork = null;
+    isZoomedToArtwork = false;
+    isRotatingToArtwork = false;
+    rotationTarget = null;
+    animationProgress = 0;
+
+    if (artworkSpotlight) {
+        scene.remove(artworkSpotlight);
+        scene.remove(artworkSpotlight.target);
+        artworkSpotlight = null;
+    }
+}
+
+function onKeyDown(event) {
+    const zoomSpeed = 2;
+    const currentDistance = camera.position.length();
+
+    switch(event.key) {
+        case '+':
+        case '=':
+        case 'w':
+        case 'W':
+        case 'ArrowUp':
+            // Zoom in
+            const newDistanceIn = Math.max(controls.minDistance, currentDistance - zoomSpeed);
+            camera.position.multiplyScalar(newDistanceIn / currentDistance);
+            break;
+
+        case '-':
+        case '_':
+        case 's':
+        case 'S':
+        case 'ArrowDown':
+            // Zoom out
+            const newDistanceOut = Math.min(controls.maxDistance, currentDistance + zoomSpeed);
+            camera.position.multiplyScalar(newDistanceOut / currentDistance);
+            break;
+    }
+}
+
+function updateLoadingStatus(message) {
+    const statusEl = document.getElementById('loading-status');
+    if (statusEl) {
+        statusEl.textContent = message;
+    }
+}
+
+function hideLoadingScreen() {
+    const loadingScreen = document.getElementById('loading-screen');
+    loadingScreen.style.opacity = '0';
+    setTimeout(() => {
+        loadingScreen.style.display = 'none';
+    }, 500);
+}
+
+function loadArtworks() {
+    if (!artworksData || artworksData.length === 0) {
+        updateLoadingStatus('No artworks to display');
+        setTimeout(hideLoadingScreen, 1000);
+        return;
+    }
+
+    const artworkCount = artworksData.length;
+    SPHERE_RADIUS = Math.max(BASE_SPHERE_RADIUS, Math.sqrt(artworkCount) * 10);
+
+    const sphereGeometry = new THREE.SphereGeometry(SPHERE_RADIUS, 64, 64);
+    const sphereMaterial = new THREE.MeshStandardMaterial({
+        color: 0xe8e8e8,
+        side: THREE.BackSide,
+        roughness: 0.8,
+        metalness: 0.1
+    });
+    const sphereMesh = scene.getObjectByName('gallerySphere');
+    if (sphereMesh) {
+        sphereMesh.geometry.dispose();
+        sphereMesh.geometry = sphereGeometry;
+    }
+
+    controls.maxDistance = SPHERE_RADIUS - 15;
+
+    updateLoadingStatus(`Loading ${artworkCount} artworks...`);
+
+    const textureLoader = new THREE.TextureLoader();
+    let loadedCount = 0;
+    const totalArtworks = artworkCount;
+
+    artworksData.forEach((artwork, index) => {
+        textureLoader.load(
+            artwork.image_url,
+            (texture) => {
+                createArtworkMesh(texture, artwork, index, totalArtworks);
+                loadedCount++;
+                updateLoadingStatus(`Loaded ${loadedCount} of ${totalArtworks} artworks...`);
+
+                if (loadedCount === totalArtworks) {
+                    hideLoadingScreen();
+                    animate();
+                }
+            },
+            undefined,
+            (error) => {
+                console.error('Error loading texture:', error);
+                loadedCount++;
+                if (loadedCount === totalArtworks) {
+                    hideLoadingScreen();
+                    animate();
+                }
+            }
+        );
+    });
+}
+
+function createArtworkMesh(texture, artwork, index, total) {
+    const aspectRatio = texture.image.width / texture.image.height;
+    const artworkWidth = 15;
+    const artworkHeight = artworkWidth / aspectRatio;
+
+    const frameThickness = 0.3;
+    const matteThickness = 0.8;
+
+    const group = new THREE.Group();
+
+    const frameGeometry = new THREE.BoxGeometry(
+        artworkWidth + (frameThickness + matteThickness) * 2,
+        artworkHeight + (frameThickness + matteThickness) * 2,
+        1.2
+    );
+    const frameMaterial = new THREE.MeshStandardMaterial({
+        color: 0x3d2817,
+        roughness: 0.6,
+        metalness: 0.2,
+        emissive: 0x1a0f08,
+        emissiveIntensity: 0.1
+    });
+    const frame = new THREE.Mesh(frameGeometry, frameMaterial);
+    frame.castShadow = true;
+    frame.receiveShadow = true;
+    group.add(frame);
+
+    const matteGeometry = new THREE.PlaneGeometry(
+        artworkWidth + matteThickness * 2,
+        artworkHeight + matteThickness * 2
+    );
+    const matteMaterial = new THREE.MeshStandardMaterial({
+        color: 0xf5f5f0,
+        roughness: 0.9,
+        metalness: 0.0
+    });
+    const matte = new THREE.Mesh(matteGeometry, matteMaterial);
+    matte.position.z = 0.61;
+    matte.castShadow = true;
+    matte.receiveShadow = true;
+    group.add(matte);
+
+    const canvasTextureCanvas = document.createElement('canvas');
+    canvasTextureCanvas.width = texture.image.width;
+    canvasTextureCanvas.height = texture.image.height;
+    const ctx = canvasTextureCanvas.getContext('2d');
+    ctx.drawImage(texture.image, 0, 0);
+
+    const imageData = ctx.getImageData(0, 0, canvasTextureCanvas.width, canvasTextureCanvas.height);
+    const data = imageData.data;
+    for (let y = 0; y < canvasTextureCanvas.height; y++) {
+        for (let x = 0; x < canvasTextureCanvas.width; x++) {
+            const i = (y * canvasTextureCanvas.width + x) * 4;
+            const weave = (Math.sin(x * 0.2) + Math.sin(y * 0.2)) * 3;
+            data[i] = Math.max(0, Math.min(255, data[i] + weave));
+            data[i + 1] = Math.max(0, Math.min(255, data[i + 1] + weave));
+            data[i + 2] = Math.max(0, Math.min(255, data[i + 2] + weave));
+        }
+    }
+    ctx.putImageData(imageData, 0, 0);
+
+    const texturedTexture = new THREE.CanvasTexture(canvasTextureCanvas);
+
+    const artworkGeometry = new THREE.PlaneGeometry(artworkWidth, artworkHeight);
+    const artworkMaterial = new THREE.MeshStandardMaterial({
+        map: texturedTexture,
+        roughness: 0.7,
+        metalness: 0.0,
+        bumpMap: texturedTexture,
+        bumpScale: 0.05
+    });
+    const artworkMesh = new THREE.Mesh(artworkGeometry, artworkMaterial);
+    artworkMesh.position.z = 0.65;
+    artworkMesh.castShadow = true;
+    artworkMesh.receiveShadow = true;
+    group.add(artworkMesh);
+
+    const glassGeometry = new THREE.PlaneGeometry(artworkWidth, artworkHeight);
+    const glassMaterial = new THREE.MeshPhysicalMaterial({
+        color: 0xffffff,
+        metalness: 0.0,
+        roughness: 0.1,
+        transmission: 0.9,
+        transparent: true,
+        opacity: 0.2,
+        reflectivity: 0.8,
+        clearcoat: 1.0,
+        clearcoatRoughness: 0.1
+    });
+    const glassMesh = new THREE.Mesh(glassGeometry, glassMaterial);
+    glassMesh.position.z = 0.7;
+    glassMesh.receiveShadow = true;
+    group.add(glassMesh);
+
+    const minPhi = Math.PI * 0.25;
+    const maxPhi = Math.PI * 0.75;
+    const phi = minPhi + (maxPhi - minPhi) * (index / total);
+
+    const theta = (index * 2.4) % (Math.PI * 2);
+
+    const artworkDistance = SPHERE_RADIUS - 10;
+    const x = artworkDistance * Math.cos(theta) * Math.sin(phi);
+    const z = artworkDistance * Math.sin(theta) * Math.sin(phi);
+    const y = artworkDistance * Math.cos(phi);
+
+    group.position.set(x, y, z);
+    group.lookAt(0, 0, 0);
+
+    group.userData = artwork;
+    group.userData.artworkHeight = artworkHeight;
+    group.userData.frameHeight = artworkHeight + (frameThickness + matteThickness) * 2;
+
+    scene.add(group);
+    artworkMeshes.push(group);
+
+    createLabel(artwork, group, artworkHeight + (frameThickness + matteThickness) * 2);
+}
+
+function createLabel(artwork, artworkGroup, frameHeight) {
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    canvas.width = 512;
+    canvas.height = 128;
+
+    context.fillStyle = 'rgba(0, 0, 0, 0.8)';
+    context.fillRect(0, 0, canvas.width, canvas.height);
+
+    context.font = 'Bold 36px Arial';
+    context.fillStyle = 'white';
+    context.textAlign = 'center';
+    context.fillText(artwork.repo_name, canvas.width / 2, 50);
+
+    context.font = '24px Arial';
+    context.fillStyle = '#aaaaaa';
+    context.fillText(artwork.art_style_name || 'Art', canvas.width / 2, 90);
+
+    const texture = new THREE.CanvasTexture(canvas);
+    const labelGeometry = new THREE.PlaneGeometry(10, 2.5);
+    const labelMaterial = new THREE.MeshBasicMaterial({
+        map: texture,
+        transparent: true,
+        side: THREE.DoubleSide
+    });
+    const labelMesh = new THREE.Mesh(labelGeometry, labelMaterial);
+
+    labelMesh.position.set(0, -(frameHeight / 2 + 2.5), 0.3);
+
+    artworkGroup.add(labelMesh);
+    labelSprites.push(labelMesh);
+}
+
+function resetView() {
+    if (isZoomedToArtwork || isRotatingToArtwork) {
+        zoomOut();
+    } else {
+        camera.position.set(0, 0, 0);
+        controls.target.set(0, 0, 0);
+        controls.update();
+        velocity = { x: 0, y: 0 };
+    }
+}
+
+function onWindowResize() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+function animate() {
+    requestAnimationFrame(animate);
+
+    if (isRotatingToArtwork && rotationTarget !== null && targetCameraPosition !== null) {
+        animationProgress += 0.03;
+        const easeProgress = easeInOutCubic(Math.min(animationProgress, 1));
+
+        controls.target.lerpVectors(startControlsTarget, rotationTarget, easeProgress);
+        camera.position.lerpVectors(startCameraPosition, targetCameraPosition, easeProgress);
+        camera.lookAt(controls.target);
+
+        if (animationProgress >= 1) {
+            controls.target.copy(rotationTarget);
+            camera.position.copy(targetCameraPosition);
+            camera.lookAt(controls.target);
+            isRotatingToArtwork = false;
+            isZoomedToArtwork = true;
+            rotationTarget = null;
+            targetCameraPosition = null;
+            targetControlsTarget = null;
+            animationProgress = 0;
+        }
+    } else if (targetCameraPosition !== null && targetControlsTarget !== null) {
+        animationProgress += 0.05;
+        const easeProgress = easeInOutCubic(Math.min(animationProgress, 1));
+
+        camera.position.lerpVectors(startCameraPosition, targetCameraPosition, easeProgress);
+        controls.target.lerpVectors(startControlsTarget, targetControlsTarget, easeProgress);
+        camera.lookAt(controls.target);
+
+        if (animationProgress >= 1) {
+            camera.position.copy(targetCameraPosition);
+            controls.target.copy(targetControlsTarget);
+            camera.lookAt(controls.target);
+            targetCameraPosition = null;
+            targetControlsTarget = null;
+            animationProgress = 0;
+
+            if (!isZoomedToArtwork) {
+                controls.enabled = true;
+            }
+        }
+    }
+
+    if (controls.enabled) {
+        controls.update();
+    }
+
+    if (cameraLights.length > 0 && cameraLights[0].target) {
+        cameraLights[0].target.position.copy(controls.target);
+    }
+
+    artworkMeshes.forEach(mesh => {
+        mesh.lookAt(camera.position);
+    });
+
+    renderer.render(scene, camera);
+}
+
+function easeInOutCubic(t) {
+    return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+}
+
+updateLoadingStatus('Initializing 3D engine...');
+init();
+</script>
+
+{% endblock %}

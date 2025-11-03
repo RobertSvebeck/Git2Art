@@ -46,6 +46,14 @@ def gallery():
     return render_template('gallery.html', artworks=artworks, art_styles=art_styles)
 
 
+@bp.route('/gallery3d')
+def gallery3d():
+    """Display 3D sphere gallery of all generated artworks."""
+    artworks = get_all_gallery_artworks(current_app.config['GENERATED_IMAGES_DIR'])
+    art_styles = ArtStyle.get_active_styles()
+    return render_template('gallery3d.html', artworks=artworks, art_styles=art_styles)
+
+
 @bp.route('/artwork/<int:artwork_id>')
 def artwork_view(artwork_id):
     """Display full-size artwork view with frame and passepartout."""
