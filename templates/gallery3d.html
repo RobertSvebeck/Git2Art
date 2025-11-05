@@ -49,9 +49,10 @@
     <div id="artwork-info" class="artwork-info hidden">
         <h3 id="info-repo-name"></h3>
         <p id="info-style"></p>
-        <p id="info-commit"></p>
-        <p id="info-date"></p>
-        <button id="info-close" class="btn btn-small">Close</button>
+        <a id="info-repo-link" href="#" target="_blank" class="repo-link">View Repository</a>
+        <div class="info-actions">
+            <a id="info-download" href="#" download class="btn btn-primary">Download Artwork</a>
+        </div>
     </div>
 </div>
 
@@ -72,7 +73,6 @@ const artworksData = {{ artworks | tojson }};
 
 let scene, camera, renderer, controls;
 let artworkMeshes = [];
-let labelSprites = [];
 let isDragging = false;
 let previousMousePosition = { x: 0, y: 0 };
 let velocity = { x: 0, y: 0 };
@@ -129,23 +129,53 @@ function init() {
     controls.target.set(1, 0, 0);
 
     const sphereGeometry = new THREE.SphereGeometry(SPHERE_RADIUS, 64, 64);
+
+    // Create gradient texture for dynamic background
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 512;
+    const ctx = canvas.getContext('2d');
+
+    // Create radial gradient with multiple color stops
+    const gradient = ctx.createRadialGradient(256, 256, 0, 256, 256, 512);
+    gradient.addColorStop(0, '#2a2a3e');
+    gradient.addColorStop(0.3, '#1a1a2e');
+    gradient.addColorStop(0.6, '#0f0f1e');
+    gradient.addColorStop(1, '#050510');
+
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 512, 512);
+
+    // Add some subtle noise/texture
+    for (let i = 0; i < 2000; i++) {
+        const x = Math.random() * 512;
+        const y = Math.random() * 512;
+        const brightness = Math.random() * 40 + 10;
+        ctx.fillStyle = `rgba(${brightness}, ${brightness}, ${brightness}, ${Math.random() * 0.3})`;
+        ctx.fillRect(x, y, 1, 1);
+    }
+
+    const backgroundTexture = new THREE.CanvasTexture(canvas);
+    backgroundTexture.wrapS = THREE.RepeatWrapping;
+    backgroundTexture.wrapT = THREE.RepeatWrapping;
+
     const sphereMaterial = new THREE.MeshStandardMaterial({
-        color: 0x808080,
+        map: backgroundTexture,
         side: THREE.BackSide,
         roughness: 0.85,
         metalness: 0.0,
-        emissive: 0x000000,
-        emissiveIntensity: 0.0
+        emissive: 0x0a0a1a,
+        emissiveIntensity: 0.2
     });
     const sphereMesh = new THREE.Mesh(sphereGeometry, sphereMaterial);
     sphereMesh.name = 'gallerySphere';
     sphereMesh.receiveShadow = true;
     scene.add(sphereMesh);
 
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
     scene.add(ambientLight);
 
-    const mainCameraLight = new THREE.SpotLight(0xffffff, 20.0);
+    const mainCameraLight = new THREE.SpotLight(0xffffff, 30.0);
     mainCameraLight.angle = Math.PI / 2.5;
     mainCameraLight.penumbra = 0.3;
     mainCameraLight.distance = SPHERE_RADIUS * 2;
@@ -160,25 +190,47 @@ function init() {
     scene.add(camera);
     cameraLights.push(mainCameraLight);
 
-    const fillCameraLight = new THREE.PointLight(0xffffff, 3.0);
+    const fillCameraLight = new THREE.PointLight(0xffffff, 6.0);
     fillCameraLight.distance = SPHERE_RADIUS * 1.5;
     fillCameraLight.decay = 1;
     camera.add(fillCameraLight);
     cameraLights.push(fillCameraLight);
 
-    const leftAccentLight = new THREE.PointLight(0xffd4a3, 2.5);
+    const leftAccentLight = new THREE.PointLight(0xffd4a3, 5.0);
     leftAccentLight.position.set(-8, 3, 5);
     leftAccentLight.distance = SPHERE_RADIUS * 1.2;
     leftAccentLight.decay = 1;
     camera.add(leftAccentLight);
     cameraLights.push(leftAccentLight);
 
-    const rightAccentLight = new THREE.PointLight(0xa3d4ff, 2.5);
+    const rightAccentLight = new THREE.PointLight(0xa3d4ff, 5.0);
     rightAccentLight.position.set(8, 3, 5);
     rightAccentLight.distance = SPHERE_RADIUS * 1.2;
     rightAccentLight.decay = 1;
     camera.add(rightAccentLight);
     cameraLights.push(rightAccentLight);
+
+    // Add fixed hemisphere light for overall brightness
+    const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1.5);
+    hemisphereLight.position.set(0, 1, 0);
+    scene.add(hemisphereLight);
+
+    // Add several fixed point lights around the sphere for even illumination
+    const sphereLights = [
+        { pos: [SPHERE_RADIUS * 0.5, SPHERE_RADIUS * 0.5, 0], color: 0xffffff, intensity: 8.0 },
+        { pos: [-SPHERE_RADIUS * 0.5, SPHERE_RADIUS * 0.5, 0], color: 0xffffff, intensity: 8.0 },
+        { pos: [0, SPHERE_RADIUS * 0.5, SPHERE_RADIUS * 0.5], color: 0xffffff, intensity: 8.0 },
+        { pos: [0, SPHERE_RADIUS * 0.5, -SPHERE_RADIUS * 0.5], color: 0xffffff, intensity: 8.0 },
+        { pos: [0, -SPHERE_RADIUS * 0.5, 0], color: 0xffffff, intensity: 8.0 }
+    ];
+
+    sphereLights.forEach(lightData => {
+        const light = new THREE.PointLight(lightData.color, lightData.intensity);
+        light.position.set(...lightData.pos);
+        light.distance = SPHERE_RADIUS * 2;
+        light.decay = 1.5;
+        scene.add(light);
+    });
 
     window.addEventListener('resize', onWindowResize);
     window.addEventListener('keydown', onKeyDown);
@@ -256,10 +308,25 @@ function zoomToArtwork(artworkGroup) {
 
     rotationTarget = targetControlsTarget.clone();
 
+    // Dim camera lights when zoomed in
+    cameraLights.forEach(light => {
+        light.intensity *= 0.1;
+    });
+
+    // Show artwork info panel
+    const infoPanel = document.getElementById('artwork-info');
+    const artwork = artworkGroup.userData;
+    document.getElementById('info-repo-name').textContent = artwork.repo_name;
+    document.getElementById('info-style').textContent = artwork.art_style_name || 'Art';
+    document.getElementById('info-repo-link').href = artwork.repo_url;
+    document.getElementById('info-download').href = artwork.image_url;
+    document.getElementById('info-download').download = `${artwork.repo_name}_${artwork.commit_hash}.png`;
+    infoPanel.classList.remove('hidden');
+
     if (artworkSpotlight) {
         scene.remove(artworkSpotlight);
     }
-    artworkSpotlight = new THREE.SpotLight(0xffffff, 1.5);
+    artworkSpotlight = new THREE.SpotLight(0xffffff, 0.5);
     artworkSpotlight.position.copy(artworkPosition).multiplyScalar(0.8);
     artworkSpotlight.target.position.copy(artworkPosition);
     artworkSpotlight.angle = Math.PI / 8;
@@ -279,11 +346,20 @@ function zoomOut() {
     targetCameraPosition = savedCameraPosition.clone();
     targetControlsTarget = savedControlsTarget.clone();
 
+    // Hide artwork info panel
+    const infoPanel = document.getElementById('artwork-info');
+    infoPanel.classList.add('hidden');
+
     zoomedArtwork = null;
     isZoomedToArtwork = false;
     isRotatingToArtwork = false;
     rotationTarget = null;
     animationProgress = 0;
+
+    // Restore camera lights to full intensity
+    cameraLights.forEach(light => {
+        light.intensity /= 0.1;
+    });
 
     if (artworkSpotlight) {
         scene.remove(artworkSpotlight);
@@ -345,12 +421,6 @@ function loadArtworks() {
     SPHERE_RADIUS = Math.max(BASE_SPHERE_RADIUS, Math.sqrt(artworkCount) * 10);
 
     const sphereGeometry = new THREE.SphereGeometry(SPHERE_RADIUS, 64, 64);
-    const sphereMaterial = new THREE.MeshStandardMaterial({
-        color: 0xe8e8e8,
-        side: THREE.BackSide,
-        roughness: 0.8,
-        metalness: 0.1
-    });
     const sphereMesh = scene.getObjectByName('gallerySphere');
     if (sphereMesh) {
         sphereMesh.geometry.dispose();
@@ -415,15 +485,14 @@ function createArtworkMesh(texture, artwork, index, total, canvasTexture) {
     const artworkWidth = 15;
     const artworkHeight = artworkWidth / aspectRatio;
 
-    const frameThickness = 0.3;
+    const frameThickness = 0.8;
     const matteThickness = 0.8;
 
     const group = new THREE.Group();
 
-    const frameGeometry = new THREE.BoxGeometry(
+    const frameGeometry = new THREE.PlaneGeometry(
         artworkWidth + (frameThickness + matteThickness) * 2,
-        artworkHeight + (frameThickness + matteThickness) * 2,
-        1.2
+        artworkHeight + (frameThickness + matteThickness) * 2
     );
     const frameMaterial = new THREE.MeshStandardMaterial({
         color: 0x3d2817,
@@ -433,6 +502,7 @@ function createArtworkMesh(texture, artwork, index, total, canvasTexture) {
         emissiveIntensity: 0.1
     });
     const frame = new THREE.Mesh(frameGeometry, frameMaterial);
+    frame.position.z = 0.58;
     frame.castShadow = true;
     frame.receiveShadow = true;
     group.add(frame);
@@ -519,41 +589,6 @@ function createArtworkMesh(texture, artwork, index, total, canvasTexture) {
 
     scene.add(group);
     artworkMeshes.push(group);
-
-    createLabel(artwork, group, artworkHeight + (frameThickness + matteThickness) * 2);
-}
-
-function createLabel(artwork, artworkGroup, frameHeight) {
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d');
-    canvas.width = 512;
-    canvas.height = 128;
-
-    context.fillStyle = 'rgba(0, 0, 0, 0.8)';
-    context.fillRect(0, 0, canvas.width, canvas.height);
-
-    context.font = 'Bold 36px Arial';
-    context.fillStyle = 'white';
-    context.textAlign = 'center';
-    context.fillText(artwork.repo_name, canvas.width / 2, 50);
-
-    context.font = '24px Arial';
-    context.fillStyle = '#aaaaaa';
-    context.fillText(artwork.art_style_name || 'Art', canvas.width / 2, 90);
-
-    const texture = new THREE.CanvasTexture(canvas);
-    const labelGeometry = new THREE.PlaneGeometry(10, 2.5);
-    const labelMaterial = new THREE.MeshBasicMaterial({
-        map: texture,
-        transparent: true,
-        side: THREE.DoubleSide
-    });
-    const labelMesh = new THREE.Mesh(labelGeometry, labelMaterial);
-
-    labelMesh.position.set(0, -(frameHeight / 2 + 2.5), 0.3);
-
-    artworkGroup.add(labelMesh);
-    labelSprites.push(labelMesh);
 }
 
 function resetView() {
