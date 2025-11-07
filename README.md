@@ -20,6 +20,7 @@ Git2Art offers multiple art styles to visualize your code:
 - **💧 Watercolor** - Transparent washes, flowing blends, soft edges
 - **🎮 Pixel** - Retro 8-bit aesthetic, blocky shapes, limited palette
 - **👤 Face** - Human face where features are built from code metrics
+- **🌿 Nature** - Organic textures inspired by natural forms and landscapes
 
 ## Features
 
@@ -65,6 +66,7 @@ python git2art.py --style impressionist  # Soft pastel brushwork
 python git2art.py --style watercolor     # Flowing transparent washes
 python git2art.py --style pixel          # Retro 8-bit aesthetic
 python git2art.py --style face           # Human face from code metrics
+python git2art.py --style nature         # Organic natural textures
 ```
 
 **Face Style Details:**
@@ -162,6 +164,14 @@ Then open http://localhost:5000 in your browser.
 - Sort by creation date or popularity
 - Responsive design for mobile and desktop
 
+✅ **3D Gallery Experience**
+- Immersive THREE.js-based 3D gallery
+- Nature-themed environments (forest, desert, ocean, arctic, sunset, midnight)
+- Artworks displayed on floating panels with realistic lighting
+- Interactive navigation with mouse/touch controls
+- Animated camera tours and environment transitions
+- Realistic materials with bump maps and reflections
+
 ✅ **Database Integration**
 - MariaDB backend for persistent storage
 - Like count tracking and user sessions
@@ -211,5 +221,6 @@ Research and development docs are in the [/research](research/) folder.
 - Animation showing repository evolution over time
 - More art style variations and presets
 - SVG and high-resolution export options
-- Interactive parameter tweaking
+- VR/AR gallery experiences
 - User accounts and authentication
+- Social sharing and community features
