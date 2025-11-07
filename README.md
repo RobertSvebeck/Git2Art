@@ -9,31 +9,29 @@ Turn your git repository into a beautiful piece of abstract art!
 Git2Art creates deterministic abstract art from your codebase:
 - **Small changes** in code = **small changes** in the artwork
 - **Big changes** in many files = **big changes** in the artwork
-- Same code always generates the same art
+- Same code always generates the same art (byte-for-byte identical)
 
 ## Art Styles
 
-Git2Art offers multiple art styles to visualize your code:
+Git2Art offers six distinct art styles to visualize your code:
 
-- **🎨 Expressionist** - Bold strokes, vibrant colors, organic shapes (default)
-- **🌸 Impressionist** - Soft brush dabs, pastel colors, luminous atmosphere
-- **💧 Watercolor** - Transparent washes, flowing blends, soft edges
-- **🎮 Pixel** - Retro 8-bit aesthetic, blocky shapes, limited palette
-- **👤 Face** - Human face where features are built from code metrics
-- **🌿 Nature** - Organic textures inspired by natural forms and landscapes
+- **Expressionist** - Bold strokes, vibrant colors, organic shapes inspired by abstract expressionism (default)
+- **Impressionist** - Soft brush dabs, pastel colors, luminous atmosphere inspired by Monet and Renoir
+- **Watercolor** - Transparent washes, flowing blends, soft edges with watercolor painting techniques
+- **Pixel** - Retro 8-bit aesthetic with blocky shapes and limited color palette
+- **Face** - Cubist face art inspired by Picasso and Matisse with playful abstract features
+- **Nature** - Organic textures inspired by natural forms with earth-toned backgrounds
 
 ## Features
 
-- 🎨 **Advanced Color Theory**: Complementary, triadic, split-complementary, and tetradic color schemes
-- 🎭 **Adjustable Contrast**: Choose low, medium, or high contrast levels for different aesthetics
-- 🌈 **Sophisticated Color Mixing**: Elements blend 2-4 colors with deterministic ratios
-- 🔀 **Analogous & Complementary Variations**: Each element uses subtle color shifts or bold complementary accents
-- 📐 **Professional Composition**: Golden ratio, rule of thirds, Fibonacci spirals
-- 📊 **Visual Hierarchy**: File importance mapped to size and opacity
-- 🌊 **Organic Flow**: IDEO-inspired Cornu curves and bold strokes (up to 30% canvas width)
-- 🔄 **100% Deterministic**: Same code always generates identical art (byte-for-byte)
-- 🖼️ **Flexible Canvas**: Multiple aspect ratios (4:3, 16:10, 16:9, 3:2, portrait modes)
-- 📝 **Smart Naming**: Auto-generated filenames with repo name, dimensions, and commit hash
+- **Multiple Art Styles**: Six unique styles, each with distinct visual characteristics
+- **Repository-Driven Palettes**: Colors automatically selected based on primary programming language
+- **100% Deterministic**: Same repository state always generates identical artwork
+- **Smart Aspect Ratios**: Auto-detects canvas shape based on project type (mobile/web/backend)
+- **Flexible Canvas Sizes**: From 800px to 2400px+ with multiple aspect ratios
+- **Professional Composition**: Uses golden ratio, rule of thirds, and visual hierarchy principles
+- **Smart Filenames**: Auto-generated with repo name, dimensions, style, timestamp, and commit hash
+- **CLI and Web Interface**: Use standalone Python script or full-featured Flask web application
 
 ## Installation
 
@@ -43,13 +41,13 @@ pip install -r requirements.txt
 
 ## Usage
 
-### Option 1: Python CLI (Simple & Fast) ⚡
+### Option 1: Python CLI (Simple & Fast)
 
 Just want to generate art directly? Use the Python script!
 
 #### Basic Usage
 
-Generate art from current repository (auto-named file):
+Generate art from current repository with auto-generated filename:
 ```bash
 python git2art.py
 ```
@@ -65,17 +63,21 @@ python git2art.py --style expressionist  # Bold abstract (default)
 python git2art.py --style impressionist  # Soft pastel brushwork
 python git2art.py --style watercolor     # Flowing transparent washes
 python git2art.py --style pixel          # Retro 8-bit aesthetic
-python git2art.py --style face           # Human face from code metrics
+python git2art.py --style face           # Cubist face art
 python git2art.py --style nature         # Organic natural textures
 ```
 
 **Face Style Details:**
-The face style creates a unique human face where each feature is determined by repository metrics:
-- **Face shape**: Repository size (round → oval → angular)
-- **Eyes**: File count and type distribution
-- **Nose**: Commit count
-- **Mouth**: Author count (more authors = bigger smile!)
-- **Hair**: Primary language (curly for Python/Ruby, spiky for JS/TS, etc.)
+The face style creates abstract cubist faces inspired by Picasso and Matisse. Features are positioned and styled using deterministic randomness based on repository metrics:
+- **Eye size**: Based on file count (more files = larger eyes)
+- **Eye shapes**: Randomly selected from 5 styles (circular, almond, organic blob, square, crescent)
+- **Nose size**: Based on commit count (more commits = larger nose)
+- **Nose shapes**: Randomly selected from 5 styles (triangle, rectangle, L-shaped, blob, hook)
+- **Mouth width**: Based on author count (more authors = wider mouth)
+- **Mouth expression**: Happiness increases with collaboration (more authors = bigger smile)
+- **Hair style**: Randomly selected from 5 styles (circular tufts, spiky triangles, organic blobs, wavy lines, rectangular blocks)
+- **Face planes**: Bold color blocks in cubist style with asymmetric positioning
+- **Background**: Organic flowing shapes with palette-based colors
 
 #### Common Options
 
@@ -89,11 +91,16 @@ python git2art.py --aspect portrait_3:4
 # Landscape for web projects
 python git2art.py --aspect 16:9
 
-# Square for backend/libraries (default)
+# Square for backend/libraries (default when auto-detect can't determine)
 python git2art.py --aspect square
 ```
 
 Available aspect ratios: `auto` (recommended), `square`, `4:3`, `16:10`, `16:9`, `3:2`, `5:4`, `portrait_3:4`, `portrait_2:3`
+
+**Aspect Ratio Auto-Detection:**
+- **Portrait (3:4)**: Mobile apps - Swift/Kotlin/Dart files >15% of codebase
+- **Landscape (16:9)**: Web frontends - HTML/CSS/JS files >25% OR documentation >40%
+- **Square (1:1)**: Backend, libraries, general purpose (default fallback)
 
 #### Adjust Contrast & Size
 
@@ -101,10 +108,13 @@ Available aspect ratios: `auto` (recommended), `square`, `4:3`, `16:10`, `16:9`,
 # Low contrast (subtle, muted tones)
 python git2art.py --contrast low
 
+# Medium contrast (balanced)
+python git2art.py --contrast medium
+
 # High contrast (dramatic, default)
 python git2art.py --contrast high
 
-# Higher resolution (default: 1200px)
+# Higher resolution (default: 1600px)
 python git2art.py --size 2400
 ```
 
@@ -124,12 +134,12 @@ python git2art.py --repo /path/to/repo --style face --aspect 16:9 --size 1920 --
 
 When you don't specify `--output`, Git2Art automatically generates descriptive filenames:
 ```
-Git2Art_1600x1200_20251019_143022_aa7f55a.png
-         ↓        ↓          ↓          ↓
-    repo name  size    timestamp  commit hash
+Git2Art_1600x1600_expressionist_20251107_143022_aa7f55a.png
+         ↓            ↓              ↓          ↓
+    dimensions    art style      timestamp  commit hash
 ```
 
-### Option 2: Flask Web Application (Full Featured) 🌐
+### Option 2: Flask Web Application (Full Featured)
 
 Want a complete web interface with gallery and sharing? Use Flask!
 
@@ -146,25 +156,24 @@ cp .env.example .env
 python app.py
 ```
 
-Then open http://localhost:5000 in your browser.
+Then open http://localhost:5001 in your browser.
 
 #### Web Features
 
-✅ **Generate Artwork**
-- GitHub URL input with validation
-- Automatic repository analysis and artwork generation
+**Generate Artwork**
+- GitHub URL input with validation (HTTPS and git@ formats supported)
+- Automatic repository cloning and analysis
 - Smart caching (avoids regeneration for unchanged repos)
-- Watermark with repository URL
 - Download button for generated artwork
 
-✅ **Gallery & Discovery**
-- Browse all generated artworks in a beautiful grid
+**Gallery & Discovery**
+- Browse all generated artworks in a beautiful grid layout
 - View artwork details and repository information
 - Like/unlike artworks (persistent with database)
 - Sort by creation date or popularity
 - Responsive design for mobile and desktop
 
-✅ **3D Gallery Experience**
+**3D Gallery Experience**
 - Immersive THREE.js-based 3D gallery
 - Nature-themed environments (forest, desert, ocean, arctic, sunset, midnight)
 - Artworks displayed on floating panels with realistic lighting
@@ -172,13 +181,13 @@ Then open http://localhost:5000 in your browser.
 - Animated camera tours and environment transitions
 - Realistic materials with bump maps and reflections
 
-✅ **Database Integration**
+**Database Integration**
 - MariaDB backend for persistent storage
 - Like count tracking and user sessions
 - Artwork metadata management
 - Graceful fallback if database unavailable
 
-✅ **User Experience**
+**User Experience**
 - Beautiful, modern responsive UI
 - Real-time generation status updates
 - Error handling and user feedback
@@ -186,41 +195,116 @@ Then open http://localhost:5000 in your browser.
 
 ## How It Works
 
-1. **Analyzes** your repository:
-   - Scans all tracked files
-   - Counts lines of code
-   - Hashes file content for determinism
+1. **Analyzes Your Repository**:
+   - Scans all tracked files in git
+   - Counts lines of code per file
+   - Hashes file content for deterministic seeding
    - Maps file types and relationships
+   - Extracts commit count and author list
 
-2. **Applies Art Theory**:
-   - **Advanced Color Theory**: Complementary, triadic, split-complementary, and tetradic schemes
-   - **Adjustable Contrast**: Low (1.15x/0.7x), Medium (1.25x/0.55x), or High (1.4x/0.4x) brightness ratios
-   - **Sophisticated Mixing**: Each element blends 2-4 colors with deterministic weighted ratios
-   - **Color Variations**: Analogous shifts (subtle) or complementary accents (bold) per element
-   - **Composition**: Places elements using golden ratio and rule of thirds
-   - **Visual Hierarchy**: Sizes elements by code importance
-   - **Bold Strokes**: IDEO-inspired thick strokes up to 30% of canvas width
-   - **Flow**: Connects elements with Cornu curves and organic Bézier paths
+2. **Selects Color Palette**:
+   - Detects primary programming language from file extensions
+   - Selects harmonious color scheme (Python=blues, JavaScript=yellows, etc.)
+   - Creates expanded palette with tints, shades, and tones
 
-3. **Generates Beautiful Art**:
-   - Multi-center gradient background
-   - Shape variation by file type (circles, hexagons, triangles)
-   - Depth and texture with subtle blur
-   - High-quality PNG output
+3. **Determines Canvas Shape**:
+   - Analyzes file type distribution
+   - Auto-detects aspect ratio (mobile=portrait, web=landscape, backend=square)
+   - Can be manually overridden with `--aspect` flag
 
-See [CLAUDE.md](CLAUDE.md) for detailed development journey and technical architecture.
+4. **Generates Artwork** (style-specific):
+   - **Expressionist**: Bold strokes, thick lines, filled color areas, organic shapes
+   - **Impressionist**: Small brush dabs, soft edges, layered transparency
+   - **Watercolor**: Transparent washes, color bleeding, soft gradients
+   - **Pixel**: Blocky shapes, limited palette, retro 8-bit aesthetic
+   - **Face**: Cubist face with planes, varied eye/nose/mouth shapes, asymmetric features
+   - **Nature**: Earth-toned background with organic elements, natural textures
 
-## For Developers
+5. **Ensures Determinism**:
+   - All randomness seeded from repository metrics
+   - Same repository state = identical artwork (byte-for-byte)
+   - Small code changes = small visual changes
+   - Large code changes = large visual changes
 
-See [DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md) for complete documentation.
+## Technical Details
+
+### Color System
+- **Language-Based Palettes**: 7 curated palettes (Python, JavaScript, Java, Ruby, Go, Rust, default)
+- **Auto-Detection**: Analyzes file extension distribution to select palette
+- **Expansion**: Each palette expanded with tints, shades, and complementary colors
+
+### Aspect Ratio Detection
+- **Mobile Detection**: Swift, Kotlin, Dart, Objective-C files
+- **Web Detection**: HTML, CSS, JS, JSX, TS, TSX, Vue, Svelte files
+- **Documentation Detection**: Markdown, RST, text files
+- **Thresholds**: Mobile >15%, Web >25%, Docs >40%
+
+### Deterministic System
+- All "random" values derived from MD5 hashes of repository data
+- `total_lines` → main seed for global decisions
+- File content hashes → element-specific seeds
+- Deterministic random class ensures reproducibility across runs
+
+### Art Theory Principles
+- **Golden Ratio (φ)**: Element positioning at natural focal points
+- **Rule of Thirds**: Dynamic composition with key elements at intersections
+- **Visual Hierarchy**: File importance mapped to size, opacity, and placement
+- **Color Harmony**: Complementary, analogous, and triadic color schemes
+
+## Project Documentation
+
+See [DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md) for complete documentation including:
+- Development journey and design decisions
+- Flask web application architecture
+- Database schema and API documentation
+- Deployment guides
 
 Research and development docs are in the [/research](research/) folder.
+
+## Examples
+
+Generate different styles from the same repository:
+
+```bash
+# Bold expressionist (default)
+python git2art.py --style expressionist
+
+# Soft impressionist
+python git2art.py --style impressionist
+
+# Flowing watercolor
+python git2art.py --style watercolor
+
+# Retro pixel art
+python git2art.py --style pixel
+
+# Abstract cubist face
+python git2art.py --style face
+
+# Natural organic textures
+python git2art.py --style nature
+```
+
+Each style will produce completely different artwork from the same codebase while maintaining determinism.
 
 ## Future Possibilities
 
 - Animation showing repository evolution over time
-- More art style variations and presets
-- SVG and high-resolution export options
+- More art style variations (minimalist, geometric, etc.)
+- SVG and vector export options
 - VR/AR gallery experiences
 - User accounts and authentication
 - Social sharing and community features
+- Comparison visualizations for multiple repositories
+
+## Contributing
+
+Contributions welcome! Please check the issues page or submit pull requests.
+
+## License
+
+MIT License - see LICENSE file for details
+
+---
+
+Generated with Claude Code - Transform your code into art
