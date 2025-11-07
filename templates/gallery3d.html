@@ -33,7 +33,12 @@
     <div id="canvas-container"></div>
 
     <div id="controls-overlay">
-        <div class="control-panel">
+        <button id="menu-toggle" class="hamburger-menu" aria-label="Toggle menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        <div class="control-panel" id="control-panel">
             <h3>Controls</h3>
             <p><strong>Click artwork</strong> to center and zoom</p>
             <p><strong>Click again</strong> to zoom out</p>
@@ -238,6 +243,22 @@ function init() {
     renderer.domElement.addEventListener('mousemove', onMouseMove);
 
     document.getElementById('reset-view').addEventListener('click', resetView);
+
+    const menuToggle = document.getElementById('menu-toggle');
+    const controlPanel = document.getElementById('control-panel');
+
+    menuToggle.addEventListener('click', function(e) {
+        e.stopPropagation();
+        menuToggle.classList.toggle('active');
+        controlPanel.classList.toggle('open');
+    });
+
+    document.addEventListener('click', function(e) {
+        if (!controlPanel.contains(e.target) && !menuToggle.contains(e.target)) {
+            menuToggle.classList.remove('active');
+            controlPanel.classList.remove('open');
+        }
+    });
 
     loadArtworks();
 }

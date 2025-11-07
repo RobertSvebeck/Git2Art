@@ -79,12 +79,72 @@ body, html {
     z-index: 100;
 }
 
+.hamburger-menu {
+    width: 50px;
+    height: 50px;
+    background: rgba(0, 0, 0, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    padding: 0;
+    backdrop-filter: blur(10px);
+    transition: background 0.3s, transform 0.2s;
+    position: relative;
+    z-index: 102;
+}
+
+.hamburger-menu:hover {
+    background: rgba(102, 126, 234, 0.3);
+    transform: scale(1.05);
+}
+
+.hamburger-menu span {
+    display: block;
+    width: 25px;
+    height: 3px;
+    background: white;
+    border-radius: 2px;
+    transition: all 0.3s ease;
+}
+
+.hamburger-menu.active span:nth-child(1) {
+    transform: translateY(9px) rotate(45deg);
+}
+
+.hamburger-menu.active span:nth-child(2) {
+    opacity: 0;
+}
+
+.hamburger-menu.active span:nth-child(3) {
+    transform: translateY(-9px) rotate(-45deg);
+}
+
 .control-panel {
     background: rgba(0, 0, 0, 0.8);
     padding: 1.5rem;
     border-radius: 10px;
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.1);
+    position: absolute;
+    top: 60px;
+    right: 0;
+    min-width: 250px;
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
+    padding: 0 1.5rem;
+}
+
+.control-panel.open {
+    max-height: 600px;
+    opacity: 1;
+    padding: 1.5rem;
 }
 
 .control-panel h3 {
@@ -200,7 +260,17 @@ body, html {
         right: 10px;
     }
 
+    .hamburger-menu {
+        width: 45px;
+        height: 45px;
+    }
+
     .control-panel {
+        min-width: calc(100vw - 40px);
+        right: -10px;
+    }
+
+    .control-panel.open {
         padding: 1rem;
     }
 
