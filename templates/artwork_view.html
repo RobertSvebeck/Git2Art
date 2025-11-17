@@ -94,9 +94,21 @@
             }
         }
 
+        // Build back-to-gallery link with style filter if provided
+        function setupBackToGalleryLink() {
+            const params = new URLSearchParams(window.location.search);
+            const style = params.get('style');
+            const backLink = document.querySelector('a[href*="/gallery"]');
+
+            if (backLink && style) {
+                backLink.href = `/gallery?style=${encodeURIComponent(style)}`;
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             const artworkId = {{ artwork.id }};
             checkHasLiked(artworkId);
+            setupBackToGalleryLink();
         });
     </script>
 </body>

@@ -24,6 +24,8 @@ def seed_art_styles():
         'watercolor': 2,
         'pixel': 3,
         'face': 4,
+        'nature': 5,
+        'psychedelic': 6,
     }
 
     success_count = 0

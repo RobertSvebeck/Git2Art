@@ -13,7 +13,7 @@ Git2Art creates deterministic abstract art from your codebase:
 
 ## Art Styles
 
-Git2Art offers six distinct art styles to visualize your code:
+Git2Art offers seven distinct art styles to visualize your code:
 
 - **Expressionist** - Bold strokes, vibrant colors, organic shapes inspired by abstract expressionism (default)
 - **Impressionist** - Soft brush dabs, pastel colors, luminous atmosphere inspired by Monet and Renoir
@@ -21,10 +21,11 @@ Git2Art offers six distinct art styles to visualize your code:
 - **Pixel** - Retro 8-bit aesthetic with blocky shapes and limited color palette
 - **Face** - Cubist face art inspired by Picasso and Matisse with playful abstract features
 - **Nature** - Organic textures inspired by natural forms with earth-toned backgrounds
+- **Psychedelic** - Hypnotic trippy flows with NO straight lines, vibrant neon colors, spirals and mandala patterns
 
 ## Features
 
-- **Multiple Art Styles**: Six unique styles, each with distinct visual characteristics
+- **Multiple Art Styles**: Seven unique styles, each with distinct visual characteristics
 - **Repository-Driven Palettes**: Colors automatically selected based on primary programming language
 - **100% Deterministic**: Same repository state always generates identical artwork
 - **Smart Aspect Ratios**: Auto-detects canvas shape based on project type (mobile/web/backend)
@@ -65,6 +66,7 @@ python git2art.py --style watercolor     # Flowing transparent washes
 python git2art.py --style pixel          # Retro 8-bit aesthetic
 python git2art.py --style face           # Cubist face art
 python git2art.py --style nature         # Organic natural textures
+python git2art.py --style psychedelic    # Hypnotic trippy flows
 ```
 
 **Face Style Details:**
@@ -78,6 +80,18 @@ The face style creates abstract cubist faces inspired by Picasso and Matisse. Fe
 - **Hair style**: Randomly selected from 5 styles (circular tufts, spiky triangles, organic blobs, wavy lines, rectangular blocks)
 - **Face planes**: Bold color blocks in cubist style with asymmetric positioning
 - **Background**: Organic flowing shapes with palette-based colors
+
+**Psychedelic Style Details:**
+The psychedelic style creates hypnotic, trippy artwork with zero straight lines and vibrant neon colors:
+- **NO straight lines**: Every element uses curves - wavy lines, spirals, and organic flows
+- **Vibrant colors**: Neon magentas, electric blues, acid yellows, vivid purples with high saturation
+- **Flowing background**: Multi-layered wavy lines with sine wave amplitude modulation
+- **Spiral vortices**: Hypnotic rotating spirals that draw the eye inward
+- **Concentric waves**: Circular patterns with wavy distortion creating ripple effects
+- **Flowing blobs**: Organic shapes with smooth, wavy edges
+- **Mandala patterns**: Radiating geometric curves with petal-like structures
+- **Undulating waves**: Complex layered sine waves for infinite visual movement
+- **Dark background**: Deep purple/black base to make colors pop with psychedelic intensity
 
 #### Common Options
 
@@ -219,6 +233,7 @@ Then open http://localhost:5001 in your browser.
    - **Pixel**: Blocky shapes, limited palette, retro 8-bit aesthetic
    - **Face**: Cubist face with planes, varied eye/nose/mouth shapes, asymmetric features
    - **Nature**: Earth-toned background with organic elements, natural textures
+   - **Psychedelic**: Hypnotic curves, zero straight lines, vibrant neon colors, spirals and mandalas
 
 5. **Ensures Determinism**:
    - All randomness seeded from repository metrics
@@ -283,6 +298,9 @@ python git2art.py --style face
 
 # Natural organic textures
 python git2art.py --style nature
+
+# Hypnotic psychedelic (trippy!)
+python git2art.py --style psychedelic
 ```
 
 Each style will produce completely different artwork from the same codebase while maintaining determinism.

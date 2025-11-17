@@ -6,6 +6,7 @@ from .watercolor_style import WatercolorStyleGenerator
 from .pixel_style import PixelStyleGenerator
 from .face_style import FaceStyleGenerator
 from .nature_style import NatureStyleGenerator
+from .psychedelic_style import PsychedelicStyleGenerator
 
 # Registry of all available art styles
 STYLE_REGISTRY = {
@@ -15,6 +16,7 @@ STYLE_REGISTRY = {
     'pixel': PixelStyleGenerator,
     'face': FaceStyleGenerator,
     'nature': NatureStyleGenerator,
+    'psychedelic': PsychedelicStyleGenerator,
     # Future styles will be added here:
     # 'minimalist': MinimalistStyleGenerator,
     # 'geometric': GeometricStyleGenerator,

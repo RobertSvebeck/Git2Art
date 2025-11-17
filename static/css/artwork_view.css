@@ -92,6 +92,10 @@
     background: #6C757D;
 }
 
+.art-style-badge[data-style="psychedelic"] {
+    background: #D946EF;  /* Vibrant magenta for psychedelic */
+}
+
 .artwork-commit,
 .artwork-date {
     margin: 5px 0;

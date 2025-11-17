@@ -691,6 +691,10 @@ main {
     background: #6C757D;
 }
 
+.art-style-badge[data-style="psychedelic"] {
+    background: #D946EF;  /* Vibrant magenta for psychedelic */
+}
+
 /* Style Filter */
 .style-filter {
     width: 100%;

@@ -117,6 +117,7 @@ def generate():
             'success': True,
             'image_url': result['image_url'],
             'repo_name': result['repo_name'],
+            'artwork_id': result['artwork_id'],
             'cached': result['cached'],
             'art_style': art_style
         })

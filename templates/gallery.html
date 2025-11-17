@@ -486,12 +486,13 @@
                     throw new Error(data.error || 'Failed to generate artwork');
                 }
 
-                status.textContent = 'Artwork generated successfully! Refreshing page...';
+                status.textContent = 'Artwork generated successfully! Viewing your new artwork...';
                 status.className = 'status success';
                 status.classList.remove('hidden');
 
+                // Redirect to artwork_view with the new artwork ID and style filter
                 setTimeout(() => {
-                    window.location.reload();
+                    window.location.href = `/artwork/${data.artwork_id}?style=${encodeURIComponent(artStyle)}`;
                 }, 1500);
 
             } catch (error) {
@@ -590,6 +591,14 @@
             // Setup style filter
             const styleFilter = document.getElementById('style-filter');
             if (styleFilter) {
+                // Check if style parameter is provided in URL
+                const params = new URLSearchParams(window.location.search);
+                const styleParam = params.get('style');
+                if (styleParam) {
+                    styleFilter.value = styleParam;
+                    filterByStyle(styleParam);
+                }
+
                 styleFilter.addEventListener('change', function() {
                     filterByStyle(this.value);
                 });
