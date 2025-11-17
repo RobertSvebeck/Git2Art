@@ -74,15 +74,14 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-const artworksData = {{ artworks | tojson }};
+const allArtworksData = {{ artworks | tojson }};
 
-let scene, camera, renderer, controls;
+let scene, camera, renderer, controls, frustum;
 let artworkMeshes = [];
-let isDragging = false;
-let previousMousePosition = { x: 0, y: 0 };
-let velocity = { x: 0, y: 0 };
-let friction = 0.95;
-let isAutoRotating = false;
+let artworkAspectRatios = {};
+let textureCache = {};
+let loadedTextureIndex = new Set();
+let textureLoader = null;
 let raycaster = new THREE.Raycaster();
 let mouse = new THREE.Vector2();
 let isZoomedToArtwork = false;
@@ -101,7 +100,13 @@ let artworkSpotlight = null;
 
 const BASE_SPHERE_RADIUS = 80;
 let SPHERE_RADIUS = BASE_SPHERE_RADIUS;
-const MIN_ARTWORKS_VISIBLE = 12;
+const MAX_VISIBLE_ARTWORKS = 50;
+const LOAD_DISTANCE = Math.PI * 1.2;  // Load artworks within 120 degrees
+const UNLOAD_DISTANCE = Math.PI * 1.8;  // Unload artworks beyond 180 degrees
+const LOAD_BATCH_SIZE = 50;
+
+let loadingBatch = false;
+let nextBatchIndex = 0;
 
 function init() {
     updateLoadingStatus('Setting up 3D scene...');
@@ -117,11 +122,11 @@ function init() {
     );
     camera.position.set(0, 0, 120);
 
-    renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.shadowMap.type = THREE.BasicShadowMap;
     document.getElementById('canvas-container').appendChild(renderer.domElement);
 
     controls = new OrbitControls(camera, renderer.domElement);
@@ -133,32 +138,25 @@ function init() {
     controls.maxDistance = 0;
     controls.target.set(1, 0, 0);
 
-    const sphereGeometry = new THREE.SphereGeometry(SPHERE_RADIUS, 64, 64);
+    frustum = new THREE.Frustum();
+
+    // Simpler sphere with fewer segments
+    const sphereGeometry = new THREE.SphereGeometry(SPHERE_RADIUS, 32, 32);
 
     // Create gradient texture for dynamic background
     const canvas = document.createElement('canvas');
-    canvas.width = 512;
-    canvas.height = 512;
+    canvas.width = 256;
+    canvas.height = 256;
     const ctx = canvas.getContext('2d');
 
-    // Create radial gradient with multiple color stops
-    const gradient = ctx.createRadialGradient(256, 256, 0, 256, 256, 512);
+    const gradient = ctx.createRadialGradient(128, 128, 0, 128, 128, 256);
     gradient.addColorStop(0, '#2a2a3e');
     gradient.addColorStop(0.3, '#1a1a2e');
     gradient.addColorStop(0.6, '#0f0f1e');
     gradient.addColorStop(1, '#050510');
 
     ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, 512, 512);
-
-    // Add some subtle noise/texture
-    for (let i = 0; i < 2000; i++) {
-        const x = Math.random() * 512;
-        const y = Math.random() * 512;
-        const brightness = Math.random() * 40 + 10;
-        ctx.fillStyle = `rgba(${brightness}, ${brightness}, ${brightness}, ${Math.random() * 0.3})`;
-        ctx.fillRect(x, y, 1, 1);
-    }
+    ctx.fillRect(0, 0, 256, 256);
 
     const backgroundTexture = new THREE.CanvasTexture(canvas);
     backgroundTexture.wrapS = THREE.RepeatWrapping;
@@ -168,74 +166,35 @@ function init() {
         map: backgroundTexture,
         side: THREE.BackSide,
         roughness: 0.85,
-        metalness: 0.0,
-        emissive: 0x0a0a1a,
-        emissiveIntensity: 0.2
+        metalness: 0.0
     });
     const sphereMesh = new THREE.Mesh(sphereGeometry, sphereMaterial);
     sphereMesh.name = 'gallerySphere';
     sphereMesh.receiveShadow = true;
     scene.add(sphereMesh);
 
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
+    // Simplified lighting
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.5);
     scene.add(ambientLight);
 
-    const mainCameraLight = new THREE.SpotLight(0xffffff, 30.0);
-    mainCameraLight.angle = Math.PI / 2.5;
-    mainCameraLight.penumbra = 0.3;
+    const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1.0);
+    scene.add(hemisphereLight);
+
+    // Single spotlight from camera (main light source)
+    const mainCameraLight = new THREE.SpotLight(0xffffff, 20.0);
+    mainCameraLight.angle = Math.PI / 2;
+    mainCameraLight.penumbra = 0.5;
     mainCameraLight.distance = SPHERE_RADIUS * 2;
     mainCameraLight.decay = 1;
     mainCameraLight.castShadow = true;
-    mainCameraLight.shadow.mapSize.width = 2048;
-    mainCameraLight.shadow.mapSize.height = 2048;
+    mainCameraLight.shadow.mapSize.width = 1024;
+    mainCameraLight.shadow.mapSize.height = 1024;
     mainCameraLight.position.set(0, 0, 0);
     mainCameraLight.target.position.set(0, 0, SPHERE_RADIUS);
     camera.add(mainCameraLight);
     camera.add(mainCameraLight.target);
     scene.add(camera);
     cameraLights.push(mainCameraLight);
-
-    const fillCameraLight = new THREE.PointLight(0xffffff, 6.0);
-    fillCameraLight.distance = SPHERE_RADIUS * 1.5;
-    fillCameraLight.decay = 1;
-    camera.add(fillCameraLight);
-    cameraLights.push(fillCameraLight);
-
-    const leftAccentLight = new THREE.PointLight(0xffd4a3, 5.0);
-    leftAccentLight.position.set(-8, 3, 5);
-    leftAccentLight.distance = SPHERE_RADIUS * 1.2;
-    leftAccentLight.decay = 1;
-    camera.add(leftAccentLight);
-    cameraLights.push(leftAccentLight);
-
-    const rightAccentLight = new THREE.PointLight(0xa3d4ff, 5.0);
-    rightAccentLight.position.set(8, 3, 5);
-    rightAccentLight.distance = SPHERE_RADIUS * 1.2;
-    rightAccentLight.decay = 1;
-    camera.add(rightAccentLight);
-    cameraLights.push(rightAccentLight);
-
-    // Add fixed hemisphere light for overall brightness
-    const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1.5);
-    hemisphereLight.position.set(0, 1, 0);
-    scene.add(hemisphereLight);
-
-    // Add several fixed point lights around the sphere for even illumination
-    const sphereLights = [
-        { pos: [SPHERE_RADIUS * 0.5, SPHERE_RADIUS * 0.5, 0], color: 0xffffff, intensity: 8.0 },
-        { pos: [-SPHERE_RADIUS * 0.5, SPHERE_RADIUS * 0.5, 0], color: 0xffffff, intensity: 8.0 },
-        { pos: [0, SPHERE_RADIUS * 0.5, SPHERE_RADIUS * 0.5], color: 0xffffff, intensity: 8.0 },
-        { pos: [0, SPHERE_RADIUS * 0.5, -SPHERE_RADIUS * 0.5], color: 0xffffff, intensity: 8.0 },
-        { pos: [0, -SPHERE_RADIUS * 0.5, 0], color: 0xffffff, intensity: 8.0 }
-    ];
-
-    sphereLights.forEach(lightData => {
-        const light = new THREE.PointLight(lightData.color, lightData.intensity);
-        light.position.set(...lightData.pos);
-        light.distance = SPHERE_RADIUS * 2;
-        light.decay = 1.5;
-        scene.add(light);
-    });
 
     window.addEventListener('resize', onWindowResize);
     window.addEventListener('keydown', onKeyDown);
@@ -268,7 +227,7 @@ function onMouseMove(event) {
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
     raycaster.setFromCamera(mouse, camera);
-    const intersects = raycaster.intersectObjects(artworkMeshes, true);
+    const intersects = raycaster.intersectObjects(artworkMeshes);
 
     if (intersects.length > 0) {
         renderer.domElement.style.cursor = 'pointer';
@@ -282,16 +241,10 @@ function onCanvasClick(event) {
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
     raycaster.setFromCamera(mouse, camera);
-
-    const intersects = raycaster.intersectObjects(artworkMeshes, true);
+    const intersects = raycaster.intersectObjects(artworkMeshes);
 
     if (intersects.length > 0) {
-        let artworkGroup = intersects[0].object;
-
-        while (artworkGroup.parent && !artworkMeshes.includes(artworkGroup)) {
-            artworkGroup = artworkGroup.parent;
-        }
-
+        const artworkGroup = intersects[0].object.parent || intersects[0].object;
         if (artworkMeshes.includes(artworkGroup)) {
             toggleArtworkZoom(artworkGroup);
         }
@@ -329,12 +282,10 @@ function zoomToArtwork(artworkGroup) {
 
     rotationTarget = targetControlsTarget.clone();
 
-    // Dim camera lights when zoomed in
     cameraLights.forEach(light => {
-        light.intensity *= 0.1;
+        light.intensity *= 0.3;
     });
 
-    // Show artwork info panel
     const infoPanel = document.getElementById('artwork-info');
     const artwork = artworkGroup.userData;
     document.getElementById('info-repo-name').textContent = artwork.repo_name;
@@ -347,15 +298,13 @@ function zoomToArtwork(artworkGroup) {
     if (artworkSpotlight) {
         scene.remove(artworkSpotlight);
     }
-    artworkSpotlight = new THREE.SpotLight(0xffffff, 0.5);
+    artworkSpotlight = new THREE.SpotLight(0xffffff, 15.0);
     artworkSpotlight.position.copy(artworkPosition).multiplyScalar(0.8);
     artworkSpotlight.target.position.copy(artworkPosition);
-    artworkSpotlight.angle = Math.PI / 8;
-    artworkSpotlight.penumbra = 0.2;
-    artworkSpotlight.distance = 30;
-    artworkSpotlight.castShadow = true;
-    artworkSpotlight.shadow.mapSize.width = 1024;
-    artworkSpotlight.shadow.mapSize.height = 1024;
+    artworkSpotlight.angle = Math.PI / 6;
+    artworkSpotlight.penumbra = 0.3;
+    artworkSpotlight.distance = 50;
+    artworkSpotlight.decay = 1;
     scene.add(artworkSpotlight);
     scene.add(artworkSpotlight.target);
 }
@@ -367,7 +316,6 @@ function zoomOut() {
     targetCameraPosition = savedCameraPosition.clone();
     targetControlsTarget = savedControlsTarget.clone();
 
-    // Hide artwork info panel
     const infoPanel = document.getElementById('artwork-info');
     infoPanel.classList.add('hidden');
 
@@ -377,9 +325,8 @@ function zoomOut() {
     rotationTarget = null;
     animationProgress = 0;
 
-    // Restore camera lights to full intensity
     cameraLights.forEach(light => {
-        light.intensity /= 0.1;
+        light.intensity /= 0.3;
     });
 
     if (artworkSpotlight) {
@@ -399,17 +346,14 @@ function onKeyDown(event) {
         case 'w':
         case 'W':
         case 'ArrowUp':
-            // Zoom in
             const newDistanceIn = Math.max(controls.minDistance, currentDistance - zoomSpeed);
             camera.position.multiplyScalar(newDistanceIn / currentDistance);
             break;
-
         case '-':
         case '_':
         case 's':
         case 'S':
         case 'ArrowDown':
-            // Zoom out
             const newDistanceOut = Math.min(controls.maxDistance, currentDistance + zoomSpeed);
             camera.position.multiplyScalar(newDistanceOut / currentDistance);
             break;
@@ -432,16 +376,16 @@ function hideLoadingScreen() {
 }
 
 function loadArtworks() {
-    if (!artworksData || artworksData.length === 0) {
+    if (!allArtworksData || allArtworksData.length === 0) {
         updateLoadingStatus('No artworks to display');
         setTimeout(hideLoadingScreen, 1000);
         return;
     }
 
-    const artworkCount = artworksData.length;
+    const artworkCount = allArtworksData.length;
     SPHERE_RADIUS = Math.max(BASE_SPHERE_RADIUS, Math.sqrt(artworkCount) * 10);
 
-    const sphereGeometry = new THREE.SphereGeometry(SPHERE_RADIUS, 64, 64);
+    const sphereGeometry = new THREE.SphereGeometry(SPHERE_RADIUS, 32, 32);
     const sphereMesh = scene.getObjectByName('gallerySphere');
     if (sphereMesh) {
         sphereMesh.geometry.dispose();
@@ -450,151 +394,105 @@ function loadArtworks() {
 
     controls.maxDistance = SPHERE_RADIUS - 15;
 
-    updateLoadingStatus(`Loading ${artworkCount} artworks...`);
+    textureLoader = new THREE.TextureLoader();
+    nextBatchIndex = 0;
 
-    const textureLoader = new THREE.TextureLoader();
+    updateLoadingStatus(`Loading initial batch of ${LOAD_BATCH_SIZE} artworks...`);
+
+    // Load first batch
+    loadNextBatch();
+}
+
+function loadNextBatch() {
+    if (nextBatchIndex >= allArtworksData.length || loadingBatch) {
+        return;
+    }
+
+    loadingBatch = true;
+    const startIndex = nextBatchIndex;
+    const endIndex = Math.min(nextBatchIndex + LOAD_BATCH_SIZE, allArtworksData.length);
     let loadedCount = 0;
-    const totalArtworks = artworkCount;
-    let canvasTextureReady = false;
-    let canvasTexture = null;
+    const totalToLoad = endIndex - startIndex;
 
-    // Load canvas texture directly - will use for bump mapping
-    textureLoader.load(
-        '/static/textures/canvas-546877_1280.jpg',
-        (texture) => {
-            canvasTexture = texture;
-            canvasTexture.wrapS = THREE.RepeatWrapping;
-            canvasTexture.wrapT = THREE.RepeatWrapping;
-            canvasTextureReady = true;
-            updateLoadingStatus('Canvas texture loaded');
-        },
-        undefined,
-        (error) => {
-            console.warn('Could not load canvas texture:', error);
-            canvasTextureReady = true;
-        }
-    );
+    updateLoadingStatus(`Loading artworks ${startIndex + 1}-${endIndex} of ${allArtworksData.length}...`);
 
-    artworksData.forEach((artwork, index) => {
+    for (let index = startIndex; index < endIndex; index++) {
+        const artwork = allArtworksData[index];
         textureLoader.load(
             artwork.image_url,
             (texture) => {
-                createArtworkMesh(texture, artwork, index, totalArtworks, canvasTexture);
+                artworkAspectRatios[index] = texture.image.width / texture.image.height;
+                textureCache[index] = texture;
+                loadedTextureIndex.add(index);
                 loadedCount++;
-                updateLoadingStatus(`Loaded ${loadedCount} of ${totalArtworks} artworks...`);
 
-                if (loadedCount === totalArtworks) {
-                    hideLoadingScreen();
-                    animate();
+                // Create mesh immediately when texture loads
+                if (!artworkMeshes.find(m => m.userData.index === index)) {
+                    createArtworkMesh(texture, artwork, index, allArtworksData.length);
+                }
+
+                updateLoadingStatus(`Loaded ${startIndex + loadedCount} of ${allArtworksData.length} artworks...`);
+
+                if (loadedCount === totalToLoad) {
+                    nextBatchIndex = endIndex;
+                    loadingBatch = false;
+
+                    // Start animation after first batch is loaded
+                    if (startIndex === 0) {
+                        hideLoadingScreen();
+                        animate();
+                    }
                 }
             },
             undefined,
             (error) => {
                 console.error('Error loading texture:', error);
                 loadedCount++;
-                if (loadedCount === totalArtworks) {
-                    hideLoadingScreen();
-                    animate();
+                if (loadedCount === totalToLoad) {
+                    nextBatchIndex = endIndex;
+                    loadingBatch = false;
+
+                    if (startIndex === 0) {
+                        hideLoadingScreen();
+                        animate();
+                    }
                 }
             }
         );
-    });
+    }
 }
 
-function createArtworkMesh(texture, artwork, index, total, canvasTexture) {
-    const aspectRatio = texture.image.width / texture.image.height;
-    const artworkWidth = 15;
-    const artworkHeight = artworkWidth / aspectRatio;
 
-    const frameThickness = 0.8;
-    const matteThickness = 0.8;
+function createArtworkMesh(texture, artwork, index, total) {
+    const aspectRatio = texture.image.width / texture.image.height;
+
+    // With fewer artworks (max 50), we can make them MUCH larger
+    // Scale up massively - 5x larger for bold presence
+    const sizeMultiplier = Math.max(1.0, (100 / total)) * 5.0;
+    const artworkWidth = 15 * sizeMultiplier;
+    const artworkHeight = artworkWidth / aspectRatio;
 
     const group = new THREE.Group();
 
-    const frameGeometry = new THREE.PlaneGeometry(
-        artworkWidth + (frameThickness + matteThickness) * 2,
-        artworkHeight + (frameThickness + matteThickness) * 2
-    );
-    const frameMaterial = new THREE.MeshStandardMaterial({
-        color: 0x3d2817,
-        roughness: 0.6,
-        metalness: 0.2,
-        emissive: 0x1a0f08,
-        emissiveIntensity: 0.1
+    // Use single simple material - just the image
+    const artworkMaterial = new THREE.MeshBasicMaterial({
+        map: texture
     });
-    const frame = new THREE.Mesh(frameGeometry, frameMaterial);
-    frame.position.z = 0.58;
-    frame.castShadow = true;
-    frame.receiveShadow = true;
-    group.add(frame);
-
-    const matteGeometry = new THREE.PlaneGeometry(
-        artworkWidth + matteThickness * 2,
-        artworkHeight + matteThickness * 2
-    );
-    const matteMaterial = new THREE.MeshStandardMaterial({
-        color: 0xf5f5f0,
-        roughness: 0.9,
-        metalness: 0.0
-    });
-    const matte = new THREE.Mesh(matteGeometry, matteMaterial);
-    matte.position.z = 0.61;
-    matte.castShadow = true;
-    matte.receiveShadow = true;
-    group.add(matte);
-
-    // Scale texture repeats based on aspect ratio for consistent texture scale
-    const textureRepeatX = canvasTexture ? Math.max(1, Math.round(aspectRatio * 4)) : 1;
-    const textureRepeatY = canvasTexture ? Math.max(1, Math.round(4 / aspectRatio)) : 1;
-
-    // Prepare canvas texture for use as bump map
-    let bumpMapTexture = null;
-
-    if (canvasTexture) {
-        // Set up bump map texture with proper wrapping
-        bumpMapTexture = canvasTexture.clone();
-        bumpMapTexture.wrapS = THREE.RepeatWrapping;
-        bumpMapTexture.wrapT = THREE.RepeatWrapping;
-        bumpMapTexture.repeat.set(textureRepeatX, textureRepeatY);
-    }
 
     const artworkGeometry = new THREE.PlaneGeometry(artworkWidth, artworkHeight);
-    const artworkMaterial = new THREE.MeshStandardMaterial({
-        map: texture,
-        roughness: canvasTexture ? 0.75 : 0.7,
-        metalness: 0.0,
-        bumpMap: bumpMapTexture,
-        bumpScale: canvasTexture ? 0.5 : 0.0
-    });
-
     const artworkMesh = new THREE.Mesh(artworkGeometry, artworkMaterial);
-    artworkMesh.position.z = 0.65;
     artworkMesh.castShadow = true;
-    artworkMesh.receiveShadow = true;
+    artworkMesh.receiveShadow = false;
     group.add(artworkMesh);
 
-    const glassGeometry = new THREE.PlaneGeometry(artworkWidth, artworkHeight);
-    const glassMaterial = new THREE.MeshPhysicalMaterial({
-        color: 0xffffff,
-        metalness: 0.0,
-        roughness: 0.1,
-        transmission: 0.9,
-        transparent: true,
-        opacity: 0.2,
-        reflectivity: 0.8,
-        clearcoat: 1.0,
-        clearcoatRoughness: 0.1
-    });
-    const glassMesh = new THREE.Mesh(glassGeometry, glassMaterial);
-    glassMesh.position.z = 0.7;
-    glassMesh.receiveShadow = true;
-    group.add(glassMesh);
+    // True Fibonacci sphere distribution - evenly distributed across entire sphere
+    // This creates a natural, centered distribution around the equator
+    const goldenAngle = Math.PI * (3 - Math.sqrt(5));
+    const theta = (index * goldenAngle) % (Math.PI * 2);
 
-    const minPhi = Math.PI * 0.25;
-    const maxPhi = Math.PI * 0.75;
-    const phi = minPhi + (maxPhi - minPhi) * (index / total);
-
-    const theta = (index * 2.4) % (Math.PI * 2);
+    // Phi ranges from 0 to PI for even vertical distribution
+    // Center is at PI/2 (equator), poles at 0 (north) and PI (south)
+    const phi = Math.acos(2 * (index + 0.5) / total - 1);
 
     const artworkDistance = SPHERE_RADIUS - 10;
     const x = artworkDistance * Math.cos(theta) * Math.sin(phi);
@@ -605,21 +503,83 @@ function createArtworkMesh(texture, artwork, index, total, canvasTexture) {
     group.lookAt(0, 0, 0);
 
     group.userData = artwork;
-    group.userData.artworkHeight = artworkHeight;
-    group.userData.frameHeight = artworkHeight + (frameThickness + matteThickness) * 2;
+    group.userData.index = index;
+    group.userData.isLoaded = true;
 
     scene.add(group);
     artworkMeshes.push(group);
+}
+
+function updateVisibleArtworks() {
+    // Update frustum for culling
+    const projMatrix = new THREE.Matrix4();
+    projMatrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+    frustum.setFromProjectionMatrix(projMatrix);
+
+    // Get camera direction
+    const cameraDir = camera.getWorldDirection(new THREE.Vector3());
+
+    // Determine which artworks should be loaded based on camera view
+    let artworksInLoadZone = 0;
+    let unloadedInView = 0;
+
+    artworkMeshes.forEach(mesh => {
+        const isInFrustum = frustum.containsPoint(mesh.position);
+        mesh.userData.inView = isInFrustum;
+
+        // Calculate angle to artwork
+        const toArtwork = mesh.position.clone().normalize();
+        const angle = Math.acos(Math.max(-1, Math.min(1, cameraDir.dot(toArtwork))));
+
+        // Check if artwork is within load distance
+        if (angle < LOAD_DISTANCE) {
+            artworksInLoadZone++;
+            if (!loadedTextureIndex.has(mesh.userData.index)) {
+                unloadedInView++;
+            }
+        }
+
+        // Unload artworks far from camera view
+        if (angle > UNLOAD_DISTANCE && loadedTextureIndex.has(mesh.userData.index)) {
+            unloadArtwork(mesh.userData.index);
+        }
+    });
+
+    // Trigger loading if we have unloaded artworks in view and not already loading
+    if (unloadedInView > 10 && !loadingBatch) {
+        loadNextBatch();
+    }
+}
+
+function unloadArtwork(index) {
+    // Dispose texture to free memory
+    if (textureCache[index]) {
+        textureCache[index].dispose();
+        delete textureCache[index];
+    }
+    loadedTextureIndex.delete(index);
+
+    // Find and remove mesh
+    const meshIndex = artworkMeshes.findIndex(m => m.userData.index === index);
+    if (meshIndex !== -1) {
+        const mesh = artworkMeshes[meshIndex];
+        // Dispose geometry and material
+        mesh.children.forEach(child => {
+            if (child.geometry) child.geometry.dispose();
+            if (child.material) child.material.dispose();
+        });
+        scene.remove(mesh);
+        artworkMeshes.splice(meshIndex, 1);
+    }
 }
 
 function resetView() {
     if (isZoomedToArtwork || isRotatingToArtwork) {
         zoomOut();
     } else {
-        camera.position.set(0, 0, 0);
-        controls.target.set(0, 0, 0);
+        camera.position.set(0, 0, 120);
+        controls.target.set(1, 0, 0);
         controls.update();
-        velocity = { x: 0, y: 0 };
     }
 }
 
@@ -680,6 +640,8 @@ function animate() {
     if (cameraLights.length > 0 && cameraLights[0].target) {
         cameraLights[0].target.position.copy(controls.target);
     }
+
+    updateVisibleArtworks();
 
     artworkMeshes.forEach(mesh => {
         mesh.lookAt(camera.position);
