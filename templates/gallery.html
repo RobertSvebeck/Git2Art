@@ -381,12 +381,16 @@
                 });
             });
 
-            // Initialize like states (only check visible ones)
+            // Initialize like states (check unique artwork IDs only once)
             setTimeout(() => {
+                const seenIds = new Set();
                 const likeButtons = document.querySelectorAll('.btn-like');
                 likeButtons.forEach(button => {
                     const artworkId = button.dataset.artworkId;
-                    checkHasLiked(artworkId);
+                    if (artworkId && !seenIds.has(artworkId)) {
+                        seenIds.add(artworkId);
+                        checkHasLiked(artworkId);
+                    }
                 });
             }, 100);
 
