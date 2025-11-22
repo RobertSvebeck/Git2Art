@@ -138,7 +138,7 @@ def get_all_gallery_artworks(images_dir, page=1, per_page=30, art_style=None, se
         # Get paginated artworks with optional filters
         from utils.db import get_db_cursor
 
-        # Build WHERE clause for filters
+        # Build WHERE clause for filters (applies to outer query)
         where_clauses = []
         params = []
 
@@ -161,12 +161,12 @@ def get_all_gallery_artworks(images_dir, page=1, per_page=30, art_style=None, se
                 INNER JOIN (
                     SELECT repo_url, art_style, MAX(created_at) as max_created_at
                     FROM artworks
-                    {where_clause}
                     GROUP BY repo_url, art_style
                 ) latest
                 ON a.repo_url = latest.repo_url
                 AND a.art_style = latest.art_style
                 AND a.created_at = latest.max_created_at
+                {where_clause}
             """
             cursor.execute(count_query, params)
             result = cursor.fetchone()
@@ -182,12 +182,12 @@ def get_all_gallery_artworks(images_dir, page=1, per_page=30, art_style=None, se
                 INNER JOIN (
                     SELECT repo_url, art_style, MAX(created_at) as max_created_at
                     FROM artworks
-                    {where_clause}
                     GROUP BY repo_url, art_style
                 ) latest
                 ON a.repo_url = latest.repo_url
                 AND a.art_style = latest.art_style
                 AND a.created_at = latest.max_created_at
+                {where_clause}
                 ORDER BY a.created_at DESC
                 LIMIT {int(per_page)}
                 OFFSET {int(offset)}
