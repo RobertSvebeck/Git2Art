@@ -124,8 +124,8 @@
                     </div>
                     <nav class="pagination-nav" aria-label="Gallery pagination">
                         {% if pagination.page > 1 %}
-                        <a href="{{ url_for('main.gallery', page=1) }}" class="pagination-btn">First</a>
-                        <a href="{{ url_for('main.gallery', page=pagination.page - 1) }}" class="pagination-btn">Previous</a>
+                        <a href="{{ url_for('main.gallery', page=1, style=current_style or None, search=current_search or None) }}" class="pagination-btn">First</a>
+                        <a href="{{ url_for('main.gallery', page=pagination.page - 1, style=current_style or None, search=current_search or None) }}" class="pagination-btn">Previous</a>
                         {% else %}
                         <span class="pagination-btn disabled">First</span>
                         <span class="pagination-btn disabled">Previous</span>
@@ -136,14 +136,14 @@
                                 {% if p == pagination.page %}
                                 <span class="pagination-btn active">{{ p }}</span>
                                 {% else %}
-                                <a href="{{ url_for('main.gallery', page=p) }}" class="pagination-btn">{{ p }}</a>
+                                <a href="{{ url_for('main.gallery', page=p, style=current_style or None, search=current_search or None) }}" class="pagination-btn">{{ p }}</a>
                                 {% endif %}
                             {% endfor %}
                         </div>
 
                         {% if pagination.page < pagination.total_pages %}
-                        <a href="{{ url_for('main.gallery', page=pagination.page + 1) }}" class="pagination-btn">Next</a>
-                        <a href="{{ url_for('main.gallery', page=pagination.total_pages) }}" class="pagination-btn">Last</a>
+                        <a href="{{ url_for('main.gallery', page=pagination.page + 1, style=current_style or None, search=current_search or None) }}" class="pagination-btn">Next</a>
+                        <a href="{{ url_for('main.gallery', page=pagination.total_pages, style=current_style or None, search=current_search or None) }}" class="pagination-btn">Last</a>
                         {% else %}
                         <span class="pagination-btn disabled">Next</span>
                         <span class="pagination-btn disabled">Last</span>
@@ -615,15 +615,42 @@
             // Setup search functionality
             const searchInput = document.getElementById('search-input');
             if (searchInput) {
+                // Restore search query from URL if present
+                const params = new URLSearchParams(window.location.search);
+                const searchParam = params.get('search');
+                if (searchParam) {
+                    searchInput.value = searchParam;
+                }
+
+                let searchTimeout;
                 searchInput.addEventListener('input', function() {
-                    performSearch(this.value);
+                    // Debounce search and navigate
+                    clearTimeout(searchTimeout);
+                    searchTimeout = setTimeout(() => {
+                        const styleFilter = document.getElementById('style-filter');
+                        const styleValue = styleFilter ? styleFilter.value : '';
+                        const url = new URL('/gallery', window.location.origin);
+                        if (this.value.trim()) {
+                            url.searchParams.set('search', this.value);
+                        }
+                        if (styleValue) {
+                            url.searchParams.set('style', styleValue);
+                        }
+                        window.location.href = url.toString();
+                    }, 500);
                 });
 
                 // Clear search on Escape key
                 searchInput.addEventListener('keydown', function(e) {
                     if (e.key === 'Escape') {
                         this.value = '';
-                        performSearch('');
+                        const styleFilter = document.getElementById('style-filter');
+                        const styleValue = styleFilter ? styleFilter.value : '';
+                        const url = new URL('/gallery', window.location.origin);
+                        if (styleValue) {
+                            url.searchParams.set('style', styleValue);
+                        }
+                        window.location.href = url.toString();
                         this.blur();
                     }
                 });
@@ -637,11 +664,20 @@
                 const styleParam = params.get('style');
                 if (styleParam) {
                     styleFilter.value = styleParam;
-                    filterByStyle(styleParam);
                 }
 
                 styleFilter.addEventListener('change', function() {
-                    filterByStyle(this.value);
+                    // Navigate to gallery with style filter and reset to page 1
+                    const searchInput = document.getElementById('search-input');
+                    const searchQuery = searchInput ? searchInput.value : '';
+                    const url = new URL('/gallery', window.location.origin);
+                    if (this.value) {
+                        url.searchParams.set('style', this.value);
+                    }
+                    if (searchQuery.trim()) {
+                        url.searchParams.set('search', searchQuery);
+                    }
+                    window.location.href = url.toString();
                 });
             }
 

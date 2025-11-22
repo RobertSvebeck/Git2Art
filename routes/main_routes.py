@@ -40,8 +40,10 @@ def terms():
 
 @bp.route('/gallery')
 def gallery():
-    """Display gallery of all generated artworks with pagination."""
+    """Display gallery of all generated artworks with pagination, filtering, and search."""
     page = request.args.get('page', 1, type=int)
+    art_style = request.args.get('style', '', type=str)
+    search_query = request.args.get('search', '', type=str)
     per_page = 30
 
     if page < 1:
@@ -50,7 +52,9 @@ def gallery():
     gallery_data = get_all_gallery_artworks(
         current_app.config['GENERATED_IMAGES_DIR'],
         page=page,
-        per_page=per_page
+        per_page=per_page,
+        art_style=art_style if art_style else None,
+        search_query=search_query if search_query else None
     )
 
     art_styles = ArtStyle.get_active_styles()
@@ -65,6 +69,8 @@ def gallery():
             'total_pages': gallery_data['total_pages']
         },
         art_styles=art_styles,
+        current_style=art_style,
+        current_search=search_query,
         max=max,
         min=min,
         range=range

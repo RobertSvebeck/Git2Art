@@ -110,19 +110,21 @@ def generate_art_from_github(github_url, temp_dir, images_dir, force=False, art_
         cleanup_repo(repo_path)
 
 
-def get_all_gallery_artworks(images_dir, page=1, per_page=30):
+def get_all_gallery_artworks(images_dir, page=1, per_page=30, art_style=None, search_query=None):
     """
-    Load gallery artworks with pagination.
+    Load gallery artworks with pagination, optional style filtering, and search.
 
     Args:
         images_dir: Directory for generated images
         page: Page number (1-indexed)
         per_page: Number of artworks per page
+        art_style: Optional filter by art style
+        search_query: Optional search by repo name or commit hash
 
     Returns:
         dict: {
             'artworks': list of artwork dicts,
-            'total': total count of unique repo+style combinations,
+            'total': total count matching filters,
             'page': current page,
             'per_page': artworks per page,
             'total_pages': total number of pages
@@ -133,20 +135,74 @@ def get_all_gallery_artworks(images_dir, page=1, per_page=30):
     try:
         offset = (page - 1) * per_page
 
-        # Get total count
-        total_count = Artwork.get_latest_per_repo_and_style_count()
+        # Get paginated artworks with optional filters
+        from utils.db import get_db_cursor
 
-        # Get paginated artworks (version_count already included in query result)
-        paginated_artworks = Artwork.get_latest_per_repo_and_style(limit=per_page, offset=offset)
+        # Build WHERE clause for filters
+        where_clauses = []
+        params = []
+
+        if art_style:
+            where_clauses.append("a.art_style = %s")
+            params.append(art_style)
+
+        if search_query:
+            where_clauses.append("(a.repo_name LIKE %s OR a.commit_hash LIKE %s)")
+            search_term = f"%{search_query}%"
+            params.extend([search_term, search_term])
+
+        where_clause = " WHERE " + " AND ".join(where_clauses) if where_clauses else ""
+
+        # Get total count matching filters
+        with get_db_cursor(commit=False) as cursor:
+            count_query = f"""
+                SELECT COUNT(DISTINCT a.repo_url, a.art_style) as total
+                FROM artworks a
+                INNER JOIN (
+                    SELECT repo_url, art_style, MAX(created_at) as max_created_at
+                    FROM artworks
+                    {where_clause}
+                    GROUP BY repo_url, art_style
+                ) latest
+                ON a.repo_url = latest.repo_url
+                AND a.art_style = latest.art_style
+                AND a.created_at = latest.max_created_at
+            """
+            cursor.execute(count_query, params)
+            result = cursor.fetchone()
+            total_count = result['total'] if result else 0
+
+        # Get paginated artworks
+        with get_db_cursor(commit=False) as cursor:
+            query = f"""
+                SELECT
+                    a.*,
+                    (SELECT COUNT(*) FROM artworks WHERE repo_url = a.repo_url AND art_style = a.art_style) as version_count
+                FROM artworks a
+                INNER JOIN (
+                    SELECT repo_url, art_style, MAX(created_at) as max_created_at
+                    FROM artworks
+                    {where_clause}
+                    GROUP BY repo_url, art_style
+                ) latest
+                ON a.repo_url = latest.repo_url
+                AND a.art_style = latest.art_style
+                AND a.created_at = latest.max_created_at
+                ORDER BY a.created_at DESC
+                LIMIT {int(per_page)}
+                OFFSET {int(offset)}
+            """
+            cursor.execute(query, params)
+            paginated_artworks = cursor.fetchall()
 
         for artwork in paginated_artworks:
             repo_url = artwork['repo_url']
             repo_name = artwork['repo_name']
-            art_style = artwork.get('art_style', 'expressionist')
+            art_style_val = artwork.get('art_style', 'expressionist')
             version_count = artwork.get('version_count', 1)
 
             # Get art style display name
-            art_style_name = art_style.replace('_', ' ').title()
+            art_style_name = art_style_val.replace('_', ' ').title()
 
             scale = 1.0
             artworks.append({
@@ -156,7 +212,7 @@ def get_all_gallery_artworks(images_dir, page=1, per_page=30):
                 'image_url': artwork['image_path'],
                 'image_filename': artwork['image_filename'],
                 'commit_hash': artwork['commit_hash'],
-                'art_style': art_style,
+                'art_style': art_style_val,
                 'art_style_name': art_style_name,
                 'created_at': artwork['created_at'],
                 'created_at_formatted': artwork['created_at'].strftime('%b %d, %Y at %I:%M %p'),
@@ -177,6 +233,8 @@ def get_all_gallery_artworks(images_dir, page=1, per_page=30):
         }
     except Exception as e:
         print(f"Error: Failed to fetch gallery artworks from database: {e}")
+        import traceback
+        traceback.print_exc()
         return {
             'artworks': [],
             'total': 0,
