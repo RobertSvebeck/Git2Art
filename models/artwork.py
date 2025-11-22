@@ -140,6 +140,7 @@ class Artwork:
         """
         Get the latest artwork for each unique (repo_url, art_style) combination.
         Includes version count in single query to avoid N+1 problem.
+        Sorted by creation date (newest first).
         """
         with get_db_cursor(commit=False) as cursor:
             # Main query with version count and pagination
@@ -156,7 +157,7 @@ class Artwork:
                 ON a.repo_url = latest.repo_url
                 AND a.art_style = latest.art_style
                 AND a.created_at = latest.max_created_at
-                ORDER BY a.art_style ASC, a.created_at DESC
+                ORDER BY a.created_at DESC
             """
 
             if limit:
