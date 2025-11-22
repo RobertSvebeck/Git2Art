@@ -110,27 +110,40 @@ def generate_art_from_github(github_url, temp_dir, images_dir, force=False, art_
         cleanup_repo(repo_path)
 
 
-def get_all_gallery_artworks(images_dir):
+def get_all_gallery_artworks(images_dir, page=1, per_page=30):
     """
-    Load all generated artworks from database.
+    Load gallery artworks with pagination.
+
+    Args:
+        images_dir: Directory for generated images
+        page: Page number (1-indexed)
+        per_page: Number of artworks per page
 
     Returns:
-        list: List of artwork dicts with id, repo_name, image_url, commit_hash, created_at,
-              like_count, scale, art_style, and version info
+        dict: {
+            'artworks': list of artwork dicts,
+            'total': total count of unique repo+style combinations,
+            'page': current page,
+            'per_page': artworks per page,
+            'total_pages': total number of pages
+        }
     """
     artworks = []
 
     try:
-        all_artworks = Artwork.get_latest_per_repo_and_style()
+        offset = (page - 1) * per_page
 
-        for artwork in all_artworks:
+        # Get total count
+        total_count = Artwork.get_latest_per_repo_and_style_count()
+
+        # Get paginated artworks (version_count already included in query result)
+        paginated_artworks = Artwork.get_latest_per_repo_and_style(limit=per_page, offset=offset)
+
+        for artwork in paginated_artworks:
             repo_url = artwork['repo_url']
             repo_name = artwork['repo_name']
             art_style = artwork.get('art_style', 'expressionist')
-
-            # Get version count for this repo+style combination
-            versions = Artwork.get_by_repo_and_style(repo_url, art_style)
-            version_count = len(versions)
+            version_count = artwork.get('version_count', 1)
 
             # Get art style display name
             art_style_name = art_style.replace('_', ' ').title()
@@ -153,7 +166,21 @@ def get_all_gallery_artworks(images_dir):
                 'versions': []
             })
 
-        return artworks
+        total_pages = (total_count + per_page - 1) // per_page
+
+        return {
+            'artworks': artworks,
+            'total': total_count,
+            'page': page,
+            'per_page': per_page,
+            'total_pages': total_pages
+        }
     except Exception as e:
         print(f"Error: Failed to fetch gallery artworks from database: {e}")
-        return []
+        return {
+            'artworks': [],
+            'total': 0,
+            'page': page,
+            'per_page': per_page,
+            'total_pages': 0
+        }

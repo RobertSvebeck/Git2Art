@@ -136,11 +136,17 @@ class Artwork:
             return cursor.fetchall()
 
     @staticmethod
-    def get_latest_per_repo_and_style():
-        """Get the latest artwork for each unique (repo_url, art_style) combination."""
+    def get_latest_per_repo_and_style(limit=None, offset=0):
+        """
+        Get the latest artwork for each unique (repo_url, art_style) combination.
+        Includes version count in single query to avoid N+1 problem.
+        """
         with get_db_cursor(commit=False) as cursor:
-            cursor.execute("""
-                SELECT a.*
+            # Main query with version count and pagination
+            query = """
+                SELECT
+                    a.*,
+                    (SELECT COUNT(*) FROM artworks WHERE repo_url = a.repo_url AND art_style = a.art_style) as version_count
                 FROM artworks a
                 INNER JOIN (
                     SELECT repo_url, art_style, MAX(created_at) as max_created_at
@@ -151,8 +157,26 @@ class Artwork:
                 AND a.art_style = latest.art_style
                 AND a.created_at = latest.max_created_at
                 ORDER BY a.art_style ASC, a.created_at DESC
-            """)
+            """
+
+            if limit:
+                query += f" LIMIT {int(limit)}"
+            if offset:
+                query += f" OFFSET {int(offset)}"
+
+            cursor.execute(query)
             return cursor.fetchall()
+
+    @staticmethod
+    def get_latest_per_repo_and_style_count():
+        """Get total count of unique (repo_url, art_style) combinations."""
+        with get_db_cursor(commit=False) as cursor:
+            cursor.execute("""
+                SELECT COUNT(DISTINCT repo_url, art_style) as total
+                FROM artworks
+            """)
+            result = cursor.fetchone()
+            return result['total'] if result else 0
 
 
 class ArtworkLike:

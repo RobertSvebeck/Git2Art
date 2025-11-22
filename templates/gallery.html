@@ -70,7 +70,7 @@
                         <div class="card-frame">
                             <div class="card-passepartout">
                                 <div class="card-image">
-                                    <img src="{{ artwork.image_url }}" alt="Art for {{ artwork.repo_name }}">
+                                    <img loading="lazy" src="{{ artwork.image_url }}" alt="Art for {{ artwork.repo_name }}">
                                 </div>
                             </div>
                         </div>
@@ -114,6 +114,43 @@
                     <div class="gallery-column" id="column-1"></div>
                     <div class="gallery-column" id="column-2"></div>
                 </div>
+
+                <!-- Pagination Controls -->
+                {% if pagination.total_pages > 1 %}
+                <div class="pagination-container">
+                    <div class="pagination-info">
+                        Showing {{ pagination.per_page }} of {{ pagination.total }} artworks
+                        (Page {{ pagination.page }} of {{ pagination.total_pages }})
+                    </div>
+                    <nav class="pagination-nav" aria-label="Gallery pagination">
+                        {% if pagination.page > 1 %}
+                        <a href="{{ url_for('main.gallery', page=1) }}" class="pagination-btn">First</a>
+                        <a href="{{ url_for('main.gallery', page=pagination.page - 1) }}" class="pagination-btn">Previous</a>
+                        {% else %}
+                        <span class="pagination-btn disabled">First</span>
+                        <span class="pagination-btn disabled">Previous</span>
+                        {% endif %}
+
+                        <div class="pagination-pages">
+                            {% for p in range(max(1, pagination.page - 2), min(pagination.total_pages + 1, pagination.page + 3)) %}
+                                {% if p == pagination.page %}
+                                <span class="pagination-btn active">{{ p }}</span>
+                                {% else %}
+                                <a href="{{ url_for('main.gallery', page=p) }}" class="pagination-btn">{{ p }}</a>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+
+                        {% if pagination.page < pagination.total_pages %}
+                        <a href="{{ url_for('main.gallery', page=pagination.page + 1) }}" class="pagination-btn">Next</a>
+                        <a href="{{ url_for('main.gallery', page=pagination.total_pages) }}" class="pagination-btn">Last</a>
+                        {% else %}
+                        <span class="pagination-btn disabled">Next</span>
+                        <span class="pagination-btn disabled">Last</span>
+                        {% endif %}
+                    </nav>
+                </div>
+                {% endif %}
             {% else %}
                 <div class="empty-state">
                     <h2>No artworks yet</h2>
