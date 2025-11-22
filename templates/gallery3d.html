@@ -121,8 +121,8 @@ let artworkSpotlight = null;
 const BASE_SPHERE_RADIUS = 80;
 let SPHERE_RADIUS = BASE_SPHERE_RADIUS;
 const MAX_VISIBLE_ARTWORKS = 50;
-const LOAD_DISTANCE = Math.PI * 1.2;  // Load artworks within 120 degrees
-const UNLOAD_DISTANCE = Math.PI * 1.8;  // Unload artworks beyond 180 degrees
+const LOAD_DISTANCE = Math.PI;  // Load artworks within 180 degrees (entire visible hemisphere)
+const UNLOAD_DISTANCE = Math.PI * 2;  // Never unload artworks (load entire sphere)
 const LOAD_BATCH_SIZE = 50;
 
 let loadingBatch = false;
@@ -141,7 +141,10 @@ function init() {
         0.1,
         1000
     );
-    camera.position.set(0, 0, 120);
+    // Position camera at an angle to see both hemispheres
+    // Use diagonal position (x, y, z) for better initial view
+    const initialDist = 120;
+    camera.position.set(initialDist * 0.6, initialDist * 0.6, initialDist * 0.6);
 
     renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -157,7 +160,7 @@ function init() {
     controls.enablePan = false;
     controls.minDistance = 0;
     controls.maxDistance = 0;
-    controls.target.set(1, 0, 0);
+    controls.target.set(0, 0, 0);
 
     frustum = new THREE.Frustum();
 
@@ -406,7 +409,9 @@ function loadArtworks() {
     }
 
     const artworkCount = allArtworksData.length;
-    SPHERE_RADIUS = Math.max(BASE_SPHERE_RADIUS, Math.sqrt(artworkCount) * 10);
+    // Increase sphere radius proportionally to artwork count to prevent overlap
+    // Larger multiplier ensures adequate spacing between artworks
+    SPHERE_RADIUS = Math.max(BASE_SPHERE_RADIUS, Math.pow(artworkCount, 0.55) * 12);
 
     const sphereGeometry = new THREE.SphereGeometry(SPHERE_RADIUS, 32, 32);
     const sphereMesh = scene.getObjectByName('gallerySphere');
@@ -489,10 +494,10 @@ function loadNextBatch() {
 function createArtworkMesh(texture, artwork, index, total) {
     const aspectRatio = texture.image.width / texture.image.height;
 
-    // With fewer artworks (max 50), we can make them MUCH larger
-    // Scale up massively - 5x larger for bold presence
-    const sizeMultiplier = Math.max(1.0, (100 / total)) * 5.0;
-    const artworkWidth = 15 * sizeMultiplier;
+    // Scale artworks inversely to count to prevent overlap
+    // Fewer artworks = larger size, but with a more reasonable multiplier
+    const sizeMultiplier = Math.max(0.6, Math.min(2.5, 50 / total));
+    const artworkWidth = 18 * sizeMultiplier;
     const artworkHeight = artworkWidth / aspectRatio;
 
     const group = new THREE.Group();
@@ -508,19 +513,30 @@ function createArtworkMesh(texture, artwork, index, total) {
     artworkMesh.receiveShadow = false;
     group.add(artworkMesh);
 
-    // True Fibonacci sphere distribution - evenly distributed across entire sphere
-    // This creates a natural, centered distribution around the equator
-    const goldenAngle = Math.PI * (3 - Math.sqrt(5));
-    const theta = (index * goldenAngle) % (Math.PI * 2);
+    // Golden spiral sunflower algorithm for even sphere distribution
+    // Source: https://stackoverflow.com/a/9600801
+    // Spreads points evenly across entire sphere surface
 
-    // Phi ranges from 0 to PI for even vertical distribution
-    // Center is at PI/2 (equator), poles at 0 (north) and PI (south)
-    const phi = Math.acos(2 * (index + 0.5) / total - 1);
+    const i = index + 0.5;
 
-    const artworkDistance = SPHERE_RADIUS - 10;
+    // Phi: polar angle from north pole to south pole
+    // arccos ensures equal area distribution across all latitudes
+    const phi = Math.acos(1 - 2 * i / total);
+
+    // Theta: azimuthal angle using golden spiral
+    // (1 + sqrt(5)) is the golden ratio spiral constant
+    const theta = Math.PI * (1 + Math.sqrt(5)) * i;
+
+    // Position artworks on sphere surface with slight radial offset to prevent overlap
+    // Small pseudo-random offset based on index to add spacing variation
+    const radialOffset = 8 + ((index * 7919) % 12) * 0.3;
+    const artworkDistance = SPHERE_RADIUS - radialOffset;
+
+    // Convert spherical coordinates to Cartesian
+    // Match Python code: x = cos(theta) * sin(phi), y = sin(theta) * sin(phi), z = cos(phi)
     const x = artworkDistance * Math.cos(theta) * Math.sin(phi);
-    const z = artworkDistance * Math.sin(theta) * Math.sin(phi);
-    const y = artworkDistance * Math.cos(phi);
+    const y = artworkDistance * Math.sin(theta) * Math.sin(phi);
+    const z = artworkDistance * Math.cos(phi);
 
     group.position.set(x, y, z);
     group.lookAt(0, 0, 0);
@@ -600,8 +616,9 @@ function resetView() {
     if (isZoomedToArtwork || isRotatingToArtwork) {
         zoomOut();
     } else {
-        camera.position.set(0, 0, 120);
-        controls.target.set(1, 0, 0);
+        const resetDist = 120;
+        camera.position.set(resetDist * 0.6, resetDist * 0.6, resetDist * 0.6);
+        controls.target.set(0, 0, 0);
         controls.update();
     }
 }
