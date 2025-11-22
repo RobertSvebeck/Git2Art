@@ -64,7 +64,10 @@ def gallery():
             'total': gallery_data['total'],
             'total_pages': gallery_data['total_pages']
         },
-        art_styles=art_styles
+        art_styles=art_styles,
+        max=max,
+        min=min,
+        range=range
     )
 
 
@@ -94,7 +97,10 @@ def gallery3d():
             'total': gallery_data['total'],
             'total_pages': gallery_data['total_pages']
         },
-        art_styles=art_styles
+        art_styles=art_styles,
+        max=max,
+        min=min,
+        range=range
     )
 
 
