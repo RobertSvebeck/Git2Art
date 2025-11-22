@@ -291,6 +291,19 @@ body, html {
     }
 }
 
+.pagination-controls {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.pagination-info {
+    color: #aaa;
+    font-size: 0.85rem;
+    margin-bottom: 0.8rem;
+    text-align: center;
+}
+
 canvas {
     display: block;
 }

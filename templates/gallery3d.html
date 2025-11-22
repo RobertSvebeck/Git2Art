@@ -46,6 +46,25 @@
             <p><strong>W/S or ↑/↓</strong> to zoom</p>
             <p><strong>+/-</strong> to zoom</p>
             <button id="reset-view" class="btn btn-primary">Reset View</button>
+
+            <!-- Pagination Controls -->
+            {% if pagination.total_pages > 1 %}
+            <div class="pagination-controls">
+                <p class="pagination-info">Page {{ pagination.page }} of {{ pagination.total_pages }}</p>
+                {% if pagination.page > 1 %}
+                <a href="{{ url_for('main.gallery3d', page=pagination.page - 1) }}" class="btn btn-secondary">Previous</a>
+                {% else %}
+                <button class="btn btn-secondary" disabled>Previous</button>
+                {% endif %}
+
+                {% if pagination.page < pagination.total_pages %}
+                <a href="{{ url_for('main.gallery3d', page=pagination.page + 1) }}" class="btn btn-secondary">Next</a>
+                {% else %}
+                <button class="btn btn-secondary" disabled>Next</button>
+                {% endif %}
+            </div>
+            {% endif %}
+
             <a href="{{ url_for('main.gallery') }}" class="btn btn-secondary">2D Gallery</a>
             <a href="{{ url_for('main.index') }}" class="btn btn-secondary">Home</a>
         </div>
@@ -74,7 +93,8 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-const allArtworksData = {{ artworks | tojson }};
+const paginationData = {{ pagination | tojson }};
+const currentPageArtworks = {{ artworks | tojson }};
 
 let scene, camera, renderer, controls, frustum;
 let artworkMeshes = [];
@@ -107,6 +127,7 @@ const LOAD_BATCH_SIZE = 50;
 
 let loadingBatch = false;
 let nextBatchIndex = 0;
+let allArtworksData = [];
 
 function init() {
     updateLoadingStatus('Setting up 3D scene...');
@@ -376,6 +397,8 @@ function hideLoadingScreen() {
 }
 
 function loadArtworks() {
+    allArtworksData = currentPageArtworks;
+
     if (!allArtworksData || allArtworksData.length === 0) {
         updateLoadingStatus('No artworks to display');
         setTimeout(hideLoadingScreen, 1000);
@@ -397,9 +420,9 @@ function loadArtworks() {
     textureLoader = new THREE.TextureLoader();
     nextBatchIndex = 0;
 
-    updateLoadingStatus(`Loading initial batch of ${LOAD_BATCH_SIZE} artworks...`);
+    updateLoadingStatus(`Loading page ${paginationData.page} of ${paginationData.total_pages} (${artworkCount} artworks)...`);
 
-    // Load first batch
+    // Load all artworks on this page
     loadNextBatch();
 }
 

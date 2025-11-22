@@ -81,7 +81,7 @@ def gallery():
 def gallery3d():
     """Display 3D sphere gallery of all generated artworks."""
     page = request.args.get('page', 1, type=int)
-    per_page = 100
+    per_page = 50
 
     if page < 1:
         page = 1
@@ -103,10 +103,7 @@ def gallery3d():
             'total': gallery_data['total'],
             'total_pages': gallery_data['total_pages']
         },
-        art_styles=art_styles,
-        max=max,
-        min=min,
-        range=range
+        art_styles=art_styles
     )
 
 
