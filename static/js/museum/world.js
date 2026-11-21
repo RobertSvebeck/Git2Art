@@ -31,8 +31,10 @@ class ArtDeck {
 }
 
 export class World {
-  constructor(scene, artworks, worldSeed) {
+  constructor(scene, artworks, worldSeed, renderer, camera) {
     this.scene = scene;
+    this.renderer = renderer;
+    this.camera = camera;
     this.worldSeed = worldSeed;
     this.deck = new ArtDeck(artworks, hashInts(worldSeed, 99));
     this.byRepo = new Map();
@@ -45,6 +47,7 @@ export class World {
       .filter(Boolean)
       .map((w) => ({ id: w.id, title: w.title, repo_url: w.repo_url, data: w.data, image: w.image, likes: w.likes }));
     this.sculptureDeck = new ArtDeck(sculptures, hashInts(worldSeed, 77));
+    this.installationDeck = new ArtDeck(sculptures, hashInts(worldSeed, 55));
     this.hung = new Map();
     this.rooms = new Map();
     this.queue = [];
@@ -68,7 +71,7 @@ export class World {
       this.visited.add(key);
       this.schedule(cx, cz);
       this.unloadFar(cx, cz);
-      this.buildNow(cx, cz);
+      this.buildNow(cx, cz, true);
       entered = this.rooms.get(key);
     }
     if (this.queue.length) {
@@ -89,17 +92,28 @@ export class World {
     this.queue = wanted.map(([x, z]) => [x, z]);
   }
 
-  buildNow(cx, cz) {
+  // Neighbours stay hidden until their shaders are compiled, so they never stall a frame.
+  buildNow(cx, cz, visibleNow = false) {
     const key = cellKey(cx, cz);
-    if (this.rooms.has(key)) return;
+    if (this.rooms.has(key)) {
+      this.rooms.get(key).group.visible = true;
+      return;
+    }
     const plan = planRoom(this.worldSeed, cx, cz);
     if (!this.hung.has(key)) this.hung.set(key, this.dealFor(plan));
     const room = buildRoom(plan, this.hung.get(key));
+    room.group.visible = visibleNow;
     this.scene.add(room.group);
     this.rooms.set(key, room);
+    if (!visibleNow) {
+      this.renderer.compileAsync(room.group, this.camera, this.scene)
+        .catch(() => {})
+        .finally(() => { if (!room.disposed) room.group.visible = true; });
+    }
   }
 
   dealFor(plan) {
+    if (plan.wing === 'light') return { paintings: [], sculptures: [], installation: this.installationDeck.draw(1)[0] };
     if (plan.wing !== 'sculpture') return { paintings: this.deck.draw(plan.slots.length), sculptures: [] };
     const plinthCount = plan.furniture.filter((f) => f.type === 'plinth').length;
     const sculptures = this.sculptureDeck.draw(plinthCount);

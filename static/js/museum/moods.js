@@ -43,6 +43,13 @@ export const MOODS = [
   },
 ];
 
+// Only used by the light installation wing: darkness so the light can speak.
+export const VOID_MOOD = {
+  name: 'Void', wall: 0x060608, trim: 0x0c0c10, floor: 'black-marble', ceilings: ['dark'],
+  light: 0xbfcfff, sky: 0x1a2036, ground: 0x000000, ambient: 0.12, spot: 0, exposure: 1.0,
+  accent: null, frames: ['float'], fog: 0x000000, fill: 0, environment: 0.02,
+};
+
 export const FRAME_STYLES = {
   'thin-black': { border: 0.05, depth: 0.05, color: 0x121212, metalness: 0.0, roughness: 0.5, mat: 0 },
   'float': { border: 0.0, depth: 0.05, color: 0x1c1c1c, metalness: 0.0, roughness: 0.7, mat: 0 },

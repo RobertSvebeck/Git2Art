@@ -12,7 +12,7 @@ const PLAQUE_H = 0.1125;
 const STYLE_LABELS = {
   expressionist: 'Expressionist', impressionist: 'Impressionist', watercolor: 'Watercolour',
   pixel: 'Pixel', face: 'Face', nature: 'Nature', psychedelic: 'Psychedelic', constellation: 'Constellation',
-  sculpture: 'Repository sculpture',
+  sculpture: 'Repository sculpture', installation: 'Light installation',
 };
 
 export function styleLabel(style) {
@@ -185,6 +185,7 @@ function addSculpture(room, item, materials, track) {
     color: plan.accent || 0xd9d9e0, metalness: 1.0, roughness: 0.12, clearcoat: 1.0, clearcoatRoughness: 0.08,
   }));
   const sculpture = new THREE.Group();
+  sculpture.userData.dynamic = true;
   sculpture.position.set(item.x, 1.65, item.z);
   const copies = item.shape === 2 ? 3 : 1;
   for (let i = 0; i < copies; i++) {

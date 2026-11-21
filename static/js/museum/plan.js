@@ -4,7 +4,7 @@
 // middle of each wall and a half-corridor out to the cell boundary, where it
 // meets the neighbour's half-corridor. Door size is global, so corridors line up.
 
-import { MOODS } from './moods.js';
+import { MOODS, VOID_MOOD } from './moods.js';
 import { Rng, hashInts } from './rng.js';
 
 export const CELL = 26;
@@ -42,15 +42,16 @@ export function planRoom(worldSeed, cx, cz) {
   const isEntrance = cx === 0 && cz === 0;
   const wing = wingOf(cx, cz);
   const isCourt = wing === 'sculpture';
+  const isLight = wing === 'light';
 
-  const mood = MOODS[isCourt ? courtMoodIndex(cx, cz) : moodIndex(worldSeed, cx, cz)];
+  const mood = isLight ? VOID_MOOD : MOODS[isCourt ? courtMoodIndex(cx, cz) : moodIndex(worldSeed, cx, cz)];
   const width = round2(rng.range(13, 19));
   const depth = round2(rng.range(13, 19));
   const height = round2(rng.range(5.2, 7.6));
   const ceiling = rng.pick(mood.ceilings);
   const frame = rng.pick(mood.frames);
   const wallTint = rng.range(-0.05, 0.05);
-  const pieceCount = isCourt ? rng.int(4, 6) : rng.int(5, 10);
+  const pieceCount = isLight ? 0 : isCourt ? rng.int(4, 6) : rng.int(5, 10);
   const pieceHeight = Math.min(2.7, height * 0.4) * rng.range(0.85, 1.0);
 
   const furniture = [];
@@ -58,6 +59,8 @@ export function planRoom(worldSeed, cx, cz) {
     for (const [sx, sz] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) {
       furniture.push({ type: 'plinth', x: sx * width * 0.24, z: sz * depth * 0.24, half: [0.62, 0.62] });
     }
+  } else if (isLight) {
+    // nothing to bump into: the installation is walked through
   } else if (!isEntrance && rng.chance(0.4)) {
     furniture.push({ type: 'abstract', x: 0, z: 0, half: [0.7, 0.7], shape: rng.int(0, 3), spin: rng.range(0.1, 0.3) });
     if (rng.chance(0.6)) {
@@ -80,11 +83,14 @@ export function planRoom(worldSeed, cx, cz) {
   return plan;
 }
 
-export const WING_NAMES = { paintings: 'Painting Galleries', sculpture: 'Sculpture Court' };
+export const WING_NAMES = { paintings: 'Painting Galleries', sculpture: 'Sculpture Court', light: 'Light Installations' };
 
-// Everything south of the entrance is the sculpture court.
+// South of the entrance: sculpture court. East (and not south): light
+// installations. Everything else: painting galleries.
 export function wingOf(cx, cz) {
-  return cz > 0 ? 'sculpture' : 'paintings';
+  if (cz > 0) return 'sculpture';
+  if (cx > 0) return 'light';
+  return 'paintings';
 }
 
 // Dark moods make the glowing sculptures read best; mod-4 lattice keeps

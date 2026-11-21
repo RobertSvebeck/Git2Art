@@ -52,11 +52,15 @@
                 <p class="m2-count">{{ room.works | length }} {{ 'work' if room.works | length == 1 else 'works' }}</p>
             </div>
             {% for work in room.works %}
-            <figure class="m2-work{% if room.kind == 'sculpture' %} m2-sculpture{% endif %}" data-item
+            <figure class="m2-work{% if room.kind == 'sculpture' %} m2-sculpture{% elif room.kind == 'light' %} m2-light{% endif %}" data-item
                     data-id="{{ work.id }}" data-title="{{ work.title }}" data-repo="{{ work.repo_url }}"
                     data-style="{{ style_labels.get(work.style, work.style) }}" data-likes="{{ work.likes }}"
                     data-image="{{ work.image }}"{% if work.data %} data-data="{{ work.data }}"{% endif %}>
-                {% if room.kind == 'sculpture' %}
+                {% if room.kind == 'light' %}
+                <div class="m2-lightbox">
+                    <canvas width="720" height="480" aria-label="Light installation of the {{ work.title }} repository history"></canvas>
+                </div>
+                {% elif room.kind == 'sculpture' %}
                 <div class="m2-plinth">
                     <canvas width="440" height="560" aria-label="Sculpture of the {{ work.title }} repository"></canvas>
                 </div>

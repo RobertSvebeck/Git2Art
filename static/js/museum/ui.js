@@ -51,8 +51,9 @@ export class Ui {
     $('hud-room').textContent = `Room ${plan.cx}, ${plan.cz}`;
     $('hud-visited').textContent = `${visited} visited`;
     const title = $('room-title');
-    $('room-title-name').textContent = plan.mood.name;
-    $('room-title-meta').textContent = `${plan.slots.length} works`;
+    const works = plan.wing === 'light' ? 1 : plan.slots.length + plan.furniture.filter((f) => f.type === 'plinth').length;
+    $('room-title-name').textContent = plan.wing === 'light' ? 'Light Installation' : plan.mood.name;
+    $('room-title-meta').textContent = `${works} ${works === 1 ? 'work' : 'works'}`;
     title.classList.remove('visible');
     void title.offsetWidth;
     title.classList.add('visible');
@@ -77,10 +78,11 @@ export class Ui {
     $('panel-image').src = artwork.image;
     $('panel-image').alt = `${artwork.title}, ${styleLabel(artwork.style)} style`;
     $('panel-title').textContent = artwork.title;
-    $('panel-style').textContent = artwork.style === 'sculpture' ? 'Repository sculpture' : `${styleLabel(artwork.style)} style`;
+    const special = artwork.style === 'sculpture' || artwork.style === 'installation';
+    $('panel-style').textContent = special ? styleLabel(artwork.style) : `${styleLabel(artwork.style)} style`;
     $('panel-stats').textContent = artwork.stats || '';
     $('panel-stats').hidden = !artwork.stats;
-    $('panel-view').textContent = artwork.style === 'sculpture' ? 'View painting' : 'View artwork';
+    $('panel-view').textContent = special ? 'View painting' : 'View artwork';
     $('panel-likes').textContent = `${artwork.likes} ${artwork.likes === 1 ? 'like' : 'likes'}`;
     $('panel-view').href = `/artwork/${artwork.id}`;
     $('panel-repo').href = artwork.repo_url;

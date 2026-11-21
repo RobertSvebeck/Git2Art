@@ -209,7 +209,7 @@ Then open http://localhost:5001 in your browser.
 - Responsive design for mobile and desktop
 
 **Museum** (`/museum`, works on any device)
-- The collection hung room by room: Entrance Hall (new acquisitions), Painting Galleries (one room per style), Sculpture Court, Most Loved
+- The collection hung room by room: Entrance Hall (new acquisitions), Painting Galleries (one room per style), Sculpture Court, Light Installations, Most Loved
 - Walk along each wall with the arrow keys, Enter to look closer, M for the floor plan; swipe on phones
 - Server-rendered HTML, so it works without JavaScript and is indexable
 - Repository sculptures are drawn on a 2D canvas and replay their history when focused
@@ -218,6 +218,7 @@ Then open http://localhost:5001 in your browser.
 - An endless, walkable museum: every room has 5 to 10 works and a door in each wall; new rooms are generated as you walk
 - Eight room moods (White Cube, Salon, Nocturne, Verdigris, Sandstone, Graphite, Blush, Ultraviolet) with different sizes, ceilings, floors, frames, benches and sculptures; adjacent rooms never share a mood
 - Track spotlights with volumetric beams, wall halos, neon accents, bloom and drifting dust
+- Light Installations (east of the entrance): dark rooms where a repository's commit history rises as a walk-through spiral of light, with a time pulse travelling through it and the file tree hanging above as a chandelier
 - Sculpture Court (south of the entrance): each repository as a 3D sculpture of glowing file beads on bronze folder branches, replaying its history while you are in the room
 - Desktop: arrow keys walk and turn, A/D step sideways, mouse look optional, Enter or click for details. Touch: left thumb walks, right thumb looks, tap a work
 - Suggests the 2D museum if the device renders below about 30 fps

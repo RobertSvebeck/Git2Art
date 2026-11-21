@@ -2,6 +2,8 @@
 
 ROOM_SIZE = 8
 SCULPTURES_PER_ROOM = 5
+INSTALLATIONS_PER_ROOM = 4
+INSTALLATION_ROOMS = 4
 
 STYLE_ROOMS = {
     'expressionist': ('Expressionism', 'Bold strokes and colliding colour. Every shape is seeded by the code, so no two repositories paint alike.', 'Salon'),
@@ -27,6 +29,10 @@ def _numbered(name, index, total):
 
 def _room(room_id, name, intro, mood, works, kind='paintings'):
     return {'id': room_id, 'name': name, 'intro': intro, 'mood': mood, 'kind': kind, 'works': works}
+
+
+def _commit_count(artwork):
+    return artwork.get('commits') or 0
 
 
 def build_museum(artworks):
@@ -63,8 +69,17 @@ def build_museum(artworks):
               'Nocturne', chunk, kind='sculpture')
         for i, chunk in enumerate(chunks)]}
 
+    by_history = sorted(sculptures, key=lambda a: -_commit_count(a))[:INSTALLATIONS_PER_ROOM * INSTALLATION_ROOMS]
+    light_chunks = _chunks([{**a, 'style': 'installation'} for a in by_history], INSTALLATIONS_PER_ROOM)
+    light = {'id': 'light', 'name': 'Light Installations', 'rooms': [
+        _room(f'light-{i + 1}', _numbered('Light Installations', i, len(light_chunks)),
+              'A repository\'s whole history as a spiral of light: every point is a change, rising from the first '
+              'commit at the bottom to today at the top. A pulse travels through time while you look.' if i == 0 else '',
+              'Void', chunk, kind='light')
+        for i, chunk in enumerate(light_chunks)]}
+
     loved = sorted((a for a in artworks if a['likes'] > 0), key=lambda a: (-a['likes'], a['id']))[:ROOM_SIZE]
-    wings = [entrance, paintings, court]
+    wings = [entrance, paintings, court, light]
     if loved:
         wings.append({'id': 'loved', 'name': 'Most Loved', 'rooms': [_room(
             'most-loved', 'Most Loved', 'The works visitors have liked most.', 'Salon', loved)]})

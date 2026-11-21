@@ -6,7 +6,7 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { buildForm } from '../shared/repoform.js';
 
-const BEAD = new THREE.IcosahedronGeometry(1, 2);
+const BEAD = new THREE.IcosahedronGeometry(1, 1);
 const POP = 0.025;
 const BEAD_SCALE = 1.5;
 const GROW = 0.06;

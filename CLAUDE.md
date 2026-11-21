@@ -221,6 +221,14 @@ Rewrite of `/gallery3d` as a walkable, procedurally generated museum (three.js 0
 - Controls: arrows walk and turn, A/D strafe, Enter for details (no pointer lock needed)
 - Lesson: low-roughness floors reflecting RoomEnvironment cause white grazing-angle glare; keep `scene.environmentIntensity` low (0.14)
 
+### Light Installations and Render Upgrades (Session 15, 2026-11-21)
+- Wing layout in `plan.js` `wingOf`: south (`cz > 0`) Sculpture Court, east (`cx > 0`) Light Installations, rest Painting Galleries
+- `installation.js`: commit spiral (`commitField` in shared `repoform.js`) as additive point sprites with a time pulse shader, plus the file tree hung from the ceiling; Void mood with no fill light and near-zero environment reflection
+- 2D: light wing rooms (repos with the longest histories) drawn by `museum2d/lightCanvas.js`
+- Render: `batch.js` merges static meshes per material, rooms compile with `compileAsync` while hidden, shared surface textures pre-warmed, artwork textures uploaded on load, SMAA instead of MSAA
+- Lesson: a 4x MSAA HalfFloat composer target rendered the whole frame black on ANGLE/Metal; always screenshot after render pipeline changes, metrics alone did not show it
+- Lesson: environment strength is per mood (`environment` in moods.js); glossy floors reflect the RoomEnvironment as white glare otherwise
+
 ## Technical Architecture
 
 ### Color System

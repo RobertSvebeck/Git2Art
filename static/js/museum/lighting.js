@@ -7,6 +7,7 @@ import { CELL } from './plan.js';
 const SPOT_INTENSITY = 32;
 const FILL_INTENSITY = 40;
 const BLEND_TAU = 0.6;
+const ENVIRONMENT = 0.14;
 
 export class Lighting {
   constructor(scene, renderer, spotCount) {
@@ -37,7 +38,8 @@ export class Lighting {
       ambient: mood.ambient,
       fog: new THREE.Color(mood.fog),
       exposure: mood.exposure,
-      fill: FILL_INTENSITY * mood.ambient * (height / 6) ** 2,
+      environment: mood.environment ?? ENVIRONMENT,
+      fill: mood.fill ?? FILL_INTENSITY * mood.ambient * (height / 6) ** 2,
     };
     this.fill.color.set(mood.light);
     this.fill.position.set(room.plan.cx * CELL, height - 1.2, room.plan.cz * CELL);
@@ -69,6 +71,7 @@ export class Lighting {
     this.scene.background = this.fogColour;
     this.exposure += (g.exposure - this.exposure) * k;
     this.renderer.toneMappingExposure = this.exposure;
+    this.scene.environmentIntensity += (g.environment - this.scene.environmentIntensity) * k;
     for (const spot of this.spots) spot.intensity += (spot.userData.goal - spot.intensity) * k;
   }
 }

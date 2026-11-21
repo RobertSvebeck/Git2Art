@@ -88,7 +88,7 @@ def gallery3d():
 STYLE_LABELS = {
     'expressionist': 'Expressionist', 'impressionist': 'Impressionist', 'watercolor': 'Watercolour',
     'pixel': 'Pixel', 'face': 'Face', 'nature': 'Nature', 'psychedelic': 'Psychedelic',
-    'constellation': 'Constellation', 'sculpture': 'Repository sculpture',
+    'constellation': 'Constellation', 'sculpture': 'Repository sculpture', 'installation': 'Light installation',
 }
 
 

@@ -6,9 +6,18 @@ import { Rng } from './rng.js';
 const SIZE = 1024;
 const surfaceCache = new Map();
 let maxAnisotropy = 8;
+let uploader = null;
 
-export function setMaxAnisotropy(value) {
-  maxAnisotropy = Math.min(8, value);
+export function setRenderer(renderer) {
+  maxAnisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+  uploader = renderer;
+}
+
+// Draw and upload every shared surface texture up front, so the first room of
+// each kind never pays for canvas drawing or GPU upload mid-walk.
+export function warmSurfaces() {
+  const textures = [...Object.keys(FLOORS).map((type) => floorTexture(type).texture), plasterTexture(), radialTexture()];
+  if (uploader) textures.forEach((t) => uploader.initTexture(t));
 }
 
 function canvas(size = SIZE) {
@@ -197,6 +206,7 @@ export function acquireArt(url) {
     entry.promise = loader.loadAsync(url).then((texture) => {
       texture.colorSpace = THREE.SRGBColorSpace;
       texture.anisotropy = maxAnisotropy;
+      if (uploader) uploader.initTexture(texture);
       entry.texture = texture;
       if (entry.refs <= 0) disposeArt(url);
       return texture;

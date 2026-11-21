@@ -12,6 +12,7 @@
 .mood-sandstone   { --wall: #d5bf9b; --wall-top: #e3d0b0; --floor: #cbb796; --floor-dark: #9b8766; --ink: #2a2116; --muted: #6e5d46; --light: 255, 230, 192; --frame: #4a2c1a; --frame-width: 10px; }
 .mood-graphite    { --wall: #29292d; --wall-top: #36363b; --floor: #4e4e52; --floor-dark: #1c1c1e; --ink: #f4f4f6; --muted: #a9a9b1; --light: 255, 255, 255; --frame: #0d0d0d; --frame-width: 4px; }
 .mood-blush       { --wall: #e4c3be; --wall-top: #efd5d1; --floor: #c9a37a; --floor-dark: #93714f; --ink: #2d1f1d; --muted: #7a5c58; --light: 255, 240, 234; --frame: #f3f1ec; --frame-width: 10px; }
+.mood-void        { --wall: #050507; --wall-top: #08080b; --floor: #08080a; --floor-dark: #020203; --ink: #eef0ff; --muted: #8e93ad; --light: 190, 205, 255; --frame: #000; --frame-width: 0px; }
 .mood-ultraviolet { --wall: #25143f; --wall-top: #321c55; --floor: #0f0a17; --floor-dark: #05030a; --ink: #f4ecff; --muted: #bba6e0; --light: 232, 220, 255; --frame: #0b0b0d; --frame-width: 4px; }
 
 html, body {
@@ -512,4 +513,24 @@ kbd {
 
 @media (prefers-reduced-motion: reduce) {
     .m2-room, .m2-work::before, .m2-frame { transition: none !important; }
+}
+
+/* Light installations glow out of a black box; no spotlight needed. */
+.m2-light::before { display: none; }
+
+.m2-lightbox canvas {
+    display: block;
+    width: min(56vw, 640px);
+    height: auto;
+    aspect-ratio: 720 / 480;
+    border-radius: 2px;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 30px 70px rgba(0, 0, 0, 0.8);
+}
+
+.m2-light.focused .m2-lightbox canvas { box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.15), 0 0 80px rgba(120, 140, 255, 0.18); }
+.mood-void .m2-plaque { background: rgba(30, 30, 36, 0.95); color: #e8e8f0; }
+.mood-void .m2-plaque span { color: #9a9ab0; }
+
+@media (max-width: 760px) {
+    .m2-lightbox canvas { width: 84vw; }
 }

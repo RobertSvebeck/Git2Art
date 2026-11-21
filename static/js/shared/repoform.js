@@ -169,3 +169,45 @@ export function sculptureLines(data) {
     [count(data.authors, 'author'), since ? `since ${since}` : null, languages || null].filter(Boolean).join(', '),
   ];
 }
+
+// Light installation: the commit history as a rising spiral of lights.
+// Returns flat arrays: positions (x, y, z), colours (r, g, b), times (0..1), sizes.
+export function commitField(data, { radius = 4.5, bottom = 0.5, top = 3.4, turns = 2.25, maxPoints = 9000 } = {}) {
+  const timeline = data.timeline || [];
+  const palette = languagePalette(data);
+  const weights = timeline.map(([, changed]) => Math.min(70, Math.max(2, Math.round(Math.sqrt(changed) * 3))));
+  const total = weights.reduce((a, b) => a + b, 0) || 1;
+  const thin = Math.min(maxPoints / total, Math.max(1, 1800 / total));
+  const positions = [], colours = [], times = [], sizes = [];
+  const span = (Math.PI * 2 * turns) / Math.max(1, timeline.length);
+  const rise = (top - bottom) / Math.max(1, timeline.length);
+  timeline.forEach(([timestamp], i) => {
+    const u = timeline.length > 1 ? i / (timeline.length - 1) : 0;
+    const count = Math.max(1, Math.round(weights[i] * thin));
+    for (let j = 0; j < count; j++) {
+      const key = `${timestamp}:${i}:${j}`;
+      const angle = u * Math.PI * 2 * turns + (hashUnit(key, 'a') - 0.5) * Math.max(0.18, span);
+      const r = radius + (hashUnit(key, 'r') - 0.5) * 1.3;
+      const y = bottom + u * (top - bottom) + (hashUnit(key, 'y') - 0.5) * Math.max(0.55, rise);
+      positions.push(Math.cos(angle) * r, y, Math.sin(angle) * r);
+      const colour = palette[Math.floor(hashUnit(key, 'c') * palette.length)];
+      const glow = 0.55 + 0.45 * hashUnit(key, 'g');
+      colours.push(colour[0] * glow, colour[1] * glow, colour[2] * glow);
+      times.push(u);
+      sizes.push(0.5 + 1.5 * hashUnit(key, 's') ** 3);
+    }
+  });
+  return { positions, colours, times, sizes, count: times.length };
+}
+
+// Language colours weighted by bytes, so the light takes the repo's palette.
+export function languagePalette(data, slots = 24) {
+  const entries = Object.entries(data.languages || {}).filter(([, bytes]) => bytes > 0);
+  const total = entries.reduce((sum, [, bytes]) => sum + bytes, 0);
+  const palette = [];
+  for (const [ext, bytes] of entries) {
+    const share = Math.max(1, Math.round((bytes / total) * slots));
+    for (let i = 0; i < share; i++) palette.push(fileColour(`x${ext}`));
+  }
+  return palette.length ? palette : [[0.7, 0.8, 1.0]];
+}

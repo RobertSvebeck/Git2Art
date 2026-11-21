@@ -1,6 +1,7 @@
 // Git2Art Museum, 2D: one room at a time, walked along the wall with arrow keys.
 
 import { loadData, SculptureCanvas } from './sculptureCanvas.js';
+import { LightCanvas } from './lightCanvas.js';
 import { sculptureLines } from '../shared/repoform.js';
 
 const $ = (id) => document.getElementById(id);
@@ -76,15 +77,17 @@ async function showWork(figure) {
   $('m2-panel-style').textContent = d.style;
   $('m2-panel-likes').textContent = `${d.likes} ${d.likes === '1' ? 'like' : 'likes'}`;
   $('m2-panel-view').href = `/artwork/${d.id}`;
-  $('m2-panel-view').textContent = figure.classList.contains('m2-sculpture') ? 'View painting' : 'View artwork';
+  $('m2-panel-view').textContent = figure.classList.contains('m2-sculpture') || figure.classList.contains('m2-light') ? 'View painting' : 'View artwork';
   $('m2-panel-repo').href = d.repo;
   $('m2-panel-stats').hidden = true;
-  if (figure.classList.contains('m2-sculpture') && d.data) {
+  const living = figure.classList.contains('m2-sculpture') || figure.classList.contains('m2-light');
+  if (living && d.data) {
+    const light = figure.classList.contains('m2-light');
     const canvas = document.createElement('canvas');
-    canvas.width = 560; canvas.height = 700;
+    [canvas.width, canvas.height] = light ? [900, 600] : [560, 700];
     media.append(canvas);
     const data = await loadData(d.data);
-    const big = new SculptureCanvas(canvas, data);
+    const big = light ? new LightCanvas(canvas, data) : new SculptureCanvas(canvas, data);
     big.setActive(true);
     sculptures.set(canvas, big);
     $('m2-panel-stats').textContent = sculptureLines(data).join('. ');
@@ -108,15 +111,17 @@ function overlayOpen() {
 }
 
 function wakeSculptures(room) {
-  room.querySelectorAll('.m2-sculpture canvas').forEach((canvas) => {
+  room.querySelectorAll('.m2-sculpture canvas, .m2-light canvas').forEach((canvas) => {
     if (sculptures.has(canvas) || canvas.dataset.loading) return;
     canvas.dataset.loading = '1';
-    const url = canvas.closest('.m2-work').dataset.data;
+    const figure = canvas.closest('.m2-work');
+    const url = figure.dataset.data;
     if (!url) return;
+    const Kind = figure.classList.contains('m2-light') ? LightCanvas : SculptureCanvas;
     loadData(url).then((data) => {
-      const sculpture = new SculptureCanvas(canvas, data);
-      sculptures.set(canvas, sculpture);
-      sculpture.setActive(items()[focus]?.contains(canvas));
+      const work = new Kind(canvas, data);
+      sculptures.set(canvas, work);
+      work.setActive(items()[focus]?.contains(canvas));
     }).catch(() => {});
   });
 }

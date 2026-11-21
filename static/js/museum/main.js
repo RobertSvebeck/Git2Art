@@ -5,9 +5,10 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { SMAAPass } from 'three/addons/postprocessing/SMAAPass.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { isWalkable } from './plan.js';
-import { setMaxAnisotropy } from './textures.js';
+import { setRenderer, warmSurfaces } from './textures.js';
 import { World } from './world.js';
 import { Lighting } from './lighting.js';
 import { Walker } from './controls.js';
@@ -28,7 +29,7 @@ function createRenderer(container) {
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   container.appendChild(renderer.domElement);
-  setMaxAnisotropy(renderer.capabilities.getMaxAnisotropy());
+  setRenderer(renderer);
   return renderer;
 }
 
@@ -40,6 +41,9 @@ function createComposer(renderer, scene, camera) {
     new THREE.Vector2(window.innerWidth * scale, window.innerHeight * scale), 0.4, 0.55, 0.92,
   );
   composer.addPass(bloom);
+  // SMAA, not a multisampled target: a 4x MSAA half-float target rendered
+  // all black on ANGLE/Metal (Chrome on Apple silicon) in testing.
+  if (!touchDevice) composer.addPass(new SMAAPass());
   composer.addPass(new OutputPass());
   return composer;
 }
@@ -66,6 +70,7 @@ async function start() {
   const camera = new THREE.PerspectiveCamera(touchDevice ? 72 : 65, window.innerWidth / window.innerHeight, 0.05, 120);
   const composer = createComposer(renderer, scene, camera);
 
+  warmSurfaces();
   let artworks;
   try {
     artworks = await loadCatalogue();
@@ -74,7 +79,7 @@ async function start() {
     return;
   }
 
-  const world = new World(scene, artworks, worldSeed);
+  const world = new World(scene, artworks, worldSeed, renderer, camera);
   const lighting = new Lighting(scene, renderer, touchDevice ? 4 : 10);
   const walker = new Walker(camera, renderer.domElement, (x, z) => isWalkable(worldSeed, x, z));
   walker.position.set(0, 1.65, 4);

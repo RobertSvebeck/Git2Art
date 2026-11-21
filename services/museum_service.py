@@ -1,5 +1,6 @@
 """Artwork catalogue and web-sized images for the 3D museum."""
 
+import json
 import os
 
 from PIL import Image
@@ -43,6 +44,22 @@ def save_repo_data(repo_path, repo_url, repo_name, data_dir):
     except Exception as e:
         print(f"Warning: Failed to save repo data for {repo_url}: {e}")
         return None
+
+
+_commit_cache = {}
+
+
+def _commit_count(data_file):
+    if not os.path.exists(data_file):
+        return 0
+    mtime = os.path.getmtime(data_file)
+    cached = _commit_cache.get(data_file)
+    if cached and cached[0] == mtime:
+        return cached[1]
+    with open(data_file, encoding='utf-8') as handle:
+        count = json.load(handle).get('commits', 0)
+    _commit_cache[data_file] = (mtime, count)
+    return count
 
 
 def _image_size(path):
@@ -96,5 +113,6 @@ def get_museum_artworks(images_dir):
             'aspect': round(width / height, 4),
             'data': f'/static/generated/{REPO_DATA_SUBDIR}/{os.path.basename(data_file)}'
                     if os.path.exists(data_file) else None,
+            'commits': _commit_count(data_file),
         })
     return artworks
