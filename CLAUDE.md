@@ -143,7 +143,7 @@ Git2Art transforms git repositories into beautiful, unique abstract art. Each re
 - React (JavaScript frontend) → 16:9 landscape (1200x675)
 - Rails (Ruby backend) → square (1200x1200)
 
-### Face Art Style (Session 10 - Current)
+### Face Art Style (Session 10)
 **Goal**: Create a human face where facial features are built from repository code metrics
 
 **Motivation**:
@@ -187,6 +187,20 @@ Git2Art transforms git repositories into beautiful, unique abstract art. Each re
 - Git2Art (15k lines, Python, solo) → Angular face, curly blue hair, small smile
 - React (large, JavaScript, many authors) → Big smile, spiky orange hair
 - Small hobby project → Round face, simple features
+
+### Scene Model and History Animation (Session 12, 2026-11-21)
+**Problem**: Every older style reseeds `random` from `total_lines`, so a one-line change reshuffled 15-83% of the pixels. Deterministic, but not stable, and impossible to animate.
+
+**Solution** (`scene/` package, see SCENE_AND_ANIMATION_PLAN.md):
+- `history.py`: one `git log --first-parent --reverse -M --numstat --summary` pass; replay matches HEAD exactly
+- `state.py`: file entities with ids that survive renames
+- `layout.py`: positions are pure functions of the path (directories at hashed angles from their parent), size `sqrt(lines)` normalised by total lines, colour by language
+- `render.py` / `builder.py`: constellation renderer (2x supersampling, blurred glow layer, tapered polygon branches)
+- `animate.py`: per-frame simulation easing sprites towards the target state, piped to ffmpeg
+- New `constellation` style and `git2art.py --animate`
+- Result: one-line edit changes 0.53% of pixels; ~50 ms per 720p frame
+
+**Web fixes**: blobless clone (commit and author counts were always 1 with `--depth 1`), unique temp folder per request, 120 s clone timeout.
 
 ## Technical Architecture
 

@@ -4,7 +4,7 @@ import os
 import subprocess
 import sys
 from datetime import datetime
-from services.git_service import clone_or_update_repo, extract_repo_name, cleanup_repo
+from services.git_service import clone_repo, extract_repo_name, cleanup_repo
 from utils.watermark import add_watermark
 from models.artwork import Artwork
 
@@ -24,7 +24,7 @@ def generate_art_from_github(github_url, temp_dir, images_dir, force=False, art_
         dict: Result with image_url, repo_name, artwork_id, and cached flag
     """
     # Clone or update repository
-    repo_path, commit_hash, _ = clone_or_update_repo(github_url, temp_dir)
+    repo_path, commit_hash = clone_repo(github_url, temp_dir)
     repo_name = extract_repo_name(github_url)
 
     try:

@@ -13,7 +13,7 @@ Git2Art creates deterministic abstract art from your codebase:
 
 ## Art Styles
 
-Git2Art offers seven distinct art styles to visualize your code:
+Git2Art offers eight distinct art styles to visualize your code:
 
 - **Expressionist** - Bold strokes, vibrant colors, organic shapes inspired by abstract expressionism (default)
 - **Impressionist** - Soft brush dabs, pastel colors, luminous atmosphere inspired by Monet and Renoir
@@ -22,6 +22,7 @@ Git2Art offers seven distinct art styles to visualize your code:
 - **Face** - Cubist face art inspired by Picasso and Matisse with playful abstract features
 - **Nature** - Organic textures inspired by natural forms with earth-toned backgrounds
 - **Psychedelic** - Hypnotic trippy flows with NO straight lines, vibrant neon colors, spirals and mandala patterns
+- **Constellation** - The directory tree as a star map: files are stars (size from line count, colour from language), folders are branches. Layout depends only on file paths, so a small change really is a small visual change, and it can be animated over the repository's history
 
 ## Features
 
@@ -92,6 +93,26 @@ The psychedelic style creates hypnotic, trippy artwork with zero straight lines 
 - **Mandala patterns**: Radiating geometric curves with petal-like structures
 - **Undulating waves**: Complex layered sine waves for infinite visual movement
 - **Dark background**: Deep purple/black base to make colors pop with psychedelic intensity
+
+#### History Animation
+
+Render the whole history of a repository as a video in the constellation style.
+Files are born, grow, glide when renamed, flare when touched and fade when
+deleted; a caption shows the date, commit, file, line and author counts.
+
+```bash
+python git2art.py --animate                          # this repo, 1920x1080 MP4
+python git2art.py --animate --repo /path/to/repo --size 1280
+python git2art.py --animate --duration 20 --fps 30   # length excludes a 3 s final hold
+python git2art.py --animate --pace time              # follow calendar time, not commit count
+python git2art.py --animate --output history.gif     # GIF instead of MP4 (much larger files)
+python git2art.py --animate --no-caption
+```
+
+MP4 output needs `ffmpeg` on the PATH. The default length scales with the
+number of commits (12 to 40 seconds). Only first-parent history is replayed,
+so merged branches appear as the merge commit. Rendering takes about 50 ms per
+frame at 1280x720.
 
 #### Common Options
 
@@ -307,7 +328,6 @@ Each style will produce completely different artwork from the same codebase whil
 
 ## Future Possibilities
 
-- Animation showing repository evolution over time
 - More art style variations (minimalist, geometric, etc.)
 - SVG and vector export options
 - VR/AR gallery experiences

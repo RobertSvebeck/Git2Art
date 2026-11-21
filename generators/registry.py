@@ -7,6 +7,7 @@ from .pixel_style import PixelStyleGenerator
 from .face_style import FaceStyleGenerator
 from .nature_style import NatureStyleGenerator
 from .psychedelic_style import PsychedelicStyleGenerator
+from .constellation_style import ConstellationStyleGenerator
 
 # Registry of all available art styles
 STYLE_REGISTRY = {
@@ -17,6 +18,7 @@ STYLE_REGISTRY = {
     'face': FaceStyleGenerator,
     'nature': NatureStyleGenerator,
     'psychedelic': PsychedelicStyleGenerator,
+    'constellation': ConstellationStyleGenerator,
     # Future styles will be added here:
     # 'minimalist': MinimalistStyleGenerator,
     # 'geometric': GeometricStyleGenerator,

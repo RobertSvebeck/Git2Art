@@ -1,8 +1,12 @@
 """Git repository operations and validation."""
 
-import subprocess
 import os
 import re
+import shutil
+import subprocess
+import tempfile
+
+CLONE_TIMEOUT_SECONDS = 120
 
 
 def validate_github_url(url):
@@ -29,11 +33,8 @@ def validate_github_url(url):
 
 def extract_repo_name(url):
     """Extract repository name from GitHub URL."""
-    # Remove trailing slash and .git
-    url = url.rstrip('/').replace('.git', '')
-
-    # Extract repo name (last part of URL)
-    return url.split('/')[-1]
+    name = url.strip().rstrip('/').split('/')[-1]
+    return name[:-4] if name.endswith('.git') else name
 
 
 def get_repo_commit_hash(repo_path):
@@ -51,63 +52,45 @@ def get_repo_commit_hash(repo_path):
         return None
 
 
-def clone_or_update_repo(github_url, temp_dir):
+def clone_repo(github_url, temp_dir):
     """
-    Clone a repository or update it if it already exists.
+    Clone a repository into its own temporary folder.
+
+    Blobless clone: full commit history (so commit and author counts are
+    correct) but file contents are only downloaded for the checked-out HEAD.
 
     Returns:
-        tuple: (repo_path, commit_hash, was_cached)
+        tuple: (repo_path, commit_hash)
     """
-    repo_name = extract_repo_name(github_url)
-    repo_path = os.path.join(temp_dir, repo_name)
-
-    if os.path.exists(repo_path):
-        # Repository exists, try to update it
-        try:
-            subprocess.run(
-                ['git', 'fetch', 'origin'],
-                cwd=repo_path,
-                capture_output=True,
-                check=True
-            )
-            subprocess.run(
-                ['git', 'reset', '--hard', 'origin/HEAD'],
-                cwd=repo_path,
-                capture_output=True,
-                check=True
-            )
-            commit_hash = get_repo_commit_hash(repo_path)
-            return repo_path, commit_hash, True
-        except subprocess.CalledProcessError:
-            # If update fails, remove and re-clone
-            import shutil
-            shutil.rmtree(repo_path)
-
-    # Clone fresh repository
+    repo_path = tempfile.mkdtemp(prefix=f'{extract_repo_name(github_url)}_', dir=temp_dir)
     try:
         subprocess.run(
-            ['git', 'clone', '--depth', '1', github_url, repo_path],
+            ['git', 'clone', '--filter=blob:none', '--single-branch', '--no-tags',
+             github_url, repo_path],
             capture_output=True,
             text=True,
-            check=True
+            check=True,
+            timeout=CLONE_TIMEOUT_SECONDS,
         )
-        commit_hash = get_repo_commit_hash(repo_path)
-        return repo_path, commit_hash, False
+    except subprocess.TimeoutExpired:
+        cleanup_repo(repo_path)
+        raise Exception("Cloning took too long. The repository may be too large.")
     except subprocess.CalledProcessError as e:
+        cleanup_repo(repo_path)
         error_msg = e.stderr
 
-        # Check for authentication/private repo errors
         if "could not read Username" in error_msg or "Authentication failed" in error_msg:
             raise Exception("This repository is private or requires authentication. Please use a public GitHub repository.")
-        elif "not found" in error_msg.lower() or "repository not found" in error_msg.lower():
+        elif "not found" in error_msg.lower():
             raise Exception("Repository not found. Please check the URL and ensure the repository exists.")
         else:
             raise Exception(f"Failed to clone repository: {error_msg}")
 
+    return repo_path, get_repo_commit_hash(repo_path)
+
 
 def cleanup_repo(repo_path):
     """Remove temporary repository directory."""
-    import shutil
     if os.path.exists(repo_path):
         try:
             shutil.rmtree(repo_path)

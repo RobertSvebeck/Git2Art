@@ -62,6 +62,14 @@
 - [ ] Create visual comparison guides
 - [ ] Create contributing guidelines
 
+### Web Fixes (found 2026-11-21)
+- ✅ Clone was `--depth 1`, so commit and author counts were always 1 on the web: now a blobless clone
+- ✅ Temp clone folders keyed by repo name collided between owners and concurrent requests: now unique per request
+- ✅ No clone timeout: now 120 s
+- ✅ `extract_repo_name` stripped `.git` anywhere in the URL
+- [ ] SECRET_KEY falls back to a hard-coded dev key when the environment variable is missing
+- [ ] No repository size cap before cloning
+
 ### Testing
 - [ ] Test on large repositories (100+ files)
 - [ ] Test on different language ecosystems (Rust, Go, Java)
@@ -91,7 +99,7 @@
 - ✅ Sanitize special characters in repo names for filenames
 - ✅ Timestamp ensures uniqueness for repos with same name
 - [ ] Auto-create output directory if it doesn't exist
-- [ ] Animation: Show repository evolution over time
+- ✅ Animation: Show repository evolution over time (CLI `--animate`, constellation style; web version planned, see SCENE_AND_ANIMATION_PLAN.md)
 - [ ] Compare mode: Visual diff between two commits
 - [ ] Gallery mode: Generate art for all branches
 - [ ] Export to SVG for infinite scaling
@@ -114,7 +122,7 @@
 - [ ] Social features: Share artwork gallery
 - [ ] Repository insights: Visual analytics from art
 - [ ] NFT export option
-- [ ] Video generation: Repository timeline animation
+- ✅ Video generation: Repository timeline animation (CLI)
 
 ### Integration
 - [ ] GitHub Action for auto-generating art on commit
