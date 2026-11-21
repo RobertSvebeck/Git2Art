@@ -40,7 +40,7 @@
                         <span class="like-icon">♡</span>
                         <span class="like-count">{{ artwork.like_count }}</span>
                     </button>
-                    <a href="{{ artwork.image_url }}" download class="btn btn-download">Download</a>
+                    <a href="{{ url_for('main.download', filename=artwork.image_filename) }}" class="btn btn-download">Download</a>
                 </div>
             </div>
         </div>

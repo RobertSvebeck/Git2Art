@@ -5,6 +5,7 @@ from pathlib import Path
 from .base import BaseArtGenerator
 from scene.repodata import build_repo_data
 from styles import DATA_STYLES
+from utils.image_io import save_artwork
 
 
 class DataStyleGenerator(BaseArtGenerator):
@@ -15,7 +16,7 @@ class DataStyleGenerator(BaseArtGenerator):
         name = Path(path).name.removesuffix('.git')
         data = build_repo_data(path, path, name)
         image = DATA_STYLES[self.STYLE_KEY](data, self.width, self.height)
-        image.save(output_path)
+        save_artwork(image, output_path)
         print(f"Saved {output_path} ({self.width}x{self.height}, {self.STYLE_KEY})")
         return output_path
 

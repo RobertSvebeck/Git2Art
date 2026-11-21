@@ -134,6 +134,9 @@
 - [ ] On the server: `python scripts/apply_style_rework.py --yes --render` (registers styles, disables retired ones, re-renders all repositories)
 - [ ] Consider a blocklist so oversized or private repos cannot be resubmitted
 - ✅ Gallery hides retired (inactive) styles; their artwork pages stay reachable by direct link
+- ✅ Artworks stored as WebP (lossless for flat-colour art), downloads converted to PNG; about 165 MB for the full collection instead of about 1.5 GB as PNG
+- ✅ `scripts/cleanup_artworks.py`: orphan files always; `--superseded` (unliked older versions) and `--retired` on request; preview without `--yes`
+- [ ] On the server after pulling: `python scripts/render_data_style.py <style>` for each style (or `apply_style_rework.py --yes --render`), then `python scripts/cleanup_artworks.py --superseded --retired --yes`
 
 ## Completed ✅
 

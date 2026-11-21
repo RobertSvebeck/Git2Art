@@ -24,6 +24,7 @@ from generators.base import BaseArtGenerator  # noqa: E402
 from services.git_service import extract_repo_name  # noqa: E402
 from services.museum_service import REPO_DATA_SUBDIR, make_museum_image  # noqa: E402
 from styles import DATA_STYLES  # noqa: E402
+from utils.image_io import save_artwork  # noqa: E402
 from utils.watermark import add_watermark  # noqa: E402
 
 IMAGES_DIR = os.path.join(ROOT, 'static', 'generated')
@@ -51,10 +52,10 @@ def main():
             data = json.load(handle)
         repo_url, head = data['repo_url'], data['head']
         repo_name = extract_repo_name(repo_url)
-        filename = f'{repo_name}_{head[:8]}_{style}.png'
+        filename = f'{repo_name}_{head[:8]}_{style}.webp'
         started = time.time()
         width, height = canvas_size(data, size)
-        render(data, width, height).save(os.path.join(out_dir, filename))
+        save_artwork(render(data, width, height), os.path.join(out_dir, filename))
         add_watermark(os.path.join(out_dir, filename), repo_url)
         if not dry_run:
             make_museum_image(IMAGES_DIR, filename, overwrite=True)

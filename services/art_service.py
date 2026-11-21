@@ -47,7 +47,7 @@ def generate_art_from_github(github_url, temp_dir, images_dir, force=False, art_
                     }
 
         # Generate new artwork
-        output_filename = f'{repo_name}_{commit_hash[:8]}_{art_style}.png'
+        output_filename = f'{repo_name}_{commit_hash[:8]}_{art_style}.webp'
         output_path = os.path.join(images_dir, output_filename)
 
         # Get absolute path to git2art.py (should be in parent directory of services)

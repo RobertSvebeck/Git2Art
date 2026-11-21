@@ -5,6 +5,7 @@ from services.art_service import generate_art_from_github, get_all_gallery_artwo
 from services.git_service import validate_github_url
 from services.museum_service import get_museum_artworks
 from services.museum_layout import build_museum
+from utils.image_io import to_png_bytes
 from models.artwork import ArtworkLike, Artwork
 from models import ArtStyle
 from datetime import datetime
@@ -141,6 +142,7 @@ def artwork_view(artwork_id):
         'repo_url': artwork['repo_url'],
         'commit_hash': artwork['commit_hash'],
         'image_url': image_url,
+        'image_filename': artwork['image_filename'],
         'like_count': artwork['like_count'],
         'art_style': art_style,
         'art_style_name': art_style_name,
@@ -197,9 +199,12 @@ def download(filename):
     """Download a generated artwork."""
     filepath = os.path.join(current_app.config['GENERATED_IMAGES_DIR'], filename)
 
-    if not os.path.exists(filepath):
+    if os.path.basename(filename) != filename or not os.path.exists(filepath):
         return jsonify({'error': 'File not found'}), 404
 
+    if filename.lower().endswith('.webp'):
+        png_name = os.path.splitext(filename)[0] + '.png'
+        return send_file(to_png_bytes(filepath), mimetype='image/png', as_attachment=True, download_name=png_name)
     return send_file(filepath, as_attachment=True)
 
 

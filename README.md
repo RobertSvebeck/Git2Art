@@ -215,6 +215,8 @@ Then open http://localhost:5001 in your browser.
 4. **Colours by language**: each language has its own colour (Python blue, JavaScript yellow, TypeScript light blue and so on).
 5. **Chooses the canvas shape**: mobile projects portrait, web and documentation-heavy projects landscape, others square (override with `--aspect`).
 
+Artworks on the site are stored as WebP (lossless for flat-colour styles such as Pixel City); downloads are converted to PNG. `scripts/cleanup_artworks.py` removes orphaned files and, on request, superseded or retired artworks.
+
 Styles live in `styles/` and render from the repository data alone, so the whole collection can be re-rendered without cloning (`scripts/render_data_style.py`). Use `scripts/style_lab.py <style>` to see a style on eight contrasting repositories.
 
 ## Project Documentation

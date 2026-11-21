@@ -1,6 +1,7 @@
 """Watermark utility for generated artwork."""
 
 from PIL import Image, ImageDraw, ImageFont
+from utils.image_io import save_artwork
 
 
 def add_watermark(image_path, github_url):
@@ -53,8 +54,7 @@ def add_watermark(image_path, github_url):
         # Convert back to RGB for PNG saving
         img = img.convert('RGB')
 
-        # Save the watermarked image
-        img.save(image_path, 'PNG', optimize=True)
+        save_artwork(img, image_path)
 
     except Exception as e:
         # If watermarking fails, don't crash - just log and continue

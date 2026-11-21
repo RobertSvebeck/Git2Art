@@ -246,6 +246,11 @@ Rewrite of `/gallery3d` as a walkable, procedurally generated museum (three.js 0
 - `scripts/apply_style_rework.py`: one-step DB update and optional full re-render (preview without `--yes`)
 - Lessons: Pillow cannot blur float images (convert to L first); clip regions for deformed shapes must use the deformed extent, not the base radius
 
+### Storage: WebP and Cleanup (Session 18, 2026-11-21)
+- New styles are heavy as PNG (2.3 to 3.7 MB at 1600 px); site artworks are now WebP via `utils/image_io.save_artwork` (quality 90; lossless when an image has 512 colours or fewer, which keeps Pixel City crisp at about 13 KB). Downloads convert to PNG on the fly (`/download/<file>`, rejects paths)
+- `scripts/cleanup_artworks.py`: orphans (files without rows, plus museum copies) always; `--superseded` (older commits, never liked ones); `--retired` (inactive styles); previews unless `--yes`; prints the DB it is connected to
+- Gallery listing filters to active styles, like the museum
+
 ## Technical Architecture
 
 ### Color System
