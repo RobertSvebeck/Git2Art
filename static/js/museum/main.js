@@ -62,7 +62,7 @@ async function start() {
   scene.fog = new THREE.Fog(0x000000, 22, 64);
   const pmrem = new THREE.PMREMGenerator(renderer);
   scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-  scene.environmentIntensity = 0.35;
+  scene.environmentIntensity = 0.14;
   const camera = new THREE.PerspectiveCamera(touchDevice ? 72 : 65, window.innerWidth / window.innerHeight, 0.05, 120);
   const composer = createComposer(renderer, scene, camera);
 
@@ -106,6 +106,11 @@ async function start() {
       ui.showArtwork(hovered);
     }
   });
+  document.addEventListener('keydown', (e) => {
+    if (e.code !== 'Enter' || !walker.enabled || ui.panelOpen || !hovered) return;
+    if (walker.locked) document.exitPointerLock();
+    ui.showArtwork(hovered);
+  });
   walker.onTap = (x, y) => {
     const artwork = pickAt((x / window.innerWidth) * 2 - 1, -(y / window.innerHeight) * 2 + 1);
     if (artwork) ui.showArtwork(artwork);
@@ -130,6 +135,7 @@ async function start() {
     window.museumDebug = { walker, world, renderer, lighting, ui };
   }
 
+  let perfFrames = 0, perfTime = 0, perfChecked = false;
   const timer = new THREE.Timer();
   timer.connect(document);
   let frame = 0;
@@ -137,6 +143,14 @@ async function start() {
     timer.update();
     const dt = Math.min(timer.getDelta(), 0.05);
     const time = timer.getElapsed();
+    if (!perfChecked && walker.enabled) {
+      perfFrames += 1;
+      perfTime += timer.getDelta();
+      if (perfTime > 4) {
+        perfChecked = true;
+        if (perfFrames / perfTime < 32) ui.suggestLite();
+      }
+    }
     walker.update(dt);
     const room = world.update(walker.position);
     if (room) {
@@ -145,7 +159,7 @@ async function start() {
     }
     lighting.update(dt);
     world.tick(dt, time);
-    if (!touchDevice && walker.locked && frame++ % 4 === 0) {
+    if (!touchDevice && walker.enabled && !ui.panelOpen && frame++ % 4 === 0) {
       hovered = pickAt(0, 0);
       ui.setHover(hovered);
     }

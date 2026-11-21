@@ -15,6 +15,7 @@ class ArtDeck {
   }
 
   draw(count) {
+    if (this.artworks.length === 0) return [];
     const hand = [];
     const ids = new Set();
     let guard = 0;
@@ -34,6 +35,16 @@ export class World {
     this.scene = scene;
     this.worldSeed = worldSeed;
     this.deck = new ArtDeck(artworks, hashInts(worldSeed, 99));
+    this.byRepo = new Map();
+    for (const artwork of artworks) {
+      if (!this.byRepo.has(artwork.repo_url)) this.byRepo.set(artwork.repo_url, []);
+      this.byRepo.get(artwork.repo_url).push(artwork);
+    }
+    const sculptures = [...this.byRepo.values()]
+      .map((works) => works.find((w) => w.data))
+      .filter(Boolean)
+      .map((w) => ({ id: w.id, title: w.title, repo_url: w.repo_url, data: w.data, image: w.image, likes: w.likes }));
+    this.sculptureDeck = new ArtDeck(sculptures, hashInts(worldSeed, 77));
     this.hung = new Map();
     this.rooms = new Map();
     this.queue = [];
@@ -52,6 +63,7 @@ export class World {
     const key = cellKey(cx, cz);
     let entered = null;
     if (!this.current || this.current.key !== key) {
+      if (this.current) this.rooms.get(this.current.key)?.rest();
       this.current = { cx, cz, key };
       this.visited.add(key);
       this.schedule(cx, cz);
@@ -81,10 +93,23 @@ export class World {
     const key = cellKey(cx, cz);
     if (this.rooms.has(key)) return;
     const plan = planRoom(this.worldSeed, cx, cz);
-    if (!this.hung.has(key)) this.hung.set(key, this.deck.draw(plan.slots.length));
+    if (!this.hung.has(key)) this.hung.set(key, this.dealFor(plan));
     const room = buildRoom(plan, this.hung.get(key));
     this.scene.add(room.group);
     this.rooms.set(key, room);
+  }
+
+  dealFor(plan) {
+    if (plan.wing !== 'sculpture') return { paintings: this.deck.draw(plan.slots.length), sculptures: [] };
+    const plinthCount = plan.furniture.filter((f) => f.type === 'plinth').length;
+    const sculptures = this.sculptureDeck.draw(plinthCount);
+    const paintings = sculptures.flatMap((s) => this.byRepo.get(s.repo_url) || []).slice(0, plan.slots.length);
+    const ids = new Set(paintings.map((p) => p.id));
+    for (const extra of this.deck.draw(plan.slots.length)) {
+      if (paintings.length >= plan.slots.length) break;
+      if (!ids.has(extra.id)) paintings.push(extra);
+    }
+    return { paintings, sculptures };
   }
 
   unloadFar(cx, cz) {

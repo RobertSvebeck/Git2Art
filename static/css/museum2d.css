@@ -1,0 +1,515 @@
+/* Git2Art Museum, 2D: one lit wall per room, walked with the arrow keys. */
+
+:root {
+    --bar-height: 56px;
+    --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.mood-white-cube  { --wall: #edeae3; --wall-top: #f7f5f0; --floor: #b48d5c; --floor-dark: #7d5f3b; --ink: #1f1d1a; --muted: #6d675e; --light: 255, 244, 226; --frame: #141414; --frame-width: 6px; }
+.mood-salon       { --wall: #5a1c23; --wall-top: #74262f; --floor: #4a2e1a; --floor-dark: #24150b; --ink: #f6ece2; --muted: #d6b9a6; --light: 255, 214, 160; --frame: #c29a45; --frame-width: 14px; }
+.mood-nocturne    { --wall: #19203b; --wall-top: #232c4f; --floor: #101219; --floor-dark: #05060a; --ink: #eef2ff; --muted: #9ba7cf; --light: 214, 228, 255; --frame: #0b0b0d; --frame-width: 4px; }
+.mood-verdigris   { --wall: #2e5b53; --wall-top: #3a6e65; --floor: #cfc9bd; --floor-dark: #8d887d; --ink: #f2fbf6; --muted: #bfdcd1; --light: 242, 255, 244; --frame: #b08d4c; --frame-width: 8px; }
+.mood-sandstone   { --wall: #d5bf9b; --wall-top: #e3d0b0; --floor: #cbb796; --floor-dark: #9b8766; --ink: #2a2116; --muted: #6e5d46; --light: 255, 230, 192; --frame: #4a2c1a; --frame-width: 10px; }
+.mood-graphite    { --wall: #29292d; --wall-top: #36363b; --floor: #4e4e52; --floor-dark: #1c1c1e; --ink: #f4f4f6; --muted: #a9a9b1; --light: 255, 255, 255; --frame: #0d0d0d; --frame-width: 4px; }
+.mood-blush       { --wall: #e4c3be; --wall-top: #efd5d1; --floor: #c9a37a; --floor-dark: #93714f; --ink: #2d1f1d; --muted: #7a5c58; --light: 255, 240, 234; --frame: #f3f1ec; --frame-width: 10px; }
+.mood-ultraviolet { --wall: #25143f; --wall-top: #321c55; --floor: #0f0a17; --floor-dark: #05030a; --ink: #f4ecff; --muted: #bba6e0; --light: 232, 220, 255; --frame: #0b0b0d; --frame-width: 4px; }
+
+html, body {
+    margin: 0;
+    height: 100%;
+    background: #0c0b0a;
+    color: #f3efe7;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+body.m2-js { overflow: hidden; }
+
+.m2-bar {
+    position: fixed;
+    inset: 0 0 auto 0;
+    height: var(--bar-height);
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 0 24px;
+    background: linear-gradient(to bottom, rgba(8, 8, 8, 0.85), rgba(8, 8, 8, 0.55));
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+.m2-brand {
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.m2-where {
+    flex: 1;
+    display: flex;
+    gap: 12px;
+    align-items: baseline;
+    min-width: 0;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.6);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#m2-room { color: #fff; }
+
+.m2-actions { display: flex; gap: 10px; }
+
+.m2-actions button, .m2-actions a {
+    padding: 8px 16px;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 999px;
+    background: transparent;
+    color: #fff;
+    font: inherit;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.m2-actions .m2-3d { background: #f3efe7; color: #111; border-color: #f3efe7; }
+
+/* Rooms. Without JavaScript every room is shown, one under another. */
+.m2-room {
+    position: relative;
+    min-height: 100vh;
+    padding-top: var(--bar-height);
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    color: var(--ink);
+    background: linear-gradient(to bottom, var(--wall-top), var(--wall) 55%);
+}
+
+.m2-js .m2-room {
+    position: fixed;
+    inset: 0;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.7s var(--ease), visibility 0s linear 0.7s;
+}
+
+.m2-js .m2-room.active {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.7s var(--ease), visibility 0s;
+}
+
+.m2-wall {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: clamp(48px, 7vw, 120px);
+    padding: 0 max(8vw, calc(50vw - 260px)) 0 8vw;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+}
+
+.m2-wall::-webkit-scrollbar { display: none; }
+
+.m2-floor {
+    height: 17vh;
+    background:
+        linear-gradient(to bottom, rgba(0, 0, 0, 0.35), transparent 22%),
+        repeating-linear-gradient(90deg, transparent 0 140px, rgba(0, 0, 0, 0.12) 140px 142px),
+        linear-gradient(to bottom, var(--floor), var(--floor-dark));
+    box-shadow: inset 0 10px 18px rgba(0, 0, 0, 0.25);
+}
+
+.m2-room::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 17vh;
+    height: 10px;
+    background: rgba(0, 0, 0, 0.25);
+    pointer-events: none;
+}
+
+/* Room label: the wall text at the start of each room. */
+.m2-room-label {
+    flex: 0 0 auto;
+    width: min(340px, 70vw);
+    scroll-snap-align: center;
+    transition: opacity 0.4s;
+}
+
+.m2-wing-name {
+    margin: 0 0 10px;
+    font-size: 12px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+
+.m2-room-label h2 {
+    margin: 0 0 18px;
+    font-size: clamp(34px, 4.4vw, 58px);
+    font-weight: 200;
+    letter-spacing: 0.04em;
+    line-height: 1.05;
+}
+
+.m2-intro {
+    margin: 0 0 18px;
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--muted);
+}
+
+.m2-count {
+    margin: 0;
+    font-size: 12px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+
+/* Works, each under its own spotlight. */
+.m2-work {
+    position: relative;
+    flex: 0 0 auto;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    scroll-snap-align: center;
+    cursor: pointer;
+    outline: none;
+}
+
+.m2-work::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: -14vh;
+    width: 190%;
+    height: 125%;
+    transform: translateX(-50%);
+    background: radial-gradient(ellipse 50% 55% at 50% 38%, rgba(var(--light), 0.38), rgba(var(--light), 0.1) 55%, transparent 72%);
+    opacity: 0.55;
+    pointer-events: none;
+    transition: opacity 0.6s var(--ease);
+}
+
+.m2-work.focused::before { opacity: 1; }
+
+.m2-frame {
+    position: relative;
+    padding: var(--frame-width);
+    background: var(--frame);
+    box-shadow:
+        0 30px 50px -20px rgba(0, 0, 0, 0.55),
+        0 10px 18px rgba(0, 0, 0, 0.22),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+    transition: transform 0.6s var(--ease);
+}
+
+.mood-salon .m2-frame, .mood-verdigris .m2-frame {
+    background: linear-gradient(135deg, #e0bf6e, var(--frame) 40%, #8a6a2c 70%, #d4b061);
+}
+
+.mood-white-cube .m2-work:not(.m2-sculpture) .m2-frame,
+.mood-blush .m2-frame { padding: calc(var(--frame-width) + 14px); }
+
+.m2-frame img {
+    display: block;
+    height: min(50vh, 520px);
+    max-width: 62vw;
+    width: auto;
+    object-fit: contain;
+    background: rgba(0, 0, 0, 0.08);
+}
+
+.m2-work.focused .m2-frame { transform: translateY(-4px); }
+
+.m2-plaque {
+    margin-top: 26px;
+    padding: 9px 14px;
+    min-width: 160px;
+    max-width: 260px;
+    background: rgba(246, 244, 239, 0.94);
+    color: #1b1b1b;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    text-align: left;
+}
+
+.m2-plaque strong {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.m2-plaque span {
+    display: block;
+    margin-top: 2px;
+    font-size: 12px;
+    color: #6a6a6a;
+}
+
+/* Sculptures stand on plinths that reach the floor line. */
+.m2-sculpture { align-self: flex-end; margin-bottom: -2vh; }
+
+.m2-plinth {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.m2-plinth canvas {
+    display: block;
+    width: min(30vw, 300px);
+    height: auto;
+    aspect-ratio: 440 / 560;
+}
+
+.m2-plinth::after {
+    content: "";
+    display: block;
+    width: min(24vw, 230px);
+    height: min(18vh, 150px);
+    margin-top: -6px;
+    background: linear-gradient(to bottom, #232327, #111114 18%, #0a0a0c);
+    border-top: 4px solid #b08d4c;
+    box-shadow: 0 24px 40px rgba(0, 0, 0, 0.5);
+}
+
+.m2-sculpture .m2-plaque { position: absolute; bottom: 4vh; }
+
+/* Doorways lead to the neighbouring rooms. */
+.m2-door {
+    flex: 0 0 auto;
+    position: relative;
+    align-self: flex-end;
+    width: clamp(120px, 13vw, 190px);
+    height: min(62vh, 560px);
+    margin-bottom: -1px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    color: inherit;
+    text-decoration: none;
+    scroll-snap-align: center;
+    outline: none;
+}
+
+.m2-door-opening {
+    flex: 1;
+    border: 10px solid rgba(0, 0, 0, 0.28);
+    border-bottom: none;
+    background:
+        radial-gradient(ellipse at 50% 30%, rgba(255, 255, 255, 0.18), transparent 70%),
+        linear-gradient(to bottom, var(--wall-top), var(--wall) 70%, var(--floor-dark));
+    box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.55);
+    transition: filter 0.4s;
+}
+
+.m2-door-label {
+    order: -1;
+    margin-bottom: 14px;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    line-height: 1.6;
+    opacity: 0.75;
+}
+
+.m2-door-label strong {
+    font-size: 13px;
+    letter-spacing: 0.08em;
+}
+
+.m2-door.focused .m2-door-opening, .m2-door:hover .m2-door-opening { filter: brightness(1.35); }
+.m2-door.focused .m2-door-label { opacity: 1; }
+
+/* Overlays. */
+.m2-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(6, 6, 8, 0.82);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+
+.m2-overlay[hidden] { display: none; }
+
+.m2-close {
+    position: absolute;
+    top: 10px;
+    right: 14px;
+    border: none;
+    background: none;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 30px;
+    cursor: pointer;
+}
+
+.m2-plan-card, .m2-panel-card {
+    position: relative;
+    max-width: 1000px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 28px;
+    border-radius: 14px;
+    background: rgba(18, 18, 22, 0.96);
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+}
+
+.m2-plan-card h2 {
+    margin: 0 0 20px;
+    font-weight: 300;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+}
+
+.m2-plan-wings {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 22px;
+}
+
+.m2-plan-wing h3 {
+    margin: 0 0 10px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.m2-plan-room {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    padding: 10px 12px;
+    border-radius: 6px;
+    background: var(--wall);
+    color: var(--ink);
+    text-decoration: none;
+    font-size: 14px;
+    outline: 2px solid transparent;
+}
+
+.m2-plan-room.current { outline-color: #fff; }
+.m2-plan-room small { opacity: 0.7; }
+
+.m2-panel-card {
+    display: flex;
+    gap: 28px;
+    align-items: center;
+}
+
+.m2-panel-media img, .m2-panel-media canvas {
+    display: block;
+    max-width: min(560px, 55vw);
+    max-height: 74vh;
+    border-radius: 4px;
+}
+
+.m2-panel-text h2 {
+    margin: 0 0 8px;
+    font-size: 28px;
+    font-weight: 500;
+    overflow-wrap: anywhere;
+}
+
+.m2-panel-text p { margin: 4px 0; color: rgba(255, 255, 255, 0.7); }
+
+.m2-panel-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 22px;
+}
+
+.m2-button {
+    display: inline-block;
+    padding: 12px 26px;
+    border: 1px solid #f3efe7;
+    border-radius: 999px;
+    background: #f3efe7;
+    color: #111;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    text-decoration: none;
+}
+
+.m2-button.secondary { background: transparent; color: #fff; }
+
+.m2-hint {
+    position: fixed;
+    left: 50%;
+    bottom: 18px;
+    z-index: 15;
+    transform: translateX(-50%);
+    display: none;
+    gap: 22px;
+    padding: 8px 18px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.45);
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.m2-js .m2-hint { display: flex; }
+
+kbd {
+    display: inline-block;
+    min-width: 1.3em;
+    margin-right: 3px;
+    padding: 1px 5px;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 11px;
+    text-align: center;
+}
+
+.m2-empty {
+    padding: 30vh 20px;
+    text-align: center;
+    font-size: 18px;
+}
+
+@media (max-width: 760px) {
+    .m2-bar { gap: 12px; padding: 0 14px; }
+    .m2-where #m2-wing { display: none; }
+    .m2-actions button { display: none; }
+    .m2-frame img { height: auto; max-height: 46vh; max-width: 78vw; }
+    .m2-wall { padding: 0 11vw; gap: 64px; }
+    .m2-hint { display: none !important; }
+    .m2-panel-card { flex-direction: column; }
+    .m2-panel-media img, .m2-panel-media canvas { max-width: 100%; max-height: 46vh; }
+    .m2-plinth canvas { width: 62vw; }
+    .m2-plinth::after { width: 48vw; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .m2-room, .m2-work::before, .m2-frame { transition: none !important; }
+}

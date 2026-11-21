@@ -30,6 +30,7 @@
     <span id="hud-visited"></span>
 </div>
 <div id="crosshair"></div>
+<a id="lite-hint" href="{{ url_for('main.museum') }}" hidden>Running slowly? Visit the museum in 2D instead</a>
 
 <div id="room-title">
     <div id="room-title-name"></div>
@@ -51,10 +52,12 @@
         <button id="enter-button" class="museum-button" disabled>Opening the doors...</button>
         <p id="intro-status" class="status"></p>
         <div id="controls-desktop" class="controls">
-            <span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> walk</span>
+            <span><kbd>&uarr;</kbd><kbd>&darr;</kbd> walk</span>
+            <span><kbd>&larr;</kbd><kbd>&rarr;</kbd> turn</span>
+            <span><kbd>A</kbd><kbd>D</kbd> step sideways</span>
             <span><kbd>Shift</kbd> stride</span>
-            <span>Mouse: look</span>
-            <span>Click a work for details</span>
+            <span>Mouse: look (optional)</span>
+            <span>Click or <kbd>Enter</kbd>: details</span>
             <span><kbd>Esc</kbd> pause</span>
         </div>
         <div id="controls-touch" class="controls" hidden>
@@ -64,7 +67,7 @@
         </div>
         <nav class="overlay-links">
             <a id="share-link" href="#">Link to this museum</a>
-            <a href="{{ url_for('main.gallery') }}">2D gallery</a>
+            <a href="{{ url_for('main.museum') }}">Museum in 2D</a>
             <a href="{{ url_for('main.index') }}">Create artwork</a>
         </nav>
     </div>
@@ -75,7 +78,7 @@
         <h2>Paused</h2>
         <button id="resume-button" class="museum-button">Keep walking</button>
         <nav class="overlay-links">
-            <a href="{{ url_for('main.gallery') }}">2D gallery</a>
+            <a href="{{ url_for('main.museum') }}">Museum in 2D</a>
             <a href="{{ url_for('main.index') }}">Create artwork</a>
         </nav>
     </div>
@@ -88,6 +91,7 @@
         <div class="panel-text">
             <h2 id="panel-title"></h2>
             <p id="panel-style"></p>
+            <p id="panel-stats" hidden></p>
             <p id="panel-likes"></p>
             <div class="panel-actions">
                 <a id="panel-view" class="museum-button" href="#">View artwork</a>

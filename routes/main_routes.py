@@ -4,6 +4,7 @@ from flask import Blueprint, render_template, request, jsonify, send_file, curre
 from services.art_service import generate_art_from_github, get_all_gallery_artworks
 from services.git_service import validate_github_url
 from services.museum_service import get_museum_artworks
+from services.museum_layout import build_museum
 from models.artwork import ArtworkLike, Artwork
 from models import ArtStyle
 from datetime import datetime
@@ -82,6 +83,28 @@ def gallery():
 def gallery3d():
     """Walkable, endless 3D museum of generated artworks."""
     return render_template('gallery3d.html')
+
+
+STYLE_LABELS = {
+    'expressionist': 'Expressionist', 'impressionist': 'Impressionist', 'watercolor': 'Watercolour',
+    'pixel': 'Pixel', 'face': 'Face', 'nature': 'Nature', 'psychedelic': 'Psychedelic',
+    'constellation': 'Constellation', 'sculpture': 'Repository sculpture',
+}
+
+
+@bp.route('/museum')
+def museum():
+    """The museum in 2D: works on any device, no WebGL needed."""
+    try:
+        wings = build_museum(get_museum_artworks(current_app.config['GENERATED_IMAGES_DIR']))
+    except Exception as e:
+        print(f"Error: museum failed: {e}")
+        wings = []
+    rooms = [dict(room, wing=wing['name'], wing_id=wing['id']) for wing in wings for room in wing['rooms']]
+    for index, room in enumerate(rooms):
+        room['prev'] = rooms[index - 1] if index > 0 else None
+        room['next'] = rooms[index + 1] if index < len(rooms) - 1 else None
+    return render_template('museum.html', wings=wings, rooms=rooms, style_labels=STYLE_LABELS)
 
 
 @bp.route('/api/museum/artworks', methods=['GET'])

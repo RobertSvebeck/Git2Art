@@ -40,20 +40,26 @@ export function planRoom(worldSeed, cx, cz) {
   if (planCache.has(key)) return planCache.get(key);
   const rng = new Rng(hashInts(worldSeed, cx, cz));
   const isEntrance = cx === 0 && cz === 0;
+  const wing = wingOf(cx, cz);
+  const isCourt = wing === 'sculpture';
 
-  const mood = MOODS[moodIndex(worldSeed, cx, cz)];
+  const mood = MOODS[isCourt ? courtMoodIndex(cx, cz) : moodIndex(worldSeed, cx, cz)];
   const width = round2(rng.range(13, 19));
   const depth = round2(rng.range(13, 19));
   const height = round2(rng.range(5.2, 7.6));
   const ceiling = rng.pick(mood.ceilings);
   const frame = rng.pick(mood.frames);
   const wallTint = rng.range(-0.05, 0.05);
-  const pieceCount = rng.int(5, 10);
+  const pieceCount = isCourt ? rng.int(4, 6) : rng.int(5, 10);
   const pieceHeight = Math.min(2.7, height * 0.4) * rng.range(0.85, 1.0);
 
   const furniture = [];
-  if (!isEntrance && rng.chance(0.4)) {
-    furniture.push({ type: 'sculpture', x: 0, z: 0, half: [0.7, 0.7], shape: rng.int(0, 3), spin: rng.range(0.1, 0.3) });
+  if (isCourt) {
+    for (const [sx, sz] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) {
+      furniture.push({ type: 'plinth', x: sx * width * 0.24, z: sz * depth * 0.24, half: [0.62, 0.62] });
+    }
+  } else if (!isEntrance && rng.chance(0.4)) {
+    furniture.push({ type: 'abstract', x: 0, z: 0, half: [0.7, 0.7], shape: rng.int(0, 3), spin: rng.range(0.1, 0.3) });
     if (rng.chance(0.6)) {
       const along = rng.chance(0.5);
       const offset = (along ? width : depth) * 0.25;
@@ -65,13 +71,28 @@ export function planRoom(worldSeed, cx, cz) {
   }
 
   const plan = {
-    cx, cz, key, mood, width, depth, height, ceiling, frame, wallTint,
+    cx, cz, key, wing, mood, width, depth, height, ceiling, frame, wallTint,
     accent: mood.accent, furniture,
     slots: planSlots(rng, width, depth, pieceCount, pieceHeight),
     seed: hashInts(worldSeed, cx, cz, 7),
   };
   planCache.set(key, plan);
   return plan;
+}
+
+export const WING_NAMES = { paintings: 'Painting Galleries', sculpture: 'Sculpture Court' };
+
+// Everything south of the entrance is the sculpture court.
+export function wingOf(cx, cz) {
+  return cz > 0 ? 'sculpture' : 'paintings';
+}
+
+// Dark moods make the glowing sculptures read best; mod-4 lattice keeps
+// neighbours different (steps of +-1 and +-3 are never 0 mod 4).
+const COURT_MOODS = ['Nocturne', 'Graphite', 'Ultraviolet', 'Salon'].map((name) => MOODS.findIndex((m) => m.name === name));
+
+function courtMoodIndex(cx, cz) {
+  return COURT_MOODS[(((cx + 3 * cz) % 4) + 4) % 4];
 }
 
 // Lattice colouring: neighbours differ by +-1 or +-3 (mod 8), never 0, so

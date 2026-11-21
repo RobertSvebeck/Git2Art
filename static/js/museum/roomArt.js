@@ -12,6 +12,7 @@ const PLAQUE_H = 0.1125;
 const STYLE_LABELS = {
   expressionist: 'Expressionist', impressionist: 'Impressionist', watercolor: 'Watercolour',
   pixel: 'Pixel', face: 'Face', nature: 'Nature', psychedelic: 'Psychedelic', constellation: 'Constellation',
+  sculpture: 'Repository sculpture',
 };
 
 export function styleLabel(style) {
@@ -38,7 +39,7 @@ export function addArtAndFurniture(room, artworks, materials, track) {
 
   for (const item of plan.furniture) {
     if (item.type === 'bench') addBench(group, item, materials, track);
-    else addSculpture(room, item, materials, track);
+    else if (item.type === 'abstract') addSculpture(room, item, materials, track);
   }
 }
 

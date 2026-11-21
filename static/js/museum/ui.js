@@ -68,7 +68,7 @@ export class Ui {
       return;
     }
     $('hover-title').textContent = artwork.title;
-    $('hover-meta').textContent = `${styleLabel(artwork.style)}  |  click for details`;
+    $('hover-meta').textContent = `${styleLabel(artwork.style)}  |  click or Enter for details`;
     hover.classList.add('visible');
   }
 
@@ -77,12 +77,20 @@ export class Ui {
     $('panel-image').src = artwork.image;
     $('panel-image').alt = `${artwork.title}, ${styleLabel(artwork.style)} style`;
     $('panel-title').textContent = artwork.title;
-    $('panel-style').textContent = `${styleLabel(artwork.style)} style`;
+    $('panel-style').textContent = artwork.style === 'sculpture' ? 'Repository sculpture' : `${styleLabel(artwork.style)} style`;
+    $('panel-stats').textContent = artwork.stats || '';
+    $('panel-stats').hidden = !artwork.stats;
+    $('panel-view').textContent = artwork.style === 'sculpture' ? 'View painting' : 'View artwork';
     $('panel-likes').textContent = `${artwork.likes} ${artwork.likes === 1 ? 'like' : 'likes'}`;
     $('panel-view').href = `/artwork/${artwork.id}`;
     $('panel-repo').href = artwork.repo_url;
     $('panel').hidden = false;
     this.setHover(null);
+  }
+
+  suggestLite() {
+    $('lite-hint').hidden = false;
+    setTimeout(() => { $('lite-hint').hidden = true; }, 12000);
   }
 
   closePanel() {

@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}Git2Art Museum - Art Made From Code{% endblock %}
+
+{% block meta_description %}Walk the Git2Art Museum: galleries of paintings and repository sculptures generated from public GitHub repositories, room by room.{% endblock %}
+
+{% block meta_keywords %}git2art museum, generative art, code art, repository sculpture, online art museum{% endblock %}
+
+{% block og_title %}Git2Art Museum - Art Made From Code{% endblock %}
+
+{% block og_description %}Paintings and sculptures generated from GitHub repositories, hung room by room.{% endblock %}
+
+{% block og_url %}/museum{% endblock %}
+
+{% block canonical_url %}/museum{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/museum2d.css') }}">
+{% endblock %}
+
+{% block content %}
+{% macro mood_class(room) %}mood-{{ room.mood | lower | replace(' ', '-') }}{% endmacro %}
+<header class="m2-bar">
+    <a class="m2-brand" href="{{ url_for('main.index') }}">Git2Art Museum</a>
+    <div class="m2-where" aria-live="polite">
+        <span id="m2-wing"></span>
+        <span id="m2-room"></span>
+    </div>
+    <nav class="m2-actions">
+        <button id="m2-plan-button" type="button">Floor plan</button>
+        <a href="{{ url_for('main.gallery3d') }}" class="m2-3d">Walk in 3D</a>
+    </nav>
+</header>
+
+<main id="m2-museum">
+    {% if not rooms %}
+    <p class="m2-empty">The museum is closed for rehanging. Please come back soon.</p>
+    {% endif %}
+    {% for room in rooms %}
+    <section class="m2-room {{ mood_class(room) }}" id="{{ room.id }}" data-wing="{{ room.wing }}" data-name="{{ room.name }}" data-kind="{{ room.kind }}" aria-label="{{ room.wing }}: {{ room.name }}">
+        <div class="m2-wall">
+            {% if room.prev %}
+            <a class="m2-door m2-door-back {{ mood_class(room.prev) }}" href="#{{ room.prev.id }}" data-item>
+                <span class="m2-door-opening"></span>
+                <span class="m2-door-label">Back to<br><strong>{{ room.prev.name }}</strong></span>
+            </a>
+            {% endif %}
+            <div class="m2-room-label" data-item>
+                <p class="m2-wing-name">{{ room.wing }}</p>
+                <h2>{{ room.name }}</h2>
+                {% if room.intro %}<p class="m2-intro">{{ room.intro }}</p>{% endif %}
+                <p class="m2-count">{{ room.works | length }} {{ 'work' if room.works | length == 1 else 'works' }}</p>
+            </div>
+            {% for work in room.works %}
+            <figure class="m2-work{% if room.kind == 'sculpture' %} m2-sculpture{% endif %}" data-item
+                    data-id="{{ work.id }}" data-title="{{ work.title }}" data-repo="{{ work.repo_url }}"
+                    data-style="{{ style_labels.get(work.style, work.style) }}" data-likes="{{ work.likes }}"
+                    data-image="{{ work.image }}"{% if work.data %} data-data="{{ work.data }}"{% endif %}>
+                {% if room.kind == 'sculpture' %}
+                <div class="m2-plinth">
+                    <canvas width="440" height="560" aria-label="Sculpture of the {{ work.title }} repository"></canvas>
+                </div>
+                {% else %}
+                <div class="m2-frame">
+                    <img src="{{ work.image }}" alt="{{ work.title }}, {{ style_labels.get(work.style, work.style) }} style" loading="lazy" style="aspect-ratio: {{ work.aspect }}">
+                </div>
+                {% endif %}
+                <figcaption class="m2-plaque">
+                    <strong>{{ work.title }}</strong>
+                    <span>{{ style_labels.get(work.style, work.style) }}</span>
+                </figcaption>
+            </figure>
+            {% endfor %}
+            {% if room.next %}
+            <a class="m2-door {{ mood_class(room.next) }}" href="#{{ room.next.id }}" data-item>
+                <span class="m2-door-opening"></span>
+                <span class="m2-door-label">Next room<br><strong>{{ room.next.name }}</strong></span>
+            </a>
+            {% endif %}
+        </div>
+        <div class="m2-floor"></div>
+    </section>
+    {% endfor %}
+</main>
+
+<div class="m2-hint" id="m2-hint">
+    <span><kbd>&larr;</kbd><kbd>&rarr;</kbd> walk along the wall</span>
+    <span><kbd>Enter</kbd> look closer</span>
+    <span><kbd>M</kbd> floor plan</span>
+</div>
+
+<div id="m2-plan" class="m2-overlay" hidden>
+    <div class="m2-plan-card">
+        <button type="button" class="m2-close" data-close aria-label="Close">&times;</button>
+        <h2>Floor plan</h2>
+        <div class="m2-plan-wings">
+            {% for wing in wings %}
+            <div class="m2-plan-wing">
+                <h3>{{ wing.name }}</h3>
+                {% for room in wing.rooms %}
+                <a href="#{{ room.id }}" class="m2-plan-room {{ mood_class(room) }}" data-room="{{ room.id }}">
+                    <span>{{ room.name }}</span><small>{{ room.works | length }}</small>
+                </a>
+                {% endfor %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<div id="m2-panel" class="m2-overlay" hidden>
+    <div class="m2-panel-card">
+        <button type="button" class="m2-close" data-close aria-label="Close">&times;</button>
+        <div class="m2-panel-media" id="m2-panel-media"></div>
+        <div class="m2-panel-text">
+            <h2 id="m2-panel-title"></h2>
+            <p id="m2-panel-style"></p>
+            <p id="m2-panel-stats" hidden></p>
+            <p id="m2-panel-likes"></p>
+            <div class="m2-panel-actions">
+                <a id="m2-panel-view" class="m2-button" href="#">View artwork</a>
+                <a id="m2-panel-repo" class="m2-button secondary" href="#" target="_blank" rel="noopener">Repository</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="module" src="{{ url_for('static', filename='js/museum2d/main.js') }}"></script>
+{% endblock %}

@@ -213,6 +213,16 @@ Rewrite of `/gallery3d` as a walkable, procedurally generated museum (three.js 0
 - `?debug=1` exposes `window.museumDebug` for scripted testing
 
 
+### Sculptures and the 2D Museum (Session 14, 2026-11-21)
+- `scene/repodata.py`: compact per-repo JSON (files with bytes, birth commit and touch count; languages; commit timeline) from a blobless clone; stored in `static/generated/repodata/` (files, not DB, so backfills never write to production)
+- `static/js/shared/repoform.js`: repo data to a 3D form (path-stable, branches grow upwards); shared by both museums
+- 3D: `sculpture.js` (instanced beads, merged bronze tubes, filaments; history replay via a `uProgress` uniform and per-element birth attributes), `court.js` (plinths, plaques, fixtures); wing = `cz > 0` is the Sculpture Court with dark moods (mod-4 lattice); wing signs over doors
+- 2D: `/museum` route, `services/museum_layout.py` curates wings and rooms, `templates/museum.html` is server-rendered, `static/js/museum2d/` adds one-room-at-a-time walking and canvas sculptures
+- Controls: arrows walk and turn, A/D strafe, Enter for details (no pointer lock needed)
+- Lesson: low-roughness floors reflecting RoomEnvironment cause white grazing-angle glare; keep `scene.environmentIntensity` low (0.14)
+
+## Technical Architecture
+
 ### Color System
 ```python
 RepositoryPalette.select_palette_by_repo(fingerprint)

@@ -4,9 +4,11 @@ import os
 
 from PIL import Image
 
+from scene.repodata import build_repo_data, repo_data_path, write_repo_data
 from utils.db import get_db_cursor
 
 MUSEUM_SUBDIR = 'museum'
+REPO_DATA_SUBDIR = 'repodata'
 MUSEUM_MAX_SIDE = 1024
 MUSEUM_QUALITY = 82
 
@@ -32,6 +34,15 @@ def make_museum_image(images_dir, image_filename, overwrite=False):
         image.thumbnail((MUSEUM_MAX_SIDE, MUSEUM_MAX_SIDE), Image.LANCZOS)
         image.save(target, 'WEBP', quality=MUSEUM_QUALITY, method=6)
     return target
+
+
+def save_repo_data(repo_path, repo_url, repo_name, data_dir):
+    """Write the repo's sculpture data; never fails the caller."""
+    try:
+        return write_repo_data(data_dir, build_repo_data(repo_path, repo_url, repo_name))
+    except Exception as e:
+        print(f"Warning: Failed to save repo data for {repo_url}: {e}")
+        return None
 
 
 def _image_size(path):
@@ -74,6 +85,7 @@ def get_museum_artworks(images_dir):
         else:
             url = f'/static/generated/{row["image_filename"]}'
         width, height = _image_size(original)
+        data_file = repo_data_path(os.path.join(images_dir, REPO_DATA_SUBDIR), row['repo_url'])
         artworks.append({
             'id': row['id'],
             'title': row['repo_name'],
@@ -82,5 +94,7 @@ def get_museum_artworks(images_dir):
             'likes': row['like_count'],
             'image': url,
             'aspect': round(width / height, 4),
+            'data': f'/static/generated/{REPO_DATA_SUBDIR}/{os.path.basename(data_file)}'
+                    if os.path.exists(data_file) else None,
         })
     return artworks

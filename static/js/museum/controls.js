@@ -10,6 +10,7 @@ const LOOK_SENSITIVITY = 0.0022;
 const TOUCH_LOOK = 0.005;
 const JOYSTICK_RADIUS = 55;
 const PITCH_LIMIT = Math.PI / 2 - 0.05;
+const TURN_SPEED = 1.9;
 
 export class Walker {
   constructor(camera, element, isWalkable) {
@@ -129,8 +130,8 @@ export class Walker {
     let forward = 0, strafe = 0;
     if (this.keys.has('KeyW') || this.keys.has('ArrowUp')) forward += 1;
     if (this.keys.has('KeyS') || this.keys.has('ArrowDown')) forward -= 1;
-    if (this.keys.has('KeyD') || this.keys.has('ArrowRight')) strafe += 1;
-    if (this.keys.has('KeyA') || this.keys.has('ArrowLeft')) strafe -= 1;
+    if (this.keys.has('KeyD')) strafe += 1;
+    if (this.keys.has('KeyA')) strafe -= 1;
     if (this.joystick) {
       forward -= this.joystick.dy;
       strafe += this.joystick.dx;
@@ -142,6 +143,10 @@ export class Walker {
 
   update(dt) {
     const [forward, strafe] = this.enabled ? this.inputVector() : [0, 0];
+    if (this.enabled) {
+      const turn = (this.keys.has('ArrowLeft') ? 1 : 0) - (this.keys.has('ArrowRight') ? 1 : 0);
+      this.yaw += turn * TURN_SPEED * dt;
+    }
     const running = this.keys.has('ShiftLeft') || this.keys.has('ShiftRight');
     const speed = running ? RUN_SPEED : WALK_SPEED;
     const sin = Math.sin(this.yaw), cos = Math.cos(this.yaw);

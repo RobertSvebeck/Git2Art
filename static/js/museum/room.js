@@ -1,14 +1,15 @@
 // Builds the architecture of one room (walls, doors, corridors, floor, ceiling).
 
 import * as THREE from 'three';
-import { CELL, DOOR_HEIGHT, DOOR_WIDTH, WALL_THICKNESS as T } from './plan.js';
+import { CELL, DOOR_HEIGHT, DOOR_WIDTH, WALL_THICKNESS as T, WING_NAMES, wingOf } from './plan.js';
+import { addPlinths } from './court.js';
 import { floorTexture, plasterTexture } from './textures.js';
 import { addArtAndFurniture } from './roomArt.js';
 import { makeDust } from './lightfx.js';
 
 const CORRIDOR_FLOOR = 0x1c1b1a;
 
-export function buildRoom(plan, artworks) {
+export function buildRoom(plan, hung) {
   const group = new THREE.Group();
   group.position.set(plan.cx * CELL, 0, plan.cz * CELL);
   const disposables = [];
@@ -22,7 +23,7 @@ export function buildRoom(plan, artworks) {
       color: plan.ceiling === 'dark' ? new THREE.Color(plan.mood.trim).multiplyScalar(0.6) : wallColour.clone().offsetHSL(0, -0.05, 0.06),
       roughness: 0.95,
     })),
-    corridor: track(new THREE.MeshStandardMaterial({ color: CORRIDOR_FLOOR, roughness: 0.35 })),
+    corridor: track(new THREE.MeshStandardMaterial({ color: CORRIDOR_FLOOR, roughness: 0.8 })),
   };
   const box = (w, h, d, material, x, y, z) => {
     const mesh = new THREE.Mesh(track(new THREE.BoxGeometry(w, h, d)), material);
@@ -38,9 +39,11 @@ export function buildRoom(plan, artworks) {
   if (plan.accent) addAccentStrips(plan, box, track);
 
   const room = {
-    plan, group, artMeshes: [], fixtures: [], updaters: [], disposed: false,
+    plan, group, artMeshes: [], fixtures: [], updaters: [], disposed: false, rest: () => {},
   };
-  addArtAndFurniture(room, artworks, materials, track);
+  addArtAndFurniture(room, hung.paintings, materials, track);
+  if (plan.wing === 'sculpture') addPlinths(room, hung.sculptures, track);
+  addWingSigns(plan, group, track);
 
   const dust = makeDust(plan.width - 1, plan.height, plan.depth - 1, 260, plan.mood.light);
   track(dust.geometry); track(dust.material);
@@ -162,4 +165,43 @@ function addAccentStrips(plan, box, track) {
       box(0.03, 0.035, segmentD, neon, sign * (W / 2 - T / 2 - 0.03), 0.2, along * (DOOR_WIDTH / 2 + 0.2 + segmentD / 2));
     }
   }
+}
+
+const SIGN_SIDES = [
+  { dx: 0, dz: -1, rotation: 0 },
+  { dx: 0, dz: 1, rotation: Math.PI },
+  { dx: 1, dz: 0, rotation: -Math.PI / 2 },
+  { dx: -1, dz: 0, rotation: Math.PI / 2 },
+];
+
+// Above a door, name the wing beyond it when it differs (and always at the entrance).
+function addWingSigns(plan, group, track) {
+  const isEntrance = plan.cx === 0 && plan.cz === 0;
+  for (const side of SIGN_SIDES) {
+    const wing = wingOf(plan.cx + side.dx, plan.cz + side.dz);
+    if (!isEntrance && wing === plan.wing) continue;
+    const texture = track(signTexture(WING_NAMES[wing], new THREE.Color(plan.mood.wall).getHSL({}).l > 0.5));
+    const material = track(new THREE.MeshBasicMaterial({ map: texture, transparent: true }));
+    const sign = new THREE.Mesh(track(new THREE.PlaneGeometry(3.6, 0.45)), material);
+    const inset = (side.dx !== 0 ? plan.width : plan.depth) / 2 - T / 2 - 0.02;
+    sign.position.set(side.dx * inset, DOOR_HEIGHT + 0.5, side.dz * inset);
+    sign.rotation.y = side.rotation;
+    group.add(sign);
+  }
+}
+
+function signTexture(text, lightWall) {
+  const c = document.createElement('canvas');
+  c.width = 1024; c.height = 128;
+  const ctx = c.getContext('2d');
+  ctx.font = '500 76px "Helvetica Neue", Arial, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = lightWall ? 'rgba(25, 23, 20, 1)' : 'rgba(255, 255, 255, 0.95)';
+  ctx.shadowColor = lightWall ? 'transparent' : 'rgba(0, 0, 0, 0.6)';
+  ctx.shadowBlur = lightWall ? 0 : 12;
+  ctx.fillText(text.toUpperCase().split('').join(' '), 512, 66);
+  const texture = new THREE.CanvasTexture(c);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
 }

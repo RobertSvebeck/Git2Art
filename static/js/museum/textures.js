@@ -89,8 +89,8 @@ function veins(ctx, rng, colour, count, width, alpha) {
 }
 
 const FLOORS = {
-  oak: { metres: 4, roughness: 0.42, draw: (ctx, rng) => planks(ctx, rng, 0xb08a5a, 64) },
-  walnut: { metres: 4, roughness: 0.32, draw: (ctx, rng) => planks(ctx, rng, 0x5e3b22, 56, 0.022) },
+  oak: { metres: 4, roughness: 0.5, draw: (ctx, rng) => planks(ctx, rng, 0xb08a5a, 64) },
+  walnut: { metres: 4, roughness: 0.48, draw: (ctx, rng) => planks(ctx, rng, 0x5e3b22, 56, 0.022) },
   'black-marble': {
     metres: 6, roughness: 0.12, draw: (ctx, rng) => {
       ctx.fillStyle = '#0d0d10'; ctx.fillRect(0, 0, SIZE, SIZE);
@@ -161,19 +161,21 @@ export function radialTexture() {
   }, false);
 }
 
-export function plaqueTexture(title, subtitle) {
+export function plaqueTexture(title, ...lines) {
+  const height = 160 + 46 * Math.max(0, lines.length - 1);
   const [c, ctx] = canvas(512);
-  c.height = 160;
-  ctx.fillStyle = '#f6f4ef'; ctx.fillRect(0, 0, 512, 160);
+  c.height = height;
+  ctx.fillStyle = '#f6f4ef'; ctx.fillRect(0, 0, 512, height);
   ctx.fillStyle = '#1b1b1b';
   ctx.font = '600 44px "Helvetica Neue", Arial, sans-serif';
   ctx.fillText(fitText(ctx, title, 470), 22, 66);
   ctx.fillStyle = '#6a6a6a';
   ctx.font = '400 30px "Helvetica Neue", Arial, sans-serif';
-  ctx.fillText(fitText(ctx, subtitle, 470), 22, 118);
+  lines.forEach((line, i) => ctx.fillText(fitText(ctx, line, 470), 22, 118 + i * 46));
   const texture = new THREE.CanvasTexture(c);
   texture.colorSpace = THREE.SRGBColorSpace;
   texture.anisotropy = maxAnisotropy;
+  texture.userData.aspect = 512 / height;
   return texture;
 }
 

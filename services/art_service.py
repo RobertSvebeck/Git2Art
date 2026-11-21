@@ -7,7 +7,7 @@ from datetime import datetime
 from services.git_service import clone_repo, extract_repo_name, cleanup_repo
 from utils.watermark import add_watermark
 from models.artwork import Artwork
-from services.museum_service import make_museum_image
+from services.museum_service import make_museum_image, save_repo_data, REPO_DATA_SUBDIR
 
 
 def generate_art_from_github(github_url, temp_dir, images_dir, force=False, art_style='expressionist'):
@@ -29,6 +29,7 @@ def generate_art_from_github(github_url, temp_dir, images_dir, force=False, art_
     repo_name = extract_repo_name(github_url)
 
     try:
+        save_repo_data(repo_path, github_url, repo_name, os.path.join(images_dir, REPO_DATA_SUBDIR))
         # Skip cache checks if force regeneration requested
         if not force:
             # Check database for cached art

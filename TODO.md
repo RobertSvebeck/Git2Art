@@ -118,7 +118,12 @@
 
 ### Advanced Features
 - ✅ 3D museum: endless walkable gallery (`/gallery3d`, static/js/museum/)
-- [ ] Museum: run `scripts/make_museum_images.py` on the server after deploying
+- [ ] Museum: run `scripts/make_museum_images.py` and `scripts/make_repo_data.py` on the server after deploying
+- ✅ Sculpture Court (3D) and 2D museum at /museum
+- [ ] Museum: light installation wing (commit particles), living shader canvases, cinema room
+- [ ] Museum: 4x MSAA render target, compileAsync per room, merge static room geometry
+- [ ] Museum: bright neighbouring rooms bloom through doorways; tune per-room exposure
+- [ ] Museum: decide whether /museum replaces the /gallery grid
 - [ ] Museum: merge static meshes per room to cut draw calls on mobile
 - [ ] Museum: test on real phones (touch controls untested on hardware)
 - [ ] Interactive mode: Adjust parameters in real-time
