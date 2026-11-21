@@ -71,6 +71,7 @@ def clone_repo(github_url, temp_dir):
             text=True,
             check=True,
             timeout=CLONE_TIMEOUT_SECONDS,
+            env={**os.environ, 'GIT_TERMINAL_PROMPT': '0'},
         )
     except subprocess.TimeoutExpired:
         cleanup_repo(repo_path)

@@ -234,6 +234,9 @@ Rewrite of `/gallery3d` as a walkable, procedurally generated museum (three.js 0
 - `styles/pixel_city.py`: low-res canvas with a fixed 32-colour palette, nearest-neighbour upscale; districts from the folder tree via a binary treemap, hash-assigned plots, docs as parks, data files as warehouses, sky from days idle
 - `scripts/style_lab.py`: contact sheet of 8 contrasting repos; `scripts/render_data_style.py`: render a style for the whole collection (DB rows unless `--dry-run`)
 - `generators/data_style.py` adapts data styles to the CLI/web generator interface; Face removed; museum shows only active styles
+- `styles/de_stijl.py`: binary treemap of the folder tree (depth 3, min share 1.8%), line weight by depth, primaries by language rank for the heaviest and most-edited fields, black for small config files
+- `scripts/remove_repo.py`: preview, then `--yes` deletes artworks (likes cascade), images, WebP copies and repo data
+- Clones run with `GIT_TERMINAL_PROMPT=0`: a private repo used to stop and prompt for credentials
 - Lesson: OneDrive's file provider can "bounce" folders to `name 2` during sync conflicts, which git sees as deletions; compare with `git show HEAD:path | cmp` before renaming back
 
 ## Technical Architecture

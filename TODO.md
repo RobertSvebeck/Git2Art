@@ -131,7 +131,11 @@
 - ✅ Style lab (`scripts/style_lab.py`) and data styles rendered from repodata (`styles/`)
 - ✅ Pixel City (replaces Pixel); Face removed
 - [ ] On the server: `python manage_styles.py add pixel_city "Pixel City" "..." --sort 3`, `disable face`, `disable pixel`, then `python scripts/render_data_style.py pixel_city`
-- [ ] Next styles: De Stijl (treemap), Garden (replaces Nature), Watercolour redo, Impressionist flow field, Expressionist structure, Psychedelic tied to folders, Tapestry
+- ✅ De Stijl (Mondrian-style folder treemap)
+- [ ] On the server: `python manage_styles.py add de_stijl "De Stijl" "..." --sort 4`, then `python scripts/render_data_style.py de_stijl`
+- [ ] Remove torvalds/linux and yeongpin/cursor-free-vip: `python scripts/remove_repo.py <urls>` then `--yes`
+- [ ] Consider a blocklist so oversized or private repos cannot be resubmitted
+- [ ] Next styles: Garden (replaces Nature), Watercolour redo, Impressionist flow field, Expressionist structure, Psychedelic tied to folders, Tapestry
 - [ ] Museum: merge static meshes per room to cut draw calls on mobile
 - [ ] Museum: test on real phones (touch controls untested on hardware)
 - [ ] Interactive mode: Adjust parameters in real-time

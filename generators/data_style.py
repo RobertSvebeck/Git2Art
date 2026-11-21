@@ -24,3 +24,9 @@ class PixelCityStyleGenerator(DataStyleGenerator):
     STYLE_KEY = 'pixel_city'
     STYLE_NAME = "Pixel City"
     STYLE_DESCRIPTION = "Isometric 8-bit city: folders are districts, files are buildings, activity sets the time of day"
+
+
+class DeStijlStyleGenerator(DataStyleGenerator):
+    STYLE_KEY = 'de_stijl'
+    STYLE_NAME = "De Stijl"
+    STYLE_DESCRIPTION = "Mondrian-style composition: the folder tree divides the canvas, primary colours mark the heaviest and busiest code"
