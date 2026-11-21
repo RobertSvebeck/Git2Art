@@ -14,7 +14,7 @@ STYLE_ROOMS = {
     'de_stijl': ('De Stijl', 'After Mondrian, but every line is real: the folder tree divides the canvas by size, and primary colours mark the heaviest and busiest code.', 'White Cube'),
     'pixel_city': ('Pixel City', 'Each repository as an 8-bit city: folders are districts, files are buildings, documentation grows as parks. Busy projects are painted by day; quiet ones by night.', 'Nocturne'),
     'nature': ('Nature', 'Code grown into forests, flowers and undergrowth.', 'Verdigris'),
-    'psychedelic': ('Psychedelia', 'No straight lines allowed: spirals, mandalas and neon, at full volume.', 'Ultraviolet'),
+    'psychedelic': ('Psychedelia', 'Every folder is the eye of a spiral; the spirals interfere into neon bands, the largest folders bloom into mandalas, and the busiest files stare back.', 'Ultraviolet'),
     'constellation': ('Constellations', 'The directory tree drawn as a star map: every star a file, every branch a folder.', 'Nocturne'),
 }
 

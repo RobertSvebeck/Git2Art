@@ -1,9 +1,8 @@
 """Style registry and factory for art generators."""
 
-from .psychedelic_style import PsychedelicStyleGenerator
 from .constellation_style import ConstellationStyleGenerator
 from .data_style import (DeStijlStyleGenerator, ExpressionistStyleGenerator, GardenStyleGenerator, ImpressionistStyleGenerator,
-                         PixelCityStyleGenerator, WatercolourStyleGenerator)
+                         PixelCityStyleGenerator, PsychedelicStyleGenerator, WatercolourStyleGenerator)
 
 # Registry of all available art styles
 STYLE_REGISTRY = {

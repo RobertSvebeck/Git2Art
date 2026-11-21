@@ -1,6 +1,6 @@
 """Art styles rendered from repository data (scene/repodata.py), not from clones."""
 
-from . import de_stijl, expressionist, garden, impressionist, pixel_city, watercolour
+from . import de_stijl, expressionist, garden, impressionist, pixel_city, psychedelic, watercolour
 
 DATA_STYLES = {
     'pixel_city': pixel_city.render,
@@ -9,4 +9,5 @@ DATA_STYLES = {
     'watercolor': watercolour.render,
     'impressionist': impressionist.render,
     'expressionist': expressionist.render,
+    'psychedelic': psychedelic.render,
 }

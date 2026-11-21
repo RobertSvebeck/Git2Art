@@ -54,3 +54,9 @@ class ExpressionistStyleGenerator(DataStyleGenerator):
     STYLE_KEY = 'expressionist'
     STYLE_NAME = "Expressionist"
     STYLE_DESCRIPTION = "Gestural bristle-brush painting: a sweep per folder, black strokes along the tree, splatter from busy files"
+
+
+class PsychedelicStyleGenerator(DataStyleGenerator):
+    STYLE_KEY = 'psychedelic'
+    STYLE_NAME = "Psychedelic"
+    STYLE_DESCRIPTION = "Op-art poster: interfering spirals around every folder, mandalas for the largest, glowing eyes for busy files"
