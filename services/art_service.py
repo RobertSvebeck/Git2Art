@@ -145,7 +145,8 @@ def get_all_gallery_artworks(images_dir, page=1, per_page=30, art_style=None, se
         from utils.db import get_db_cursor
 
         # Build WHERE clause for filters (applies to outer query)
-        where_clauses = []
+        # Retired styles (inactive in art_styles) stay in the database but are not shown
+        where_clauses = ["a.art_style IN (SELECT style_id FROM art_styles WHERE is_active = 1)"]
         params = []
 
         if art_style:

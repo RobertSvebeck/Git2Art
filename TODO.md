@@ -133,7 +133,7 @@
 - [ ] On the server: `python scripts/remove_repo.py https://github.com/torvalds/linux https://github.com/yeongpin/cursor-free-vip --yes`
 - [ ] On the server: `python scripts/apply_style_rework.py --yes --render` (registers styles, disables retired ones, re-renders all repositories)
 - [ ] Consider a blocklist so oversized or private repos cannot be resubmitted
-- [ ] Gallery: old-style images of retired styles remain in /gallery; decide whether to hide them there too
+- ✅ Gallery hides retired (inactive) styles; their artwork pages stay reachable by direct link
 
 ## Completed ✅
 
