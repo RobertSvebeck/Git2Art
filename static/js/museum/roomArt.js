@@ -5,8 +5,10 @@ import { FRAME_STYLES } from './moods.js';
 import { WALL_THICKNESS as T } from './plan.js';
 import { acquireArt, plaqueTexture, releaseArt } from './textures.js';
 import { makeBeam, makeHalo } from './lightfx.js';
+import { applyArt, buildCanvas, frameRing, paintMaterial, wallShadow } from './canvasWork.js';
 
 const FIXTURE_OUT = 2.3;
+const FRAME_DEPTH = 0.055;
 const PLAQUE_W = 0.36;
 const PLAQUE_H = 0.1125;
 const STYLE_LABELS = {
@@ -27,13 +29,19 @@ export function addArtAndFurniture(room, artworks, materials, track) {
     color: frameSpec.color, metalness: frameSpec.metalness, roughness: frameSpec.roughness,
   }));
   const matMaterial = track(new THREE.MeshStandardMaterial({ color: 0xf7f5f0, roughness: 0.9 }));
+  const pieceMaterials = {
+    frame: frameMaterial,
+    mat: matMaterial,
+    wood: track(new THREE.MeshStandardMaterial({ color: 0x8a6544, roughness: 0.6 })),
+    back: track(new THREE.MeshStandardMaterial({ color: 0x5a4632, roughness: 0.9 })),
+  };
   const fixtureMaterial = track(new THREE.MeshStandardMaterial({ color: 0x151515, metalness: 0.6, roughness: 0.4 }));
   const lensMaterial = track(new THREE.MeshBasicMaterial({ color: new THREE.Color(plan.mood.light).multiplyScalar(4) }));
 
   plan.slots.forEach((slot, index) => {
     const artwork = artworks[index % artworks.length];
     if (!artwork) return;
-    const piece = buildPiece(room, slot, artwork, frameSpec, frameMaterial, matMaterial, track);
+    const piece = buildPiece(room, slot, artwork, frameSpec, pieceMaterials, track);
     addFixture(room, slot, piece, fixtureMaterial, lensMaterial, track);
   });
 
@@ -54,7 +62,7 @@ function slotTransform(plan, slot) {
   };
 }
 
-function buildPiece(room, slot, artwork, spec, frameMaterial, matMaterial, track) {
+function buildPiece(room, slot, artwork, spec, materials, track) {
   const { plan, group } = room;
   const aspect = artwork.aspect || 1;
   const inset = 2 * (spec.border + spec.mat);
@@ -69,34 +77,40 @@ function buildPiece(room, slot, artwork, spec, frameMaterial, matMaterial, track
   group.add(piece);
 
   const outerW = width + inset, outerH = height + inset;
-  const frame = new THREE.Mesh(track(new THREE.BoxGeometry(outerW, outerH, spec.depth)), frameMaterial);
-  frame.position.z = spec.depth / 2 + 0.02;
-  piece.add(frame);
-  let front = spec.depth + 0.021;
-  if (spec.mat > 0) {
-    const mat = new THREE.Mesh(track(new THREE.PlaneGeometry(width + 2 * spec.mat, height + 2 * spec.mat)), matMaterial);
-    mat.position.z = front;
-    piece.add(mat);
-    front += 0.002;
-  }
+  const onPaper = spec.mat > 0;
+  const frameDepth = spec.border > 0 ? FRAME_DEPTH : 0;
+  if (spec.border > 0) frameRing(piece, outerW, outerH, spec.border, onPaper ? spec.depth : frameDepth, materials.frame, track);
+  wallShadow(piece, outerW, outerH, track);
 
-  const artMaterial = track(new THREE.MeshStandardMaterial({
-    color: new THREE.Color(plan.mood.trim), roughness: 0.62, emissive: 0x000000,
-  }));
-  const art = new THREE.Mesh(track(new THREE.PlaneGeometry(width, height)), artMaterial);
-  art.position.z = front;
+  let art;
+  const paint = onPaper
+    ? track(new THREE.MeshStandardMaterial({ color: new THREE.Color(plan.mood.trim), roughness: 0.8 }))
+    : paintMaterial(width, height, new THREE.Color(plan.mood.trim), track);
+  if (onPaper) {
+    const board = new THREE.Mesh(track(new THREE.BoxGeometry(outerW - 2 * spec.border, outerH - 2 * spec.border, 0.01)), materials.mat);
+    board.position.z = 0.012;
+    piece.add(board);
+    art = new THREE.Mesh(track(new THREE.PlaneGeometry(width, height)), paint);
+    art.position.z = 0.0175;
+    piece.add(art);
+  } else {
+    art = buildCanvas(piece, artwork, width, height, frameDepth, { paint, wood: materials.wood, back: materials.back }, track);
+  }
   art.userData.artwork = artwork;
-  piece.add(art);
   room.artMeshes.push(art);
 
   acquireArt(artwork.image).then((texture) => {
     if (room.disposed) return;
-    artMaterial.map = texture;
-    artMaterial.emissiveMap = texture;
-    artMaterial.emissive.set(0xffffff);
-    artMaterial.emissiveIntensity = 0.05;
-    artMaterial.color.set(0xffffff);
-    artMaterial.needsUpdate = true;
+    if (onPaper) {
+      paint.map = texture;
+      paint.emissiveMap = texture;
+      paint.emissive.set(0xffffff);
+      paint.emissiveIntensity = 0.04;
+      paint.color.set(0xffffff);
+      paint.needsUpdate = true;
+    } else {
+      applyArt(paint, texture);
+    }
   }).catch(() => {});
   room.releases.push(() => releaseArt(artwork.image));
 
@@ -112,7 +126,7 @@ function buildPiece(room, slot, artwork, spec, frameMaterial, matMaterial, track
 
   const halo = makeHalo(outerW * 2.0, outerH * 1.9, plan.mood.light, 0.07 * plan.mood.spot);
   track(halo.geometry); track(halo.material);
-  halo.position.set(0, 0.15, 0.005);
+  halo.position.set(0, 0.15, 0.004);
   piece.add(halo);
 
   return { piece, width: outerW, height: outerH, art };

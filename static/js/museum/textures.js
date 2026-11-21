@@ -229,3 +229,51 @@ function disposeArt(url) {
   if (entry && entry.texture) entry.texture.dispose();
   artCache.delete(url);
 }
+
+// Linen weave as a tangent-space normal map: threads over and under in a
+// plain weave. One tile is about 3 cm of canvas; repeat it per artwork.
+export function weaveNormal() {
+  if (surfaceCache.has('weave')) return surfaceCache.get('weave');
+  const size = 128, threads = 32, pitch = size / threads;
+  const height = new Float32Array(size * size);
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const cx = (x % pitch) / pitch - 0.5, cy = (y % pitch) / pitch - 0.5;
+      const over = (Math.floor(x / pitch) + Math.floor(y / pitch)) % 2;
+      const warp = Math.cos(cx * Math.PI) * (over ? 1 : 0.55);
+      const weft = Math.cos(cy * Math.PI) * (over ? 0.55 : 1);
+      height[y * size + x] = Math.max(warp, weft) + ((x * 7 + y * 13) % 5) * 0.02;
+    }
+  }
+  const [c, ctx] = canvas(size);
+  const image = ctx.createImageData(size, size);
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const h = (dx, dy) => height[((y + dy + size) % size) * size + ((x + dx + size) % size)];
+      const nx = (h(-1, 0) - h(1, 0)) * 1.4, ny = (h(0, -1) - h(0, 1)) * 1.4;
+      const len = Math.hypot(nx, ny, 1);
+      const i = (y * size + x) * 4;
+      image.data[i] = (nx / len * 0.5 + 0.5) * 255;
+      image.data[i + 1] = (ny / len * 0.5 + 0.5) * 255;
+      image.data[i + 2] = (1 / len * 0.5 + 0.5) * 255;
+      image.data[i + 3] = 255;
+    }
+  }
+  ctx.putImageData(image, 0, 0);
+  const texture = new THREE.CanvasTexture(c);
+  texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+  texture.anisotropy = maxAnisotropy;
+  surfaceCache.set('weave', texture);
+  return texture;
+}
+
+// Soft rectangular shadow (white = opaque) for use as an alphaMap.
+export function softShadow() {
+  return cachedCanvasTexture('soft-shadow', (ctx) => {
+    ctx.fillStyle = '#000'; ctx.fillRect(0, 0, SIZE, SIZE);
+    ctx.filter = `blur(${SIZE * 0.05}px)`;
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(SIZE * 0.12, SIZE * 0.12, SIZE * 0.76, SIZE * 0.76);
+    ctx.filter = 'none';
+  }, false);
+}
