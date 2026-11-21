@@ -101,6 +101,32 @@
     </div>
 </aside>
 
+<aside id="submit-panel" class="overlay" hidden>
+    <div class="panel-card submit-card">
+        <button id="submit-close" class="panel-close" aria-label="Close">&times;</button>
+        <form id="submit-form">
+            <p class="eyebrow">Git2Art Museum</p>
+            <h2>Hang your repository here</h2>
+            <p class="lede">Paste a public GitHub repository. We read its folders, files and history and paint it, then hang it on this wall.</p>
+            <input id="submit-url" type="url" placeholder="https://github.com/owner/repo" autocomplete="off" required>
+            <select id="submit-style" aria-label="Art style">
+                {% for style in art_styles %}<option value="{{ style.style_id }}">{{ style.display_name }}</option>{% endfor %}
+            </select>
+            <button id="submit-button" class="museum-button" type="submit">Paint it</button>
+            <p id="submit-status" class="status" aria-live="polite"></p>
+        </form>
+        <div id="submit-done" hidden>
+            <img id="submit-preview" src="" alt="Your new artwork">
+            <h2 id="submit-done-title"></h2>
+            <p class="lede">It now hangs where the invitation was, and it will appear in other rooms too.</p>
+            <div class="panel-actions">
+                <button id="submit-walk" class="museum-button" type="button">Keep walking</button>
+                <a id="submit-view" class="museum-button secondary" href="#">View artwork</a>
+            </div>
+        </div>
+    </div>
+</aside>
+
 <script type="importmap">
 {
     "imports": {

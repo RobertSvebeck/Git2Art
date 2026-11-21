@@ -78,6 +78,7 @@ export function planRoom(worldSeed, cx, cz) {
     accent: mood.accent, furniture,
     slots: planSlots(rng, width, depth, pieceCount, pieceHeight),
     seed: hashInts(worldSeed, cx, cz, 7),
+    poster: isEntrance || (wing === 'paintings' && hashInts(worldSeed, cx, cz, 13) % 10 < 3),
   };
   planCache.set(key, plan);
   return plan;

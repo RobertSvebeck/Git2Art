@@ -69,7 +69,9 @@ export class Ui {
       return;
     }
     $('hover-title').textContent = artwork.title;
-    $('hover-meta').textContent = `${styleLabel(artwork.style)}  |  click or Enter for details`;
+    $('hover-meta').textContent = artwork.kind === 'submit'
+      ? 'Place your repository in this museum  |  click or Enter'
+      : `${styleLabel(artwork.style)}  |  click or Enter for details`;
     hover.classList.add('visible');
   }
 

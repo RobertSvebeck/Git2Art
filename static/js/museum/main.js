@@ -13,6 +13,7 @@ import { World } from './world.js';
 import { Lighting } from './lighting.js';
 import { Walker } from './controls.js';
 import { Ui } from './ui.js';
+import { SubmitPanel } from './submit.js';
 
 const INTERACT_DISTANCE = 7;
 const touchDevice = window.matchMedia('(pointer: coarse)').matches;
@@ -89,7 +90,24 @@ async function start() {
   const pickAt = (ndcX, ndcY) => {
     raycaster.setFromCamera(new THREE.Vector2(ndcX, ndcY), camera);
     const hit = raycaster.intersectObjects(world.artMeshes(), false)[0];
-    return hit ? hit.object.userData.artwork : null;
+    return hit ? hit.object : null;
+  };
+  const submit = new SubmitPanel({
+    onOpen: () => { if (walker.locked) document.exitPointerLock(); ui.setHover(null); },
+    onClose: () => { if (!touchDevice) walker.lock(); },
+    onHang: (face, artwork) => {
+      const room = world.roomContaining(face);
+      if (room) {
+        room.hangArtwork(face, artwork);
+        if (world.current && room.plan.key === world.current.key) lighting.focus(room);
+      }
+      world.deck.cards.push(artwork);
+    },
+  });
+  const inspect = (mesh) => {
+    if (!mesh) return;
+    if (mesh.userData.poster) submit.open(mesh);
+    else ui.showArtwork(mesh.userData.artwork);
   };
 
   let hovered = null;
@@ -101,27 +119,26 @@ async function start() {
     if (!touchDevice) walker.lock();
   };
   renderer.domElement.addEventListener('click', () => {
-    if (touchDevice || ui.panelOpen) return;
+    if (touchDevice || ui.panelOpen || submit.isOpen) return;
     if (!walker.locked) {
       if (walker.enabled) walker.lock();
       return;
     }
     if (hovered) {
       document.exitPointerLock();
-      ui.showArtwork(hovered);
+      inspect(hovered);
     }
   });
   document.addEventListener('keydown', (e) => {
-    if (e.code !== 'Enter' || !walker.enabled || ui.panelOpen || !hovered) return;
+    if (e.code !== 'Enter' || !walker.enabled || ui.panelOpen || submit.isOpen || !hovered) return;
     if (walker.locked) document.exitPointerLock();
-    ui.showArtwork(hovered);
+    inspect(hovered);
   });
   walker.onTap = (x, y) => {
-    const artwork = pickAt((x / window.innerWidth) * 2 - 1, -(y / window.innerHeight) * 2 + 1);
-    if (artwork) ui.showArtwork(artwork);
+    inspect(pickAt((x / window.innerWidth) * 2 - 1, -(y / window.innerHeight) * 2 + 1));
   };
   document.addEventListener('pointerlockchange', () => {
-    if (!walker.locked && !ui.panelOpen && walker.enabled && !touchDevice) ui.showPaused();
+    if (!walker.locked && !ui.panelOpen && !submit.isOpen && walker.enabled && !touchDevice) ui.showPaused();
     if (walker.locked) ui.hideOverlays();
   });
 
@@ -137,7 +154,7 @@ async function start() {
   ui.ready(artworks.length, worldSeed, touchDevice);
 
   if (new URLSearchParams(window.location.search).has('debug')) {
-    window.museumDebug = { walker, world, renderer, lighting, ui };
+    window.museumDebug = { walker, world, renderer, lighting, ui, submit };
   }
 
   let perfFrames = 0, perfTime = 0, perfChecked = false;
@@ -164,9 +181,9 @@ async function start() {
     }
     lighting.update(dt);
     world.tick(dt, time);
-    if (!touchDevice && walker.enabled && !ui.panelOpen && frame++ % 4 === 0) {
+    if (!touchDevice && walker.enabled && !ui.panelOpen && !submit.isOpen && frame++ % 4 === 0) {
       hovered = pickAt(0, 0);
-      ui.setHover(hovered);
+      ui.setHover(hovered ? hovered.userData.artwork : null);
     }
     composer.render();
   });

@@ -136,6 +136,9 @@
 - ✅ Gallery hides retired (inactive) styles; their artwork pages stay reachable by direct link
 - ✅ Artworks stored as WebP (lossless for flat-colour art), downloads converted to PNG; about 165 MB for the full collection instead of about 1.5 GB as PNG
 - ✅ `scripts/cleanup_artworks.py`: orphan files always; `--superseded` (unliked older versions) and `--retired` on request; preview without `--yes`
+- ✅ 3D museum: canvases with depth (gallery wrap or wooden panel), linen weave, brushstroke relief, varnish, wall shadows
+- ✅ 3D museum invitations ("Your repository could hang here") in the entrance and ~30% of painting rooms; in-museum submit form hangs the result in place
+- ✅ About page rewritten for the museums and new styles
 - [ ] On the server after pulling: `python scripts/render_data_style.py <style>` for each style (or `apply_style_rework.py --yes --render`), then `python scripts/cleanup_artworks.py --superseded --retired --yes`
 
 ## Completed ✅

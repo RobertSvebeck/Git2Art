@@ -6,6 +6,7 @@ import { WALL_THICKNESS as T } from './plan.js';
 import { acquireArt, plaqueTexture, releaseArt } from './textures.js';
 import { makeBeam, makeHalo } from './lightfx.js';
 import { applyArt, buildCanvas, frameRing, paintMaterial, wallShadow } from './canvasWork.js';
+import { addPoster, removePoster } from './poster.js';
 
 const FIXTURE_OUT = 2.3;
 const FRAME_DEPTH = 0.055;
@@ -14,7 +15,7 @@ const PLAQUE_H = 0.1125;
 const STYLE_LABELS = {
   expressionist: 'Expressionist', impressionist: 'Impressionist', watercolor: 'Watercolour',
   pixel: 'Pixel', pixel_city: 'Pixel City', de_stijl: 'De Stijl', garden: 'Garden', tapestry: 'Tapestry', nature: 'Nature', psychedelic: 'Psychedelic', constellation: 'Constellation',
-  sculpture: 'Repository sculpture', installation: 'Light installation',
+  sculpture: 'Repository sculpture', installation: 'Light installation', invitation: 'Invitation',
 };
 
 export function styleLabel(style) {
@@ -38,7 +39,17 @@ export function addArtAndFurniture(room, artworks, materials, track) {
   const fixtureMaterial = track(new THREE.MeshStandardMaterial({ color: 0x151515, metalness: 0.6, roughness: 0.4 }));
   const lensMaterial = track(new THREE.MeshBasicMaterial({ color: new THREE.Color(plan.mood.light).multiplyScalar(4) }));
 
+  room.hangArtwork = (face, artwork) => {
+    const { slot } = face.userData.poster;
+    removePoster(room, face);
+    const piece = buildPiece(room, slot, artwork, frameSpec, pieceMaterials, track);
+    addFixture(room, slot, piece, fixtureMaterial, lensMaterial, track);
+  };
   plan.slots.forEach((slot, index) => {
+    if (plan.poster && index === plan.slots.length - 1) {
+      addPoster(room, slot, slotTransform(plan, slot), track);
+      return;
+    }
     const artwork = artworks[index % artworks.length];
     if (!artwork) return;
     const piece = buildPiece(room, slot, artwork, frameSpec, pieceMaterials, track);

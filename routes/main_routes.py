@@ -83,7 +83,7 @@ def gallery():
 @bp.route('/gallery3d')
 def gallery3d():
     """Walkable, endless 3D museum of generated artworks."""
-    return render_template('gallery3d.html')
+    return render_template('gallery3d.html', art_styles=ArtStyle.get_active_styles())
 
 
 STYLE_LABELS = {

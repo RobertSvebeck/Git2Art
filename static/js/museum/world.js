@@ -137,6 +137,11 @@ export class World {
     }
   }
 
+  roomContaining(mesh) {
+    for (const room of this.rooms.values()) if (room.artMeshes.includes(mesh)) return room;
+    return null;
+  }
+
   artMeshes() {
     const meshes = [];
     for (const room of this.rooms.values()) meshes.push(...room.artMeshes);

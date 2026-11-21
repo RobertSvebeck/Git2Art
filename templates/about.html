@@ -48,17 +48,18 @@
         <main class="about-content">
             <section class="about-hero">
                 <h2>About Git2Art</h2>
-                <p>Git2Art transforms your GitHub repositories into unique, beautiful abstract artwork. Every repository generates deterministic art where the visual form reflects the code structure.</p>
+                <p>Git2Art turns GitHub repositories into artworks and hangs them in a museum. Every picture is drawn from the real structure of the code, so no two repositories look alike, and you can see why.</p>
             </section>
 
             <section class="about-section">
                 <h3>How It Works</h3>
-                <p>Git2Art analyzes your repository's code metrics and creates a visual representation:</p>
+                <p>Git2Art reads a repository and paints what it finds:</p>
                 <ul>
-                    <li><strong>File Types & Structure</strong> - Mapped to shapes, colors, and composition</li>
-                    <li><strong>Code Complexity</strong> - Reflected in visual density and layering</li>
-                    <li><strong>Repository History</strong> - Commit patterns influence the overall design</li>
-                    <li><strong>Language Detection</strong> - Different languages get harmonious color palettes</li>
+                    <li><strong>Folders</strong> - become districts, plants, washes, spirals or bands of thread, depending on the style</li>
+                    <li><strong>Files</strong> - become buildings, leaves, brushstrokes or beads, sized by how big they are</li>
+                    <li><strong>Languages</strong> - every language has its own colour, so a Python project and a JavaScript project look different at a glance</li>
+                    <li><strong>History</strong> - when files appeared and how often they changed decide what flowers, glows, flares or splatters</li>
+                    <li><strong>Stability</strong> - everything is placed by the file's path, so a small change to the code is a small change to the picture</li>
                 </ul>
             </section>
 
@@ -66,35 +67,46 @@
                 <h3>Key Features</h3>
                 <div class="features-grid">
                     <div class="feature-card">
-                        <h4>🎨 Multiple Art Styles</h4>
-                        <p>Choose from nine styles: expressionist, impressionist, watercolour, psychedelic, Pixel City, De Stijl, Garden, Tapestry and Constellation - each offers a unique visual interpretation of your code.</p>
+                        <h4>🎨 Eight Art Styles</h4>
+                        <p>From gestural painting and watercolour to an 8-bit city, a Mondrian, a botanical garden and a woven tapestry.</p>
                     </div>
                     <div class="feature-card">
-                        <h4>🌐 3D Gallery</h4>
-                        <p>Experience your artwork in an immersive 3D environment with nature-themed scenes, realistic lighting, and interactive navigation.</p>
+                        <h4>🏛️ The Museum</h4>
+                        <p>Walk the collection room by room with the arrow keys: new acquisitions, a gallery for every style, the Sculpture Court and the Light Installations. Works on any device.</p>
                     </div>
                     <div class="feature-card">
-                        <h4>🎨 Deterministic Art</h4>
-                        <p>Same repository = same artwork. Your code's visual fingerprint never changes.</p>
+                        <h4>🌐 The 3D Museum</h4>
+                        <p>An endless museum you walk through in your browser: spotlit canvases, repositories as glowing sculptures that replay their history, and dark rooms where a project's commits rise around you as light.</p>
                     </div>
                     <div class="feature-card">
-                        <h4>📐 Adaptive Layout</h4>
-                        <p>Canvas aspect ratio automatically adjusts based on repository type: portrait for mobile apps, landscape for web, square for backends.</p>
+                        <h4>🖼️ Hang Your Own</h4>
+                        <p>Paste a public repository on the home page, or click an invitation on the museum wall, and your code is painted and hung within moments.</p>
                     </div>
                     <div class="feature-card">
-                        <h4>🎭 Art Theory</h4>
-                        <p>Built on golden ratio, color harmony, and visual hierarchy principles for professional, gallery-worthy results.</p>
+                        <h4>📐 Adaptive Canvas</h4>
+                        <p>The canvas shape follows the project: portrait for mobile apps, landscape for web and documentation-heavy projects, square for the rest.</p>
                     </div>
                     <div class="feature-card">
-                        <h4>🔄 Incremental Changes</h4>
-                        <p>Small code changes create subtle visual differences. Large refactors result in dramatic transformations.</p>
+                        <h4>🔄 Grows With Your Code</h4>
+                        <p>Small changes make subtle differences; big refactors transform the picture. Generate again later and see how your project has changed.</p>
                     </div>
                 </div>
             </section>
 
             <section class="about-section">
+                <h3>The Museum</h3>
+                <p>Every artwork in the collection hangs in the museum, which you can visit in two ways:</p>
+                <ul>
+                    <li><strong><a href="{{ url_for('main.museum') }}">Museum</a></strong> - room by room on any device: walk along each wall with the arrow keys, press Enter to look closer, M for the floor plan</li>
+                    <li><strong><a href="{{ url_for('main.gallery3d') }}">3D Museum</a></strong> - an endless, walkable building with a door in every wall. North and west lie the Painting Galleries, south the Sculpture Court, east the Light Installations</li>
+                    <li><strong>Sculpture Court</strong> - each repository as a sculpture: files are glowing beads, folders are bronze branches, and it grows again commit by commit while you stand in the room</li>
+                    <li><strong>Light Installations</strong> - a project's whole history as a spiral of lights you walk through, with a pulse travelling from the first commit to today</li>
+                </ul>
+            </section>
+
+            <section class="about-section">
                 <h3>Art Styles</h3>
-                <p>Git2Art offers seven unique artistic interpretations of your code:</p>
+                <p>Eight styles, each a different way of looking at the same code:</p>
                 <div class="styles-list">
                     <div class="style-item">
                         <strong>🎨 Expressionist</strong> - Gestural bristle-brush painting in the spirit of De Kooning and Kline: a sweeping stroke for each folder, black calligraphy along the folder tree, splatter and drips from the most-edited files (default)
@@ -124,53 +136,19 @@
             </section>
 
             <section class="about-section">
-                <h3>Color Palettes</h3>
-                <p>Git2Art automatically selects harmonious color schemes based on your repository's primary language:</p>
-                <div class="palettes-list">
-                    <div class="palette-item">
-                        <strong>Python</strong> - Cool blues and teals
-                    </div>
-                    <div class="palette-item">
-                        <strong>JavaScript</strong> - Warm yellows and oranges
-                    </div>
-                    <div class="palette-item">
-                        <strong>HTML/CSS</strong> - Fresh greens, blues, and purples
-                    </div>
-                    <div class="palette-item">
-                        <strong>PHP</strong> - Purple and violet
-                    </div>
-                    <div class="palette-item">
-                        <strong>Ruby</strong> - Rich reds and gems
-                    </div>
-                    <div class="palette-item">
-                        <strong>Java</strong> - Professional burgundy and brown
-                    </div>
-                    <div class="palette-item">
-                        <strong>C/C++</strong> - Industrial grays and blues
-                    </div>
-                    <div class="palette-item">
-                        <strong>Go/Rust</strong> - Modern cyan and steel (labeled "systems" internally)
-                    </div>
-                    <div class="palette-item">
-                        <strong>Mobile</strong> - Vibrant coral and pink
-                    </div>
-                    <div class="palette-item">
-                        <strong>Data Science</strong> - Natural greens
-                    </div>
-                    <div class="palette-item">
-                        <strong>Documentation</strong> - Elegant grays
-                    </div>
-                </div>
+                <h3>Language Colours</h3>
+                <p>Each language keeps the same colour in every style, so you learn to read the pictures: Python is blue, JavaScript yellow, TypeScript light blue, HTML orange, CSS violet, Go cyan, Rust copper, Java amber, Ruby red, C# green, Swift coral, and documentation a quiet cream.</p>
             </section>
 
             <section class="about-section">
                 <h3>Art Inspiration</h3>
-                <p>Git2Art draws inspiration from:</p>
+                <p>Each style borrows from a tradition:</p>
                 <ul>
-                    <li><strong>Abstract Expressionism</strong> - Bold strokes and expressive color blocking reminiscent of De Kooning and Kandinsky</li>
-                    <li><strong>Generative Art</strong> - Mathematical algorithms creating organic, complex patterns</li>
-                    <li><strong>Data Visualization</strong> - Transforming code metrics into visual form</li>
-                    <li><strong>Golden Ratio & Fibonacci</strong> - Natural proportion and balance in composition</li>
+                    <li><strong>Abstract Expressionism</strong> - the gestures of De Kooning and Franz Kline</li>
+                    <li><strong>Impressionism and Post-Impressionism</strong> - broken colour, and the swirling strokes of Van Gogh</li>
+                    <li><strong>De Stijl</strong> - Mondrian's grids of black lines and primary colour</li>
+                    <li><strong>Op Art and 1960s posters</strong> - interference patterns and neon bands</li>
+                    <li><strong>Botanical illustration, weaving and pixel art</strong> - for the Garden, the Tapestry and Pixel City</li>
                 </ul>
             </section>
 
@@ -184,10 +162,10 @@
                         <strong>Database:</strong> MariaDB
                     </div>
                     <div class="tech-item">
-                        <strong>Art Generation:</strong> Python PIL/Pillow with Bézier curves, gradients, and organic shapes
+                        <strong>Art Generation:</strong> Python with Pillow and NumPy, drawn from each repository's folders, files and history
                     </div>
                     <div class="tech-item">
-                        <strong>3D Rendering:</strong> THREE.js with WebGL
+                        <strong>3D Museum:</strong> three.js with WebGL
                     </div>
                     <div class="tech-item">
                         <strong>Frontend:</strong> HTML, CSS, JavaScript
@@ -218,8 +196,9 @@
 
             <section class="about-section cta-section">
                 <h3>Ready to see your code as art?</h3>
-                <p>Transform any GitHub repository into a unique artwork.</p>
+                <p>Transform any GitHub repository into a unique artwork, then find it in the museum.</p>
                 <a href="{{ url_for('main.index') }}" class="btn btn-primary">Generate Your Art</a>
+                <a href="{{ url_for('main.gallery3d') }}" class="btn btn-primary">Visit the 3D Museum</a>
             </section>
         </main>
 

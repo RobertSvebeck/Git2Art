@@ -251,6 +251,11 @@ Rewrite of `/gallery3d` as a walkable, procedurally generated museum (three.js 0
 - `scripts/cleanup_artworks.py`: orphans (files without rows, plus museum copies) always; `--superseded` (older commits, never liked ones); `--retired` (inactive styles); previews unless `--yes`; prints the DB it is connected to
 - Gallery listing filters to active styles, like the museum
 
+### Physical Canvases, Invitations, About Page (Session 19, 2026-11-21)
+- `static/js/museum/canvasWork.js`: canvas box whose side faces sample the image's edge strip (gallery wrap) or wooden panel edges; weave normal map (`textures.weaveNormal`), image as bump map, clearcoat; frame mouldings as rings around a recessed canvas; soft wall shadow via alphaMap
+- `poster.js` + `submit.js`: invitation lightboxes (`plan.poster`: entrance always, ~30% of painting rooms via a separate hash so room layouts are unchanged); form posts to `/generate`, then `room.hangArtwork` swaps the sign for the new canvas and the work joins the deck; walker ignores keys typed into form fields
+- Local testing: the local DB is production but images live on the server, so headless tests intercept `/api/museum/artworks` with a fixture built from local images and mock `/generate`
+
 ## Technical Architecture
 
 ### Color System

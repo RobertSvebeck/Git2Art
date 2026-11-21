@@ -349,3 +349,26 @@ kbd {
     text-decoration: none;
     z-index: 5;
 }
+
+.submit-card { display: block; max-width: 560px; text-align: center; }
+.submit-card h2 { margin: 6px 0 12px; font-size: 30px; font-weight: 300; letter-spacing: 0.04em; text-transform: none; }
+.submit-card input, .submit-card select {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0 0 12px;
+    padding: 14px 16px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.06);
+    color: #fff;
+    font: inherit;
+    font-size: 16px;
+}
+.submit-card select option { color: #111; }
+.submit-card #submit-preview { display: block; max-width: 100%; max-height: 46vh; margin: 0 auto 16px; border-radius: 4px; }
+.submit-card .panel-actions { justify-content: center; }
+.submit-card .museum-button { width: 100%; background: #f4f1ea; color: #111; border-color: #f4f1ea; }
+.submit-card .museum-button:hover { background: transparent; color: #fff; }
+.submit-card .panel-actions .museum-button { width: auto; }
+.submit-card .panel-actions .museum-button.secondary { background: transparent; color: #fff; }

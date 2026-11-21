@@ -41,6 +41,7 @@ export class Walker {
 
   bindDesktop() {
     document.addEventListener('keydown', (e) => {
+      if (e.target.closest && e.target.closest('input, textarea, select')) return;
       if (['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ShiftLeft', 'ShiftRight'].includes(e.code)) {
         this.keys.add(e.code);
         if (e.code.startsWith('Arrow')) e.preventDefault();
