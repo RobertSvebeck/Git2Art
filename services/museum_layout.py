@@ -10,6 +10,7 @@ STYLE_ROOMS = {
     'impressionist': ('Impressionism', 'Thousands of soft dabs of light, the way a codebase looks from across the room.', 'Sandstone'),
     'watercolor': ('Watercolour', 'Transparent washes that bleed into one another, quiet and pale.', 'Blush'),
     'pixel': ('Pixel', 'Repositories reduced to blocks on a dark ground, in the spirit of early computer graphics.', 'Graphite'),
+    'garden': ('The Garden', 'Every folder grows as a plant: files are leaves, the busiest files flower in their language colour, documentation blooms as daisies. Old code turns woody; butterflies are the contributors.', 'Sandstone'),
     'de_stijl': ('De Stijl', 'After Mondrian, but every line is real: the folder tree divides the canvas by size, and primary colours mark the heaviest and busiest code.', 'White Cube'),
     'pixel_city': ('Pixel City', 'Each repository as an 8-bit city: folders are districts, files are buildings, documentation grows as parks. Busy projects are painted by day; quiet ones by night.', 'Nocturne'),
     'nature': ('Nature', 'Code grown into forests, flowers and undergrowth.', 'Verdigris'),

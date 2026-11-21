@@ -30,3 +30,9 @@ class DeStijlStyleGenerator(DataStyleGenerator):
     STYLE_KEY = 'de_stijl'
     STYLE_NAME = "De Stijl"
     STYLE_DESCRIPTION = "Mondrian-style composition: the folder tree divides the canvas, primary colours mark the heaviest and busiest code"
+
+
+class GardenStyleGenerator(DataStyleGenerator):
+    STYLE_KEY = 'garden'
+    STYLE_NAME = "Garden"
+    STYLE_DESCRIPTION = "Botanical plate: folders grow as plants, files as leaves, busy files flower, contributors are butterflies"

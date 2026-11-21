@@ -20,7 +20,7 @@ Git2Art offers eight distinct art styles to visualize your code:
 - **Watercolor** - Transparent washes, flowing blends, soft edges with watercolor painting techniques
 - **De Stijl** - A Mondrian-style composition that maps the code exactly: folders divide the canvas by size, line weight follows depth, primary colours mark the main languages where the code is heaviest or busiest
 - **Pixel City** - The repository as an isometric 8-bit city: folders are districts, files are buildings (height from size, colour from language), documentation is parkland, and the time of day shows how recently the project was active
-- **Nature** - Organic textures inspired by natural forms with earth-toned backgrounds
+- **Garden** - A botanical plate: folders grow as plants, files are leaves, the busiest files flower in their language colour, contributors are butterflies
 - **Psychedelic** - Hypnotic trippy flows with NO straight lines, vibrant neon colors, spirals and mandala patterns
 - **Constellation** - The directory tree as a star map: files are stars (size from line count, colour from language), folders are branches. Layout depends only on file paths, so a small change really is a small visual change, and it can be animated over the repository's history
 
@@ -66,7 +66,7 @@ python git2art.py --style impressionist  # Soft pastel brushwork
 python git2art.py --style watercolor     # Flowing transparent washes
 python git2art.py --style pixel_city     # Isometric 8-bit city
 python git2art.py --style de_stijl       # Mondrian-style map of the code
-python git2art.py --style nature         # Organic natural textures
+python git2art.py --style garden         # Botanical plate of the code
 python git2art.py --style psychedelic    # Hypnotic trippy flows
 ```
 
