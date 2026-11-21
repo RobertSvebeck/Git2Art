@@ -239,6 +239,13 @@ Rewrite of `/gallery3d` as a walkable, procedurally generated museum (three.js 0
 - Clones run with `GIT_TERMINAL_PROMPT=0`: a private repo used to stop and prompt for credentials
 - Lesson: OneDrive's file provider can "bounce" folders to `name 2` during sync conflicts, which git sees as deletions; compare with `git show HEAD:path | cmp` before renaming back
 
+### Style Rework Completed (Session 17, 2026-11-21)
+- All styles now render from repository data in `styles/`: expressionist (bristle-brush gestures per folder), impressionist (flow-field strokes around folders), watercolour (layered deformed-polygon glazes, multiplicative pigment with soft saturation), psychedelic (log-spiral interference; arms are multiples of the palette length to hide the atan2 seam), pixel_city, de_stijl, garden (plants grown from the folder tree), tapestry (warp bands per folder, weft rows through time, activity lingers after a file's birth)
+- Old generators deleted; `generators/data_style.py` adapts each style; style ids unchanged for existing ones
+- `--contrast` removed (no style used it)
+- `scripts/apply_style_rework.py`: one-step DB update and optional full re-render (preview without `--yes`)
+- Lessons: Pillow cannot blur float images (convert to L first); clip regions for deformed shapes must use the deformed extent, not the base radius
+
 ## Technical Architecture
 
 ### Color System

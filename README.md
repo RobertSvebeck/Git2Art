@@ -13,25 +13,25 @@ Git2Art creates deterministic abstract art from your codebase:
 
 ## Art Styles
 
-Git2Art offers eight distinct art styles to visualize your code:
+Every style is drawn from the repository's actual structure (folders, file sizes, languages and history), so each repository looks different and you can see why. Layouts are seeded by file paths, so a small change to the code is a small change to the picture.
 
-- **Expressionist** - Bold strokes, vibrant colors, organic shapes inspired by abstract expressionism (default)
-- **Impressionist** - Soft brush dabs, pastel colors, luminous atmosphere inspired by Monet and Renoir
-- **Watercolour** - Layered transparent glazes on cold-press paper: folders as washes, files as glazes, an ink sketch of the folder tree
-- **De Stijl** - A Mondrian-style composition that maps the code exactly: folders divide the canvas by size, line weight follows depth, primary colours mark the main languages where the code is heaviest or busiest
-- **Pixel City** - The repository as an isometric 8-bit city: folders are districts, files are buildings (height from size, colour from language), documentation is parkland, and the time of day shows how recently the project was active
-- **Garden** - A botanical plate: folders grow as plants, files are leaves, the busiest files flower in their language colour, contributors are butterflies
-- **Psychedelic** - Hypnotic trippy flows with NO straight lines, vibrant neon colors, spirals and mandala patterns
-- **Constellation** - The directory tree as a star map: files are stars (size from line count, colour from language), folders are branches. Layout depends only on file paths, so a small change really is a small visual change, and it can be animated over the repository's history
+- **Expressionist** (default) - Gestural bristle-brush painting: a sweep for every folder, black calligraphy along the folder tree, splatter and drips from the most-edited files
+- **Impressionist** - Broken brushstrokes swirling around each folder like eddies in a pond; the busiest files catch the light
+- **Watercolour** (`watercolor`) - Layered transparent glazes on cold-press paper: folders as washes, files as glazes, an ink sketch of the folder tree
+- **Psychedelic** - An op-art poster: every folder is the eye of a spiral, the spirals interfere into neon bands, the largest folders bloom into mandalas
+- **Pixel City** (`pixel_city`) - An isometric 8-bit city: folders are districts, files are buildings, documentation is parkland, the time of day shows how recently the project was active
+- **De Stijl** (`de_stijl`) - A Mondrian-style composition that maps the code exactly: folders divide the canvas by size, primary colours mark the heaviest and busiest code
+- **Garden** - A botanical plate: folders grow as plants, files are leaves, the busiest files flower, contributors are butterflies
+- **Tapestry** - The history woven as cloth: a warp band per folder, weft rows from first commit to today, colour where the code grew
+- **Constellation** - The directory tree as a star map; also used for the history animation (`--animate`)
 
 ## Features
 
-- **Multiple Art Styles**: Seven unique styles, each with distinct visual characteristics
-- **Repository-Driven Palettes**: Colors automatically selected based on primary programming language
+- **Nine Art Styles**: Each drawn from the repository's folders, files, languages and history
+- **Language Colours**: Every file is coloured by its language
 - **100% Deterministic**: Same repository state always generates identical artwork
 - **Smart Aspect Ratios**: Auto-detects canvas shape based on project type (mobile/web/backend)
 - **Flexible Canvas Sizes**: From 800px to 2400px+ with multiple aspect ratios
-- **Professional Composition**: Uses golden ratio, rule of thirds, and visual hierarchy principles
 - **Smart Filenames**: Auto-generated with repo name, dimensions, style, timestamp, and commit hash
 - **CLI and Web Interface**: Use standalone Python script or full-featured Flask web application
 
@@ -61,38 +61,16 @@ python git2art.py
 python git2art.py --list-styles
 
 # Generate with specific style
-python git2art.py --style expressionist  # Bold abstract (default)
-python git2art.py --style impressionist  # Soft pastel brushwork
-python git2art.py --style watercolor     # Flowing transparent washes
+python git2art.py --style expressionist  # Gestural painting (default)
+python git2art.py --style impressionist  # Swirling brushstrokes
+python git2art.py --style watercolor     # Layered glazes
+python git2art.py --style psychedelic    # Op-art spirals
 python git2art.py --style pixel_city     # Isometric 8-bit city
 python git2art.py --style de_stijl       # Mondrian-style map of the code
-python git2art.py --style garden         # Botanical plate of the code
-python git2art.py --style psychedelic    # Hypnotic trippy flows
+python git2art.py --style garden         # Botanical plate
+python git2art.py --style tapestry       # History woven as cloth
+python git2art.py --style constellation  # Star map of the folder tree
 ```
-
-**Face Style Details:**
-The face style creates abstract cubist faces inspired by Picasso and Matisse. Features are positioned and styled using deterministic randomness based on repository metrics:
-- **Eye size**: Based on file count (more files = larger eyes)
-- **Eye shapes**: Randomly selected from 5 styles (circular, almond, organic blob, square, crescent)
-- **Nose size**: Based on commit count (more commits = larger nose)
-- **Nose shapes**: Randomly selected from 5 styles (triangle, rectangle, L-shaped, blob, hook)
-- **Mouth width**: Based on author count (more authors = wider mouth)
-- **Mouth expression**: Happiness increases with collaboration (more authors = bigger smile)
-- **Hair style**: Randomly selected from 5 styles (circular tufts, spiky triangles, organic blobs, wavy lines, rectangular blocks)
-- **Face planes**: Bold color blocks in cubist style with asymmetric positioning
-- **Background**: Organic flowing shapes with palette-based colors
-
-**Psychedelic Style Details:**
-The psychedelic style creates hypnotic, trippy artwork with zero straight lines and vibrant neon colors:
-- **NO straight lines**: Every element uses curves - wavy lines, spirals, and organic flows
-- **Vibrant colors**: Neon magentas, electric blues, acid yellows, vivid purples with high saturation
-- **Flowing background**: Multi-layered wavy lines with sine wave amplitude modulation
-- **Spiral vortices**: Hypnotic rotating spirals that draw the eye inward
-- **Concentric waves**: Circular patterns with wavy distortion creating ripple effects
-- **Flowing blobs**: Organic shapes with smooth, wavy edges
-- **Mandala patterns**: Radiating geometric curves with petal-like structures
-- **Undulating waves**: Complex layered sine waves for infinite visual movement
-- **Dark background**: Deep purple/black base to make colors pop with psychedelic intensity
 
 #### History Animation
 
@@ -137,18 +115,9 @@ Available aspect ratios: `auto` (recommended), `square`, `4:3`, `16:10`, `16:9`,
 - **Landscape (16:9)**: Web frontends - HTML/CSS/JS files >25% OR documentation >40%
 - **Square (1:1)**: Backend, libraries, general purpose (default fallback)
 
-#### Adjust Contrast & Size
+#### Size
 
 ```bash
-# Low contrast (subtle, muted tones)
-python git2art.py --contrast low
-
-# Medium contrast (balanced)
-python git2art.py --contrast medium
-
-# High contrast (dramatic, default)
-python git2art.py --contrast high
-
 # Higher resolution (default: 1600px)
 python git2art.py --size 2400
 ```
@@ -162,7 +131,7 @@ python git2art.py --repo /path/to/any/git/repo
 #### Combine Options
 
 ```bash
-python git2art.py --repo /path/to/repo --style face --aspect 16:9 --size 1920 --contrast medium --output my_art.png
+python git2art.py --repo /path/to/repo --style garden --aspect 16:9 --size 1920 --output my_art.png
 ```
 
 #### Smart Filenames
@@ -240,62 +209,13 @@ Then open http://localhost:5001 in your browser.
 
 ## How It Works
 
-1. **Analyzes Your Repository**:
-   - Scans all tracked files in git
-   - Counts lines of code per file
-   - Hashes file content for deterministic seeding
-   - Maps file types and relationships
-   - Extracts commit count and author list
+1. **Reads the repository**: every tracked file at HEAD with its size, the commit in which it first appeared and how often it has changed, plus languages and a commit timeline (`scene/repodata.py`). A blobless clone is enough.
+2. **Groups the code**: folders become districts, plants, washes, warp bands or spiral centres depending on the style.
+3. **Places things stably**: positions and angles come from hashes of file paths, so adding or editing a file changes only its own part of the picture.
+4. **Colours by language**: each language has its own colour (Python blue, JavaScript yellow, TypeScript light blue and so on).
+5. **Chooses the canvas shape**: mobile projects portrait, web and documentation-heavy projects landscape, others square (override with `--aspect`).
 
-2. **Selects Color Palette**:
-   - Detects primary programming language from file extensions
-   - Selects harmonious color scheme (Python=blues, JavaScript=yellows, etc.)
-   - Creates expanded palette with tints, shades, and tones
-
-3. **Determines Canvas Shape**:
-   - Analyzes file type distribution
-   - Auto-detects aspect ratio (mobile=portrait, web=landscape, backend=square)
-   - Can be manually overridden with `--aspect` flag
-
-4. **Generates Artwork** (style-specific):
-   - **Expressionist**: Bold strokes, thick lines, filled color areas, organic shapes
-   - **Impressionist**: Small brush dabs, soft edges, layered transparency
-   - **Watercolor**: Transparent washes, color bleeding, soft gradients
-   - **Pixel**: Blocky shapes, limited palette, retro 8-bit aesthetic
-   - **Face**: Cubist face with planes, varied eye/nose/mouth shapes, asymmetric features
-   - **Nature**: Earth-toned background with organic elements, natural textures
-   - **Psychedelic**: Hypnotic curves, zero straight lines, vibrant neon colors, spirals and mandalas
-
-5. **Ensures Determinism**:
-   - All randomness seeded from repository metrics
-   - Same repository state = identical artwork (byte-for-byte)
-   - Small code changes = small visual changes
-   - Large code changes = large visual changes
-
-## Technical Details
-
-### Color System
-- **Language-Based Palettes**: 7 curated palettes (Python, JavaScript, Java, Ruby, Go, Rust, default)
-- **Auto-Detection**: Analyzes file extension distribution to select palette
-- **Expansion**: Each palette expanded with tints, shades, and complementary colors
-
-### Aspect Ratio Detection
-- **Mobile Detection**: Swift, Kotlin, Dart, Objective-C files
-- **Web Detection**: HTML, CSS, JS, JSX, TS, TSX, Vue, Svelte files
-- **Documentation Detection**: Markdown, RST, text files
-- **Thresholds**: Mobile >15%, Web >25%, Docs >40%
-
-### Deterministic System
-- All "random" values derived from MD5 hashes of repository data
-- `total_lines` → main seed for global decisions
-- File content hashes → element-specific seeds
-- Deterministic random class ensures reproducibility across runs
-
-### Art Theory Principles
-- **Golden Ratio (φ)**: Element positioning at natural focal points
-- **Rule of Thirds**: Dynamic composition with key elements at intersections
-- **Visual Hierarchy**: File importance mapped to size, opacity, and placement
-- **Color Harmony**: Complementary, analogous, and triadic color schemes
+Styles live in `styles/` and render from the repository data alone, so the whole collection can be re-rendered without cloning (`scripts/render_data_style.py`). Use `scripts/style_lab.py <style>` to see a style on eight contrasting repositories.
 
 ## Project Documentation
 
@@ -306,35 +226,6 @@ See [DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md) for complete documentation 
 - Deployment guides
 
 Research and development docs are in the [/research](research/) folder.
-
-## Examples
-
-Generate different styles from the same repository:
-
-```bash
-# Bold expressionist (default)
-python git2art.py --style expressionist
-
-# Soft impressionist
-python git2art.py --style impressionist
-
-# Flowing watercolor
-python git2art.py --style watercolor
-
-# Retro pixel art
-python git2art.py --style pixel
-
-# Abstract cubist face
-python git2art.py --style face
-
-# Natural organic textures
-python git2art.py --style nature
-
-# Hypnotic psychedelic (trippy!)
-python git2art.py --style psychedelic
-```
-
-Each style will produce completely different artwork from the same codebase while maintaining determinism.
 
 ## Future Possibilities
 

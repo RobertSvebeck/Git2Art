@@ -60,3 +60,9 @@ class PsychedelicStyleGenerator(DataStyleGenerator):
     STYLE_KEY = 'psychedelic'
     STYLE_NAME = "Psychedelic"
     STYLE_DESCRIPTION = "Op-art poster: interfering spirals around every folder, mandalas for the largest, glowing eyes for busy files"
+
+
+class TapestryStyleGenerator(DataStyleGenerator):
+    STYLE_KEY = 'tapestry'
+    STYLE_NAME = "Tapestry"
+    STYLE_DESCRIPTION = "The history woven as textile: a warp band per folder, weft rows through time, colour where the code grew"

@@ -2,7 +2,8 @@
 
 from .constellation_style import ConstellationStyleGenerator
 from .data_style import (DeStijlStyleGenerator, ExpressionistStyleGenerator, GardenStyleGenerator, ImpressionistStyleGenerator,
-                         PixelCityStyleGenerator, PsychedelicStyleGenerator, WatercolourStyleGenerator)
+                         PixelCityStyleGenerator, PsychedelicStyleGenerator, TapestryStyleGenerator,
+                         WatercolourStyleGenerator)
 
 # Registry of all available art styles
 STYLE_REGISTRY = {
@@ -14,6 +15,7 @@ STYLE_REGISTRY = {
     'pixel_city': PixelCityStyleGenerator,
     'de_stijl': DeStijlStyleGenerator,
     'garden': GardenStyleGenerator,
+    'tapestry': TapestryStyleGenerator,
     # Future styles will be added here:
     # 'minimalist': MinimalistStyleGenerator,
     # 'geometric': GeometricStyleGenerator,

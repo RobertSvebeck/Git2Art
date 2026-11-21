@@ -129,34 +129,11 @@
 
 ### Art Styles Rework (2026-11-21)
 - ✅ Style lab (`scripts/style_lab.py`) and data styles rendered from repodata (`styles/`)
-- ✅ Pixel City (replaces Pixel); Face removed
-- [ ] On the server: `python manage_styles.py add pixel_city "Pixel City" "..." --sort 3`, `disable face`, `disable pixel`, then `python scripts/render_data_style.py pixel_city`
-- ✅ De Stijl (Mondrian-style folder treemap)
-- [ ] On the server: `python manage_styles.py add de_stijl "De Stijl" "..." --sort 4`, then `python scripts/render_data_style.py de_stijl`
-- [ ] Remove torvalds/linux and yeongpin/cursor-free-vip: `python scripts/remove_repo.py <urls>` then `--yes`
+- ✅ New: Pixel City, De Stijl, Garden, Tapestry. Rebuilt: Expressionist, Impressionist, Watercolour, Psychedelic. Removed: Face, Pixel, Nature
+- [ ] On the server: `python scripts/remove_repo.py https://github.com/torvalds/linux https://github.com/yeongpin/cursor-free-vip --yes`
+- [ ] On the server: `python scripts/apply_style_rework.py --yes --render` (registers styles, disables retired ones, re-renders all repositories)
 - [ ] Consider a blocklist so oversized or private repos cannot be resubmitted
-- [ ] Next styles: Garden (replaces Nature), Watercolour redo, Impressionist flow field, Expressionist structure, Psychedelic tied to folders, Tapestry
-- [ ] Museum: merge static meshes per room to cut draw calls on mobile
-- [ ] Museum: test on real phones (touch controls untested on hardware)
-- [ ] Interactive mode: Adjust parameters in real-time
-- [ ] Social features: Share artwork gallery
-- [ ] Repository insights: Visual analytics from art
-- [ ] NFT export option
-- ✅ Video generation: Repository timeline animation (CLI)
-
-### Integration
-- [ ] GitHub Action for auto-generating art on commit
-- [ ] VS Code extension
-- [ ] CLI improvements (progress bar, verbose mode)
-- [ ] Docker container for easy deployment
-- [ ] API endpoint for programmatic access
-
-### Community
-- [ ] Create showcase gallery on website
-- [ ] Add community-contributed palettes
-- [ ] Art competition/challenges
-- [ ] Blog posts about art generation techniques
-- [ ] Tutorial videos
+- [ ] Gallery: old-style images of retired styles remain in /gallery; decide whether to hide them there too
 
 ## Completed ✅
 

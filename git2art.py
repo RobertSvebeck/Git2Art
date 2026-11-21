@@ -29,9 +29,6 @@ def main():
     parser.add_argument('--aspect', default='auto',
                        choices=['auto', 'square', '16:10', '16:9', '3:2', '4:3', '5:4', 'portrait_3:4', 'portrait_2:3'],
                        help='Canvas aspect ratio (default: auto - detects based on repo type)')
-    parser.add_argument('--contrast', default='high',
-                       choices=['low', 'medium', 'high'],
-                       help='Color contrast level: low (subtle), medium (balanced), high (dramatic). Default: high')
     parser.add_argument('--style', default='expressionist',
                        help='Art style to use (expressionist, minimalist, etc.). Use --list-styles to see all available')
     parser.add_argument('--list-styles', action='store_true',
@@ -93,8 +90,7 @@ def main():
             style=args.style,
             repo_path=args.repo,
             width=args.size,
-            aspect_ratio=args.aspect,
-            contrast=args.contrast
+            aspect_ratio=args.aspect
         )
         width = generator_temp.width
         height = generator_temp.height
@@ -109,8 +105,7 @@ def main():
         style=args.style,
         repo_path=args.repo,
         width=args.size,
-        aspect_ratio=args.aspect,
-        contrast=args.contrast
+        aspect_ratio=args.aspect
     )
 
     # Generate artwork
