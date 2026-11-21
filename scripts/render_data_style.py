@@ -1,7 +1,8 @@
 """Render a repository-data style for every repository with a repodata file.
 
 No cloning: works from static/generated/repodata/*.json. Each image is
-watermarked, gets a museum WebP copy and (unless --dry-run) an artworks row.
+watermarked, gets a museum WebP copy and an artworks row. --dry-run renders
+into a temporary folder instead and touches neither static/generated nor the DB.
 
 Usage: python scripts/render_data_style.py pixel_city [--dry-run] [--size 1600]
 """
@@ -9,6 +10,7 @@ Usage: python scripts/render_data_style.py pixel_city [--dry-run] [--size 1600]
 import json
 import os
 import sys
+import tempfile
 import time
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -38,6 +40,7 @@ def main():
     dry_run = '--dry-run' in sys.argv
     size = int(sys.argv[sys.argv.index('--size') + 1]) if '--size' in sys.argv else 1600
     render = DATA_STYLES[style]
+    out_dir = tempfile.mkdtemp(prefix=f'git2art_{style}_') if dry_run else IMAGES_DIR
     if not dry_run:
         from models.artwork import Artwork
 
@@ -51,13 +54,15 @@ def main():
         filename = f'{repo_name}_{head[:8]}_{style}.png'
         started = time.time()
         width, height = canvas_size(data, size)
-        render(data, width, height).save(os.path.join(IMAGES_DIR, filename))
-        add_watermark(os.path.join(IMAGES_DIR, filename), repo_url)
-        make_museum_image(IMAGES_DIR, filename, overwrite=True)
+        render(data, width, height).save(os.path.join(out_dir, filename))
+        add_watermark(os.path.join(out_dir, filename), repo_url)
         if not dry_run:
+            make_museum_image(IMAGES_DIR, filename, overwrite=True)
             Artwork.create(repo_url, repo_name, head, f'/static/generated/{filename}', filename, style)
         print(f'[{index}/{len(names)}] {repo_name} {width}x{height} {time.time() - started:.1f}s'
               + (' (dry run)' if dry_run else ''))
+    if dry_run:
+        print(f'Dry run images in {out_dir}')
 
 
 if __name__ == '__main__':
