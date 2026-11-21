@@ -7,7 +7,7 @@ INSTALLATION_ROOMS = 4
 
 STYLE_ROOMS = {
     'expressionist': ('Expressionism', 'Bold strokes and colliding colour. Every shape is seeded by the code, so no two repositories paint alike.', 'Salon'),
-    'impressionist': ('Impressionism', 'Thousands of soft dabs of light, the way a codebase looks from across the room.', 'Sandstone'),
+    'impressionist': ('Impressionism', 'Thousands of broken brushstrokes swirling around each folder like eddies in a pond; the busiest files catch the light.', 'Sandstone'),
     'watercolor': ('Watercolour', 'Layered glazes on cold-press paper: each folder a broad wash, each file a smaller glaze, tied together by an ink sketch of the folder tree. Where pigment pools, the code is dense.', 'Blush'),
     'pixel': ('Pixel', 'Repositories reduced to blocks on a dark ground, in the spirit of early computer graphics.', 'Graphite'),
     'garden': ('The Garden', 'Every folder grows as a plant: files are leaves, the busiest files flower in their language colour, documentation blooms as daisies. Old code turns woody; butterflies are the contributors.', 'Sandstone'),
