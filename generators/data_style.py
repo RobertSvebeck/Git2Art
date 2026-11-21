@@ -48,3 +48,9 @@ class ImpressionistStyleGenerator(DataStyleGenerator):
     STYLE_KEY = 'impressionist'
     STYLE_NAME = "Impressionist"
     STYLE_DESCRIPTION = "Broken brushstrokes swirling around each folder; busy files catch the light"
+
+
+class ExpressionistStyleGenerator(DataStyleGenerator):
+    STYLE_KEY = 'expressionist'
+    STYLE_NAME = "Expressionist"
+    STYLE_DESCRIPTION = "Gestural bristle-brush painting: a sweep per folder, black strokes along the tree, splatter from busy files"

@@ -6,7 +6,7 @@ INSTALLATIONS_PER_ROOM = 4
 INSTALLATION_ROOMS = 4
 
 STYLE_ROOMS = {
-    'expressionist': ('Expressionism', 'Bold strokes and colliding colour. Every shape is seeded by the code, so no two repositories paint alike.', 'Salon'),
+    'expressionist': ('Expressionism', 'Gestural painting with a bristle brush: one sweep for every folder, black calligraphic strokes along the folder tree, splatter where the code is most edited.', 'Salon'),
     'impressionist': ('Impressionism', 'Thousands of broken brushstrokes swirling around each folder like eddies in a pond; the busiest files catch the light.', 'Sandstone'),
     'watercolor': ('Watercolour', 'Layered glazes on cold-press paper: each folder a broad wash, each file a smaller glaze, tied together by an ink sketch of the folder tree. Where pigment pools, the code is dense.', 'Blush'),
     'pixel': ('Pixel', 'Repositories reduced to blocks on a dark ground, in the spirit of early computer graphics.', 'Graphite'),
