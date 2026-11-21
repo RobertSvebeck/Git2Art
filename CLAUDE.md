@@ -229,6 +229,13 @@ Rewrite of `/gallery3d` as a walkable, procedurally generated museum (three.js 0
 - Lesson: a 4x MSAA HalfFloat composer target rendered the whole frame black on ANGLE/Metal; always screenshot after render pipeline changes, metrics alone did not show it
 - Lesson: environment strength is per mood (`environment` in moods.js); glossy floors reflect the RoomEnvironment as white glare otherwise
 
+### Art Styles from Repository Data (Session 16, 2026-11-21)
+- Old styles seed everything from `total_lines`, so they encode nothing and all repos look alike within a style; new styles live in `styles/` and render from the repodata JSON (no clone needed)
+- `styles/pixel_city.py`: low-res canvas with a fixed 32-colour palette, nearest-neighbour upscale; districts from the folder tree via a binary treemap, hash-assigned plots, docs as parks, data files as warehouses, sky from days idle
+- `scripts/style_lab.py`: contact sheet of 8 contrasting repos; `scripts/render_data_style.py`: render a style for the whole collection (DB rows unless `--dry-run`)
+- `generators/data_style.py` adapts data styles to the CLI/web generator interface; Face removed; museum shows only active styles
+- Lesson: OneDrive's file provider can "bounce" folders to `name 2` during sync conflicts, which git sees as deletions; compare with `git show HEAD:path | cmp` before renaming back
+
 ## Technical Architecture
 
 ### Color System

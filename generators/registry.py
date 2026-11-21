@@ -4,10 +4,10 @@ from .expressionist_style import ExpressionistStyleGenerator
 from .impressionist_style import ImpressionistStyleGenerator
 from .watercolor_style import WatercolorStyleGenerator
 from .pixel_style import PixelStyleGenerator
-from .face_style import FaceStyleGenerator
 from .nature_style import NatureStyleGenerator
 from .psychedelic_style import PsychedelicStyleGenerator
 from .constellation_style import ConstellationStyleGenerator
+from .data_style import PixelCityStyleGenerator
 
 # Registry of all available art styles
 STYLE_REGISTRY = {
@@ -15,10 +15,10 @@ STYLE_REGISTRY = {
     'impressionist': ImpressionistStyleGenerator,
     'watercolor': WatercolorStyleGenerator,
     'pixel': PixelStyleGenerator,
-    'face': FaceStyleGenerator,
     'nature': NatureStyleGenerator,
     'psychedelic': PsychedelicStyleGenerator,
     'constellation': ConstellationStyleGenerator,
+    'pixel_city': PixelCityStyleGenerator,
     # Future styles will be added here:
     # 'minimalist': MinimalistStyleGenerator,
     # 'geometric': GeometricStyleGenerator,

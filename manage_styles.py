@@ -67,6 +67,13 @@ def disable_style(style_id):
         return False
 
 
+def add_style(style_id, display_name, description, class_name, sort_order):
+    """Create (or update) an art style and make it active."""
+    ArtStyle.create(style_id, display_name, description, class_name, is_active=True, sort_order=sort_order)
+    print(f"Added style '{style_id}' ({display_name})")
+    return True
+
+
 def show_usage_stats():
     """Show usage statistics for each style."""
     stats = ArtStyle.get_usage_stats()
@@ -109,6 +116,13 @@ def main():
     disable_parser.add_argument('style_id', help='Style ID to disable')
 
     # Stats command
+    add_parser = subparsers.add_parser('add', help='Add or update an art style (active)')
+    add_parser.add_argument('style_id')
+    add_parser.add_argument('display_name')
+    add_parser.add_argument('description')
+    add_parser.add_argument('--class-name', default='')
+    add_parser.add_argument('--sort', type=int, default=0)
+
     stats_parser = subparsers.add_parser('stats', help='Show usage statistics')
 
     args = parser.parse_args()
@@ -121,6 +135,8 @@ def main():
         enable_style(args.style_id)
     elif args.command == 'disable':
         disable_style(args.style_id)
+    elif args.command == 'add':
+        add_style(args.style_id, args.display_name, args.description, args.class_name, args.sort)
     elif args.command == 'stats':
         show_usage_stats()
     else:

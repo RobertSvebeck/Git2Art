@@ -126,6 +126,12 @@
 - [ ] Museum: 4x MSAA half-float composer target renders black on ANGLE/Metal; revisit if SMAA is not enough
 - [ ] Museum: bright neighbouring rooms bloom through doorways; tune per-room exposure
 - [ ] Museum: decide whether /museum replaces the /gallery grid
+
+### Art Styles Rework (2026-11-21)
+- ✅ Style lab (`scripts/style_lab.py`) and data styles rendered from repodata (`styles/`)
+- ✅ Pixel City (replaces Pixel); Face removed
+- [ ] On the server: `python manage_styles.py add pixel_city "Pixel City" "..." --sort 3`, `disable face`, `disable pixel`, then `python scripts/render_data_style.py pixel_city`
+- [ ] Next styles: De Stijl (treemap), Garden (replaces Nature), Watercolour redo, Impressionist flow field, Expressionist structure, Psychedelic tied to folders, Tapestry
 - [ ] Museum: merge static meshes per room to cut draw calls on mobile
 - [ ] Museum: test on real phones (touch controls untested on hardware)
 - [ ] Interactive mode: Adjust parameters in real-time

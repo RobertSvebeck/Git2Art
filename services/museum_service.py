@@ -87,6 +87,7 @@ def get_museum_artworks(images_dir):
             ON a.repo_url = latest.repo_url
             AND a.art_style = latest.art_style
             AND a.created_at = latest.max_created_at
+            WHERE a.art_style IN (SELECT style_id FROM art_styles WHERE is_active = 1)
             ORDER BY a.id
         """)
         rows = cursor.fetchall()

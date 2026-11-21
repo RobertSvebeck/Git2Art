@@ -10,7 +10,7 @@ STYLE_ROOMS = {
     'impressionist': ('Impressionism', 'Thousands of soft dabs of light, the way a codebase looks from across the room.', 'Sandstone'),
     'watercolor': ('Watercolour', 'Transparent washes that bleed into one another, quiet and pale.', 'Blush'),
     'pixel': ('Pixel', 'Repositories reduced to blocks on a dark ground, in the spirit of early computer graphics.', 'Graphite'),
-    'face': ('Portraits', 'Cubist faces: eyes from file counts, noses from commits, smiles from collaborators.', 'Verdigris'),
+    'pixel_city': ('Pixel City', 'Each repository as an 8-bit city: folders are districts, files are buildings, documentation grows as parks. Busy projects are painted by day; quiet ones by night.', 'Nocturne'),
     'nature': ('Nature', 'Code grown into forests, flowers and undergrowth.', 'Verdigris'),
     'psychedelic': ('Psychedelia', 'No straight lines allowed: spirals, mandalas and neon, at full volume.', 'Ultraviolet'),
     'constellation': ('Constellations', 'The directory tree drawn as a star map: every star a file, every branch a folder.', 'Nocturne'),

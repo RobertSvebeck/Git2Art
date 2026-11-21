@@ -11,7 +11,7 @@ const PLAQUE_W = 0.36;
 const PLAQUE_H = 0.1125;
 const STYLE_LABELS = {
   expressionist: 'Expressionist', impressionist: 'Impressionist', watercolor: 'Watercolour',
-  pixel: 'Pixel', face: 'Face', nature: 'Nature', psychedelic: 'Psychedelic', constellation: 'Constellation',
+  pixel: 'Pixel', pixel_city: 'Pixel City', nature: 'Nature', psychedelic: 'Psychedelic', constellation: 'Constellation',
   sculpture: 'Repository sculpture', installation: 'Light installation',
 };
 

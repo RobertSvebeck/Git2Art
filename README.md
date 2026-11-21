@@ -18,8 +18,7 @@ Git2Art offers eight distinct art styles to visualize your code:
 - **Expressionist** - Bold strokes, vibrant colors, organic shapes inspired by abstract expressionism (default)
 - **Impressionist** - Soft brush dabs, pastel colors, luminous atmosphere inspired by Monet and Renoir
 - **Watercolor** - Transparent washes, flowing blends, soft edges with watercolor painting techniques
-- **Pixel** - Retro 8-bit aesthetic with blocky shapes and limited color palette
-- **Face** - Cubist face art inspired by Picasso and Matisse with playful abstract features
+- **Pixel City** - The repository as an isometric 8-bit city: folders are districts, files are buildings (height from size, colour from language), documentation is parkland, and the time of day shows how recently the project was active
 - **Nature** - Organic textures inspired by natural forms with earth-toned backgrounds
 - **Psychedelic** - Hypnotic trippy flows with NO straight lines, vibrant neon colors, spirals and mandala patterns
 - **Constellation** - The directory tree as a star map: files are stars (size from line count, colour from language), folders are branches. Layout depends only on file paths, so a small change really is a small visual change, and it can be animated over the repository's history
@@ -64,8 +63,7 @@ python git2art.py --list-styles
 python git2art.py --style expressionist  # Bold abstract (default)
 python git2art.py --style impressionist  # Soft pastel brushwork
 python git2art.py --style watercolor     # Flowing transparent washes
-python git2art.py --style pixel          # Retro 8-bit aesthetic
-python git2art.py --style face           # Cubist face art
+python git2art.py --style pixel_city     # Isometric 8-bit city
 python git2art.py --style nature         # Organic natural textures
 python git2art.py --style psychedelic    # Hypnotic trippy flows
 ```
