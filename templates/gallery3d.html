@@ -1,701 +1,109 @@
 {% extends "base.html" %}
 
-{% block title %}Git2Art 3D Gallery - Immersive Art Experience{% endblock %}
+{% block title %}Git2Art Museum - An Endless Gallery of Code Art{% endblock %}
 
-{% block meta_description %}Explore the Git2Art gallery in immersive 3D. Experience repository artworks displayed on a massive sphere.{% endblock %}
+{% block meta_description %}Walk through the Git2Art Museum: an endless, procedurally generated gallery where every room hangs new artworks made from GitHub repositories.{% endblock %}
 
-{% block meta_keywords %}git2art 3d gallery, immersive art experience, three.js gallery, 3d visualization{% endblock %}
+{% block meta_keywords %}git2art museum, 3d gallery, virtual art museum, generative art, code art, three.js{% endblock %}
 
-{% block og_title %}Git2Art 3D Gallery - Immersive Art Experience{% endblock %}
+{% block og_title %}Git2Art Museum - An Endless Gallery of Code Art{% endblock %}
 
-{% block og_description %}Experience repository art in stunning 3D on a massive sphere.{% endblock %}
+{% block og_description %}Walk an endless museum of art generated from GitHub repositories. Every door opens a new room.{% endblock %}
 
 {% block og_url %}/gallery3d{% endblock %}
 
-{% block twitter_title %}Git2Art 3D Gallery - Immersive Experience{% endblock %}
+{% block twitter_title %}Git2Art Museum{% endblock %}
 
 {% block canonical_url %}/gallery3d{% endblock %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/gallery3d.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/museum.css') }}">
 {% endblock %}
 
 {% block content %}
-<div id="gallery3d-container">
-    <div id="loading-screen">
-        <div class="loading-content">
-            <h2>Loading 3D Gallery...</h2>
-            <div class="loading-spinner"></div>
-            <p id="loading-status">Initializing...</p>
-        </div>
-    </div>
+<div id="museum"></div>
+<div id="vignette"></div>
 
-    <div id="canvas-container"></div>
-
-    <div id="controls-overlay">
-        <button id="menu-toggle" class="hamburger-menu" aria-label="Toggle menu">
-            <span></span>
-            <span></span>
-            <span></span>
-        </button>
-        <div class="control-panel" id="control-panel">
-            <h3>Controls</h3>
-            <p><strong>Click artwork</strong> to center and zoom</p>
-            <p><strong>Click again</strong> to zoom out</p>
-            <p><strong>Drag</strong> to rotate</p>
-            <p><strong>W/S or ↑/↓</strong> to zoom</p>
-            <p><strong>+/-</strong> to zoom</p>
-            <button id="reset-view" class="btn btn-primary">Reset View</button>
-
-            <!-- Pagination Controls -->
-            {% if pagination.total_pages > 1 %}
-            <div class="pagination-controls">
-                <p class="pagination-info">Page {{ pagination.page }} of {{ pagination.total_pages }}</p>
-                {% if pagination.page > 1 %}
-                <a href="{{ url_for('main.gallery3d', page=pagination.page - 1) }}" class="btn btn-secondary">Previous</a>
-                {% else %}
-                <button class="btn btn-secondary" disabled>Previous</button>
-                {% endif %}
-
-                {% if pagination.page < pagination.total_pages %}
-                <a href="{{ url_for('main.gallery3d', page=pagination.page + 1) }}" class="btn btn-secondary">Next</a>
-                {% else %}
-                <button class="btn btn-secondary" disabled>Next</button>
-                {% endif %}
-            </div>
-            {% endif %}
-
-            <a href="{{ url_for('main.gallery') }}" class="btn btn-secondary">2D Gallery</a>
-            <a href="{{ url_for('main.index') }}" class="btn btn-secondary">Home</a>
-        </div>
-    </div>
-
-    <div id="artwork-info" class="artwork-info hidden">
-        <h3 id="info-repo-name"></h3>
-        <p id="info-style"></p>
-        <a id="info-repo-link" href="#" target="_blank" class="repo-link">View Repository</a>
-        <div class="info-actions">
-            <a id="info-download" href="#" download class="btn btn-primary">Download Artwork</a>
-        </div>
-    </div>
+<div id="hud" hidden>
+    <a href="{{ url_for('main.index') }}" class="hud-brand">Git2Art Museum</a>
+    <span id="hud-room"></span>
+    <span id="hud-visited"></span>
 </div>
+<div id="crosshair"></div>
+
+<div id="room-title">
+    <div id="room-title-name"></div>
+    <div id="room-title-meta"></div>
+</div>
+
+<div id="hover">
+    <div id="hover-title"></div>
+    <div id="hover-meta"></div>
+</div>
+
+<div id="joystick"><div id="joystick-knob"></div></div>
+
+<section id="intro" class="overlay">
+    <div class="overlay-card">
+        <p class="eyebrow">Git2Art</p>
+        <h1>The Museum</h1>
+        <p class="lede">An endless gallery of art made from code. Every door leads to a new room, and no visit is the same.</p>
+        <button id="enter-button" class="museum-button" disabled>Opening the doors...</button>
+        <p id="intro-status" class="status"></p>
+        <div id="controls-desktop" class="controls">
+            <span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> walk</span>
+            <span><kbd>Shift</kbd> stride</span>
+            <span>Mouse: look</span>
+            <span>Click a work for details</span>
+            <span><kbd>Esc</kbd> pause</span>
+        </div>
+        <div id="controls-touch" class="controls" hidden>
+            <span>Left thumb: walk</span>
+            <span>Right thumb: look</span>
+            <span>Tap a work for details</span>
+        </div>
+        <nav class="overlay-links">
+            <a id="share-link" href="#">Link to this museum</a>
+            <a href="{{ url_for('main.gallery') }}">2D gallery</a>
+            <a href="{{ url_for('main.index') }}">Create artwork</a>
+        </nav>
+    </div>
+</section>
+
+<section id="paused" class="overlay" hidden>
+    <div class="overlay-card">
+        <h2>Paused</h2>
+        <button id="resume-button" class="museum-button">Keep walking</button>
+        <nav class="overlay-links">
+            <a href="{{ url_for('main.gallery') }}">2D gallery</a>
+            <a href="{{ url_for('main.index') }}">Create artwork</a>
+        </nav>
+    </div>
+</section>
+
+<aside id="panel" class="overlay" hidden>
+    <div class="panel-card">
+        <button id="panel-close" class="panel-close" aria-label="Close">&times;</button>
+        <img id="panel-image" src="" alt="">
+        <div class="panel-text">
+            <h2 id="panel-title"></h2>
+            <p id="panel-style"></p>
+            <p id="panel-likes"></p>
+            <div class="panel-actions">
+                <a id="panel-view" class="museum-button" href="#">View artwork</a>
+                <a id="panel-repo" class="museum-button secondary" href="#" target="_blank" rel="noopener">Repository</a>
+            </div>
+        </div>
+    </div>
+</aside>
 
 <script type="importmap">
 {
-  "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
-  }
+    "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.187.0/examples/jsm/"
+    }
 }
 </script>
-
-<script type="module">
-import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-
-const paginationData = {{ pagination | tojson }};
-const currentPageArtworks = {{ artworks | tojson }};
-
-let scene, camera, renderer, controls, frustum;
-let artworkMeshes = [];
-let artworkAspectRatios = {};
-let textureCache = {};
-let loadedTextureIndex = new Set();
-let textureLoader = null;
-let raycaster = new THREE.Raycaster();
-let mouse = new THREE.Vector2();
-let isZoomedToArtwork = false;
-let zoomedArtwork = null;
-let savedCameraPosition = new THREE.Vector3();
-let savedControlsTarget = new THREE.Vector3();
-let targetCameraPosition = null;
-let targetControlsTarget = null;
-let animationProgress = 0;
-let startCameraPosition = new THREE.Vector3();
-let startControlsTarget = new THREE.Vector3();
-let isRotatingToArtwork = false;
-let rotationTarget = null;
-let cameraLights = [];
-let artworkSpotlight = null;
-
-const BASE_SPHERE_RADIUS = 80;
-let SPHERE_RADIUS = BASE_SPHERE_RADIUS;
-const MAX_VISIBLE_ARTWORKS = 50;
-const LOAD_DISTANCE = Math.PI;  // Load artworks within 180 degrees (entire visible hemisphere)
-const UNLOAD_DISTANCE = Math.PI * 2;  // Never unload artworks (load entire sphere)
-const LOAD_BATCH_SIZE = 50;
-
-let loadingBatch = false;
-let nextBatchIndex = 0;
-let allArtworksData = [];
-
-function init() {
-    updateLoadingStatus('Setting up 3D scene...');
-
-    scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0a0a0a);
-
-    camera = new THREE.PerspectiveCamera(
-        75,
-        window.innerWidth / window.innerHeight,
-        0.1,
-        1000
-    );
-    // Position camera at an angle to see both hemispheres
-    // Use diagonal position (x, y, z) for better initial view
-    const initialDist = 120;
-    camera.position.set(initialDist * 0.6, initialDist * 0.6, initialDist * 0.6);
-
-    renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.BasicShadowMap;
-    document.getElementById('canvas-container').appendChild(renderer.domElement);
-
-    controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.05;
-    controls.rotateSpeed = 0.5;
-    controls.enablePan = false;
-    controls.minDistance = 0;
-    controls.maxDistance = 0;
-    controls.target.set(0, 0, 0);
-
-    frustum = new THREE.Frustum();
-
-    // Simpler sphere with fewer segments
-    const sphereGeometry = new THREE.SphereGeometry(SPHERE_RADIUS, 32, 32);
-
-    // Create gradient texture for dynamic background
-    const canvas = document.createElement('canvas');
-    canvas.width = 256;
-    canvas.height = 256;
-    const ctx = canvas.getContext('2d');
-
-    const gradient = ctx.createRadialGradient(128, 128, 0, 128, 128, 256);
-    gradient.addColorStop(0, '#2a2a3e');
-    gradient.addColorStop(0.3, '#1a1a2e');
-    gradient.addColorStop(0.6, '#0f0f1e');
-    gradient.addColorStop(1, '#050510');
-
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, 256, 256);
-
-    const backgroundTexture = new THREE.CanvasTexture(canvas);
-    backgroundTexture.wrapS = THREE.RepeatWrapping;
-    backgroundTexture.wrapT = THREE.RepeatWrapping;
-
-    const sphereMaterial = new THREE.MeshStandardMaterial({
-        map: backgroundTexture,
-        side: THREE.BackSide,
-        roughness: 0.85,
-        metalness: 0.0
-    });
-    const sphereMesh = new THREE.Mesh(sphereGeometry, sphereMaterial);
-    sphereMesh.name = 'gallerySphere';
-    sphereMesh.receiveShadow = true;
-    scene.add(sphereMesh);
-
-    // Simplified lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1.5);
-    scene.add(ambientLight);
-
-    const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1.0);
-    scene.add(hemisphereLight);
-
-    // Single spotlight from camera (main light source)
-    const mainCameraLight = new THREE.SpotLight(0xffffff, 20.0);
-    mainCameraLight.angle = Math.PI / 2;
-    mainCameraLight.penumbra = 0.5;
-    mainCameraLight.distance = SPHERE_RADIUS * 2;
-    mainCameraLight.decay = 1;
-    mainCameraLight.castShadow = true;
-    mainCameraLight.shadow.mapSize.width = 1024;
-    mainCameraLight.shadow.mapSize.height = 1024;
-    mainCameraLight.position.set(0, 0, 0);
-    mainCameraLight.target.position.set(0, 0, SPHERE_RADIUS);
-    camera.add(mainCameraLight);
-    camera.add(mainCameraLight.target);
-    scene.add(camera);
-    cameraLights.push(mainCameraLight);
-
-    window.addEventListener('resize', onWindowResize);
-    window.addEventListener('keydown', onKeyDown);
-    renderer.domElement.addEventListener('click', onCanvasClick);
-    renderer.domElement.addEventListener('mousemove', onMouseMove);
-
-    document.getElementById('reset-view').addEventListener('click', resetView);
-
-    const menuToggle = document.getElementById('menu-toggle');
-    const controlPanel = document.getElementById('control-panel');
-
-    menuToggle.addEventListener('click', function(e) {
-        e.stopPropagation();
-        menuToggle.classList.toggle('active');
-        controlPanel.classList.toggle('open');
-    });
-
-    document.addEventListener('click', function(e) {
-        if (!controlPanel.contains(e.target) && !menuToggle.contains(e.target)) {
-            menuToggle.classList.remove('active');
-            controlPanel.classList.remove('open');
-        }
-    });
-
-    loadArtworks();
-}
-
-function onMouseMove(event) {
-    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-    raycaster.setFromCamera(mouse, camera);
-    const intersects = raycaster.intersectObjects(artworkMeshes);
-
-    if (intersects.length > 0) {
-        renderer.domElement.style.cursor = 'pointer';
-    } else {
-        renderer.domElement.style.cursor = 'grab';
-    }
-}
-
-function onCanvasClick(event) {
-    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-    raycaster.setFromCamera(mouse, camera);
-    const intersects = raycaster.intersectObjects(artworkMeshes);
-
-    if (intersects.length > 0) {
-        const artworkGroup = intersects[0].object.parent || intersects[0].object;
-        if (artworkMeshes.includes(artworkGroup)) {
-            toggleArtworkZoom(artworkGroup);
-        }
-    } else if (isZoomedToArtwork) {
-        zoomOut();
-    }
-}
-
-function toggleArtworkZoom(artworkGroup) {
-    if (isZoomedToArtwork) {
-        zoomOut();
-    } else {
-        zoomToArtwork(artworkGroup);
-    }
-}
-
-function zoomToArtwork(artworkGroup) {
-    savedCameraPosition.copy(camera.position);
-    savedControlsTarget.copy(controls.target);
-
-    startCameraPosition.copy(camera.position);
-    startControlsTarget.copy(controls.target);
-
-    const artworkPosition = artworkGroup.position.clone();
-    const directionToArtwork = artworkPosition.clone().normalize();
-
-    const zoomedCameraDistance = SPHERE_RADIUS - 25;
-    targetCameraPosition = directionToArtwork.clone().multiplyScalar(zoomedCameraDistance);
-    targetControlsTarget = artworkPosition.clone();
-
-    zoomedArtwork = artworkGroup;
-    isRotatingToArtwork = true;
-    animationProgress = 0;
-    controls.enabled = false;
-
-    rotationTarget = targetControlsTarget.clone();
-
-    cameraLights.forEach(light => {
-        light.intensity *= 0.3;
-    });
-
-    const infoPanel = document.getElementById('artwork-info');
-    const artwork = artworkGroup.userData;
-    document.getElementById('info-repo-name').textContent = artwork.repo_name;
-    document.getElementById('info-style').textContent = artwork.art_style_name || 'Art';
-    document.getElementById('info-repo-link').href = artwork.repo_url;
-    document.getElementById('info-download').href = artwork.image_url;
-    document.getElementById('info-download').download = `${artwork.repo_name}_${artwork.commit_hash}.png`;
-    infoPanel.classList.remove('hidden');
-
-    if (artworkSpotlight) {
-        scene.remove(artworkSpotlight);
-    }
-    artworkSpotlight = new THREE.SpotLight(0xffffff, 15.0);
-    artworkSpotlight.position.copy(artworkPosition).multiplyScalar(0.8);
-    artworkSpotlight.target.position.copy(artworkPosition);
-    artworkSpotlight.angle = Math.PI / 6;
-    artworkSpotlight.penumbra = 0.3;
-    artworkSpotlight.distance = 50;
-    artworkSpotlight.decay = 1;
-    scene.add(artworkSpotlight);
-    scene.add(artworkSpotlight.target);
-}
-
-function zoomOut() {
-    startCameraPosition.copy(camera.position);
-    startControlsTarget.copy(controls.target);
-
-    targetCameraPosition = savedCameraPosition.clone();
-    targetControlsTarget = savedControlsTarget.clone();
-
-    const infoPanel = document.getElementById('artwork-info');
-    infoPanel.classList.add('hidden');
-
-    zoomedArtwork = null;
-    isZoomedToArtwork = false;
-    isRotatingToArtwork = false;
-    rotationTarget = null;
-    animationProgress = 0;
-
-    cameraLights.forEach(light => {
-        light.intensity /= 0.3;
-    });
-
-    if (artworkSpotlight) {
-        scene.remove(artworkSpotlight);
-        scene.remove(artworkSpotlight.target);
-        artworkSpotlight = null;
-    }
-}
-
-function onKeyDown(event) {
-    const zoomSpeed = 2;
-    const currentDistance = camera.position.length();
-
-    switch(event.key) {
-        case '+':
-        case '=':
-        case 'w':
-        case 'W':
-        case 'ArrowUp':
-            const newDistanceIn = Math.max(controls.minDistance, currentDistance - zoomSpeed);
-            camera.position.multiplyScalar(newDistanceIn / currentDistance);
-            break;
-        case '-':
-        case '_':
-        case 's':
-        case 'S':
-        case 'ArrowDown':
-            const newDistanceOut = Math.min(controls.maxDistance, currentDistance + zoomSpeed);
-            camera.position.multiplyScalar(newDistanceOut / currentDistance);
-            break;
-    }
-}
-
-function updateLoadingStatus(message) {
-    const statusEl = document.getElementById('loading-status');
-    if (statusEl) {
-        statusEl.textContent = message;
-    }
-}
-
-function hideLoadingScreen() {
-    const loadingScreen = document.getElementById('loading-screen');
-    loadingScreen.style.opacity = '0';
-    setTimeout(() => {
-        loadingScreen.style.display = 'none';
-    }, 500);
-}
-
-function loadArtworks() {
-    allArtworksData = currentPageArtworks;
-
-    if (!allArtworksData || allArtworksData.length === 0) {
-        updateLoadingStatus('No artworks to display');
-        setTimeout(hideLoadingScreen, 1000);
-        return;
-    }
-
-    const artworkCount = allArtworksData.length;
-    // Increase sphere radius proportionally to artwork count to prevent overlap
-    // Larger multiplier ensures adequate spacing between artworks
-    SPHERE_RADIUS = Math.max(BASE_SPHERE_RADIUS, Math.pow(artworkCount, 0.55) * 12);
-
-    const sphereGeometry = new THREE.SphereGeometry(SPHERE_RADIUS, 32, 32);
-    const sphereMesh = scene.getObjectByName('gallerySphere');
-    if (sphereMesh) {
-        sphereMesh.geometry.dispose();
-        sphereMesh.geometry = sphereGeometry;
-    }
-
-    controls.maxDistance = SPHERE_RADIUS - 15;
-
-    textureLoader = new THREE.TextureLoader();
-    nextBatchIndex = 0;
-
-    updateLoadingStatus(`Loading page ${paginationData.page} of ${paginationData.total_pages} (${artworkCount} artworks)...`);
-
-    // Load all artworks on this page
-    loadNextBatch();
-}
-
-function loadNextBatch() {
-    if (nextBatchIndex >= allArtworksData.length || loadingBatch) {
-        return;
-    }
-
-    loadingBatch = true;
-    const startIndex = nextBatchIndex;
-    const endIndex = Math.min(nextBatchIndex + LOAD_BATCH_SIZE, allArtworksData.length);
-    let loadedCount = 0;
-    const totalToLoad = endIndex - startIndex;
-
-    updateLoadingStatus(`Loading artworks ${startIndex + 1}-${endIndex} of ${allArtworksData.length}...`);
-
-    for (let index = startIndex; index < endIndex; index++) {
-        const artwork = allArtworksData[index];
-        textureLoader.load(
-            artwork.image_url,
-            (texture) => {
-                artworkAspectRatios[index] = texture.image.width / texture.image.height;
-                textureCache[index] = texture;
-                loadedTextureIndex.add(index);
-                loadedCount++;
-
-                // Create mesh immediately when texture loads
-                if (!artworkMeshes.find(m => m.userData.index === index)) {
-                    createArtworkMesh(texture, artwork, index, allArtworksData.length);
-                }
-
-                updateLoadingStatus(`Loaded ${startIndex + loadedCount} of ${allArtworksData.length} artworks...`);
-
-                if (loadedCount === totalToLoad) {
-                    nextBatchIndex = endIndex;
-                    loadingBatch = false;
-
-                    // Start animation after first batch is loaded
-                    if (startIndex === 0) {
-                        hideLoadingScreen();
-                        animate();
-                    }
-                }
-            },
-            undefined,
-            (error) => {
-                console.error('Error loading texture:', error);
-                loadedCount++;
-                if (loadedCount === totalToLoad) {
-                    nextBatchIndex = endIndex;
-                    loadingBatch = false;
-
-                    if (startIndex === 0) {
-                        hideLoadingScreen();
-                        animate();
-                    }
-                }
-            }
-        );
-    }
-}
-
-
-function createArtworkMesh(texture, artwork, index, total) {
-    const aspectRatio = texture.image.width / texture.image.height;
-
-    // Scale artworks inversely to count to prevent overlap
-    // Fewer artworks = larger size, but with a more reasonable multiplier
-    const sizeMultiplier = Math.max(0.6, Math.min(2.5, 50 / total));
-    const artworkWidth = 18 * sizeMultiplier;
-    const artworkHeight = artworkWidth / aspectRatio;
-
-    const group = new THREE.Group();
-
-    // Use single simple material - just the image
-    const artworkMaterial = new THREE.MeshBasicMaterial({
-        map: texture
-    });
-
-    const artworkGeometry = new THREE.PlaneGeometry(artworkWidth, artworkHeight);
-    const artworkMesh = new THREE.Mesh(artworkGeometry, artworkMaterial);
-    artworkMesh.castShadow = true;
-    artworkMesh.receiveShadow = false;
-    group.add(artworkMesh);
-
-    // Golden spiral sunflower algorithm for even sphere distribution
-    // Source: https://stackoverflow.com/a/9600801
-    // Spreads points evenly across entire sphere surface
-
-    const i = index + 0.5;
-
-    // Phi: polar angle from north pole to south pole
-    // arccos ensures equal area distribution across all latitudes
-    const phi = Math.acos(1 - 2 * i / total);
-
-    // Theta: azimuthal angle using golden spiral
-    // (1 + sqrt(5)) is the golden ratio spiral constant
-    const theta = Math.PI * (1 + Math.sqrt(5)) * i;
-
-    // Position artworks on sphere surface with slight radial offset to prevent overlap
-    // Small pseudo-random offset based on index to add spacing variation
-    const radialOffset = 8 + ((index * 7919) % 12) * 0.3;
-    const artworkDistance = SPHERE_RADIUS - radialOffset;
-
-    // Convert spherical coordinates to Cartesian
-    // Match Python code: x = cos(theta) * sin(phi), y = sin(theta) * sin(phi), z = cos(phi)
-    const x = artworkDistance * Math.cos(theta) * Math.sin(phi);
-    const y = artworkDistance * Math.sin(theta) * Math.sin(phi);
-    const z = artworkDistance * Math.cos(phi);
-
-    group.position.set(x, y, z);
-    group.lookAt(0, 0, 0);
-
-    group.userData = artwork;
-    group.userData.index = index;
-    group.userData.isLoaded = true;
-
-    scene.add(group);
-    artworkMeshes.push(group);
-}
-
-function updateVisibleArtworks() {
-    // Update frustum for culling
-    const projMatrix = new THREE.Matrix4();
-    projMatrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
-    frustum.setFromProjectionMatrix(projMatrix);
-
-    // Get camera direction
-    const cameraDir = camera.getWorldDirection(new THREE.Vector3());
-
-    // Determine which artworks should be loaded based on camera view
-    let artworksInLoadZone = 0;
-    let unloadedInView = 0;
-
-    artworkMeshes.forEach(mesh => {
-        const isInFrustum = frustum.containsPoint(mesh.position);
-        mesh.userData.inView = isInFrustum;
-
-        // Calculate angle to artwork
-        const toArtwork = mesh.position.clone().normalize();
-        const angle = Math.acos(Math.max(-1, Math.min(1, cameraDir.dot(toArtwork))));
-
-        // Check if artwork is within load distance
-        if (angle < LOAD_DISTANCE) {
-            artworksInLoadZone++;
-            if (!loadedTextureIndex.has(mesh.userData.index)) {
-                unloadedInView++;
-            }
-        }
-
-        // Unload artworks far from camera view
-        if (angle > UNLOAD_DISTANCE && loadedTextureIndex.has(mesh.userData.index)) {
-            unloadArtwork(mesh.userData.index);
-        }
-    });
-
-    // Trigger loading if we have unloaded artworks in view and not already loading
-    if (unloadedInView > 10 && !loadingBatch) {
-        loadNextBatch();
-    }
-}
-
-function unloadArtwork(index) {
-    // Dispose texture to free memory
-    if (textureCache[index]) {
-        textureCache[index].dispose();
-        delete textureCache[index];
-    }
-    loadedTextureIndex.delete(index);
-
-    // Find and remove mesh
-    const meshIndex = artworkMeshes.findIndex(m => m.userData.index === index);
-    if (meshIndex !== -1) {
-        const mesh = artworkMeshes[meshIndex];
-        // Dispose geometry and material
-        mesh.children.forEach(child => {
-            if (child.geometry) child.geometry.dispose();
-            if (child.material) child.material.dispose();
-        });
-        scene.remove(mesh);
-        artworkMeshes.splice(meshIndex, 1);
-    }
-}
-
-function resetView() {
-    if (isZoomedToArtwork || isRotatingToArtwork) {
-        zoomOut();
-    } else {
-        const resetDist = 120;
-        camera.position.set(resetDist * 0.6, resetDist * 0.6, resetDist * 0.6);
-        controls.target.set(0, 0, 0);
-        controls.update();
-    }
-}
-
-function onWindowResize() {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-}
-
-function animate() {
-    requestAnimationFrame(animate);
-
-    if (isRotatingToArtwork && rotationTarget !== null && targetCameraPosition !== null) {
-        animationProgress += 0.03;
-        const easeProgress = easeInOutCubic(Math.min(animationProgress, 1));
-
-        controls.target.lerpVectors(startControlsTarget, rotationTarget, easeProgress);
-        camera.position.lerpVectors(startCameraPosition, targetCameraPosition, easeProgress);
-        camera.lookAt(controls.target);
-
-        if (animationProgress >= 1) {
-            controls.target.copy(rotationTarget);
-            camera.position.copy(targetCameraPosition);
-            camera.lookAt(controls.target);
-            isRotatingToArtwork = false;
-            isZoomedToArtwork = true;
-            rotationTarget = null;
-            targetCameraPosition = null;
-            targetControlsTarget = null;
-            animationProgress = 0;
-        }
-    } else if (targetCameraPosition !== null && targetControlsTarget !== null) {
-        animationProgress += 0.05;
-        const easeProgress = easeInOutCubic(Math.min(animationProgress, 1));
-
-        camera.position.lerpVectors(startCameraPosition, targetCameraPosition, easeProgress);
-        controls.target.lerpVectors(startControlsTarget, targetControlsTarget, easeProgress);
-        camera.lookAt(controls.target);
-
-        if (animationProgress >= 1) {
-            camera.position.copy(targetCameraPosition);
-            controls.target.copy(targetControlsTarget);
-            camera.lookAt(controls.target);
-            targetCameraPosition = null;
-            targetControlsTarget = null;
-            animationProgress = 0;
-
-            if (!isZoomedToArtwork) {
-                controls.enabled = true;
-            }
-        }
-    }
-
-    if (controls.enabled) {
-        controls.update();
-    }
-
-    if (cameraLights.length > 0 && cameraLights[0].target) {
-        cameraLights[0].target.position.copy(controls.target);
-    }
-
-    updateVisibleArtworks();
-
-    artworkMeshes.forEach(mesh => {
-        mesh.lookAt(camera.position);
-    });
-
-    renderer.render(scene, camera);
-}
-
-function easeInOutCubic(t) {
-    return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-}
-
-updateLoadingStatus('Initializing 3D engine...');
-init();
-</script>
-
+<script type="module" src="{{ url_for('static', filename='js/museum/main.js') }}"></script>
 {% endblock %}

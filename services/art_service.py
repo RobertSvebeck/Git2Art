@@ -7,6 +7,7 @@ from datetime import datetime
 from services.git_service import clone_repo, extract_repo_name, cleanup_repo
 from utils.watermark import add_watermark
 from models.artwork import Artwork
+from services.museum_service import make_museum_image
 
 
 def generate_art_from_github(github_url, temp_dir, images_dir, force=False, art_style='expressionist'):
@@ -87,6 +88,10 @@ def generate_art_from_github(github_url, temp_dir, images_dir, force=False, art_
 
         # Add watermark
         add_watermark(output_path, github_url)
+        try:
+            make_museum_image(images_dir, output_filename)
+        except Exception as e:
+            print(f"Warning: Failed to create museum image: {e}")
 
         # Save to database
         artwork_id = None

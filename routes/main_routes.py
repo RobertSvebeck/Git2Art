@@ -3,6 +3,7 @@
 from flask import Blueprint, render_template, request, jsonify, send_file, current_app, session, Response
 from services.art_service import generate_art_from_github, get_all_gallery_artworks
 from services.git_service import validate_github_url
+from services.museum_service import get_museum_artworks
 from models.artwork import ArtworkLike, Artwork
 from models import ArtStyle
 from datetime import datetime
@@ -79,32 +80,21 @@ def gallery():
 
 @bp.route('/gallery3d')
 def gallery3d():
-    """Display 3D sphere gallery of all generated artworks."""
-    page = request.args.get('page', 1, type=int)
-    per_page = 50
+    """Walkable, endless 3D museum of generated artworks."""
+    return render_template('gallery3d.html')
 
-    if page < 1:
-        page = 1
 
-    gallery_data = get_all_gallery_artworks(
-        current_app.config['GENERATED_IMAGES_DIR'],
-        page=page,
-        per_page=per_page
-    )
-
-    art_styles = ArtStyle.get_active_styles()
-
-    return render_template(
-        'gallery3d.html',
-        artworks=gallery_data['artworks'],
-        pagination={
-            'page': gallery_data['page'],
-            'per_page': gallery_data['per_page'],
-            'total': gallery_data['total'],
-            'total_pages': gallery_data['total_pages']
-        },
-        art_styles=art_styles
-    )
+@bp.route('/api/museum/artworks', methods=['GET'])
+def museum_artworks():
+    """Catalogue for the 3D museum: latest artwork per repository and style."""
+    try:
+        artworks = get_museum_artworks(current_app.config['GENERATED_IMAGES_DIR'])
+    except Exception as e:
+        print(f"Error: museum catalogue failed: {e}")
+        return jsonify({'error': 'Could not load artworks'}), 500
+    response = jsonify({'artworks': artworks})
+    response.headers['Cache-Control'] = 'public, max-age=300'
+    return response
 
 
 @bp.route('/artwork/<int:artwork_id>')

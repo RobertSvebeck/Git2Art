@@ -208,13 +208,13 @@ Then open http://localhost:5001 in your browser.
 - Sort by creation date or popularity
 - Responsive design for mobile and desktop
 
-**3D Gallery Experience**
-- Immersive THREE.js-based 3D gallery
-- Nature-themed environments (forest, desert, ocean, arctic, sunset, midnight)
-- Artworks displayed on floating panels with realistic lighting
-- Interactive navigation with mouse/touch controls
-- Animated camera tours and environment transitions
-- Realistic materials with bump maps and reflections
+**3D Museum** (`/gallery3d`)
+- An endless, walkable museum: every room has 5 to 10 works and a door in each wall; new rooms are generated as you walk
+- Eight room moods (White Cube, Salon, Nocturne, Verdigris, Sandstone, Graphite, Blush, Ultraviolet) with different sizes, ceilings, floors, frames, benches and sculptures; adjacent rooms never share a mood
+- Track spotlights with volumetric beams, wall halos, neon accents, bloom and drifting dust
+- Desktop: WASD + mouse (pointer lock), Shift to stride, click a work for details. Touch: left thumb walks, right thumb looks, tap a work
+- `?seed=N` reproduces a museum layout; the intro screen links to the current one
+- Uses web-sized WebP copies in `static/generated/museum/`; create them for existing artworks with `python scripts/make_museum_images.py` (new artworks get one automatically)
 
 **Database Integration**
 - MariaDB backend for persistent storage

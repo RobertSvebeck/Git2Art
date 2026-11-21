@@ -202,7 +202,16 @@ Git2Art transforms git repositories into beautiful, unique abstract art. Each re
 
 **Web fixes**: blobless clone (commit and author counts were always 1 with `--depth 1`), unique temp folder per request, 120 s clone timeout.
 
-## Technical Architecture
+### Endless 3D Museum (Session 13, 2026-11-21)
+Rewrite of `/gallery3d` as a walkable, procedurally generated museum (three.js 0.187, ES modules in `static/js/museum/`):
+- `plan.js`: room = pure function of (world seed, cell) on a 26 m grid; door + half-corridor on every side so neighbours always connect; lattice mood colouring `(cx + 3*cz) mod 8` guarantees adjacent rooms differ; `isWalkable` is the collision model
+- `room.js` / `roomArt.js`: architecture, frames, plaques, fixtures, benches, sculptures
+- `lighting.js`: a pool of real spotlights moves to the current room; other rooms use fake light (`lightfx.js`: additive beam shader, halos, dust)
+- `world.js`: streams a 3x3 window (unload beyond 2), one room built per frame, art dealt from a shuffled deck and remembered per room
+- `controls.js`: pointer lock + WASD, touch joystick + drag look; `ui.js`: overlays
+- Server: `/api/museum/artworks` (read-only) and WebP copies via `services/museum_service.py`
+- `?debug=1` exposes `window.museumDebug` for scripted testing
+
 
 ### Color System
 ```python

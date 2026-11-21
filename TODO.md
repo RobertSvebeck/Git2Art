@@ -117,7 +117,10 @@
 ## Low Priority
 
 ### Advanced Features
-- [ ] 3D visualization option (using Three.js or similar)
+- ✅ 3D museum: endless walkable gallery (`/gallery3d`, static/js/museum/)
+- [ ] Museum: run `scripts/make_museum_images.py` on the server after deploying
+- [ ] Museum: merge static meshes per room to cut draw calls on mobile
+- [ ] Museum: test on real phones (touch controls untested on hardware)
 - [ ] Interactive mode: Adjust parameters in real-time
 - [ ] Social features: Share artwork gallery
 - [ ] Repository insights: Visual analytics from art

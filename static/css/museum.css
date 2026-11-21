@@ -1,0 +1,338 @@
+html, body {
+    margin: 0;
+    height: 100%;
+    overflow: hidden;
+    background: #000;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    color: #f4f1ea;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+#museum, #museum canvas {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    touch-action: none;
+}
+
+#vignette {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, 0.45) 100%);
+}
+
+[hidden] { display: none !important; }
+
+#hud {
+    position: fixed;
+    top: 18px;
+    left: 22px;
+    display: flex;
+    gap: 18px;
+    align-items: baseline;
+    font-size: 13px;
+    letter-spacing: 0.04em;
+    color: rgba(255, 255, 255, 0.7);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+    pointer-events: none;
+}
+
+.hud-brand {
+    color: #fff;
+    font-weight: 600;
+    text-decoration: none;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    pointer-events: auto;
+}
+
+#crosshair {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    width: 6px;
+    height: 6px;
+    margin: -3px 0 0 -3px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.55);
+    pointer-events: none;
+    transition: transform 0.15s, background 0.15s;
+}
+
+#crosshair.active {
+    transform: scale(2.4);
+    background: transparent;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.85);
+}
+
+@media (pointer: coarse) {
+    #crosshair { display: none; }
+}
+
+#room-title {
+    position: fixed;
+    top: 16%;
+    width: 100%;
+    text-align: center;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.9s ease, transform 0.9s ease;
+    text-shadow: 0 2px 18px rgba(0, 0, 0, 0.6);
+}
+
+#room-title.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+#room-title-name {
+    font-size: clamp(26px, 4vw, 46px);
+    font-weight: 300;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+}
+
+#room-title-meta {
+    margin-top: 6px;
+    font-size: 13px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.65);
+}
+
+#hover {
+    position: fixed;
+    bottom: 9%;
+    width: 100%;
+    text-align: center;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.8);
+}
+
+#hover.visible { opacity: 1; }
+
+#hover-title {
+    font-size: 20px;
+    font-weight: 500;
+}
+
+#hover-meta {
+    margin-top: 4px;
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+#joystick {
+    position: fixed;
+    width: 110px;
+    height: 110px;
+    margin: -55px 0 0 -55px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    background: rgba(255, 255, 255, 0.06);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s;
+}
+
+#joystick.visible { opacity: 1; }
+
+#joystick-knob {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.55);
+    transform: translate(-50%, -50%);
+}
+
+.overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: radial-gradient(ellipse at center, rgba(10, 10, 14, 0.55), rgba(0, 0, 0, 0.88));
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 10;
+}
+
+.overlay-card {
+    max-width: 560px;
+    text-align: center;
+}
+
+.eyebrow {
+    margin: 0;
+    font-size: 13px;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.overlay h1 {
+    margin: 10px 0 16px;
+    font-size: clamp(44px, 8vw, 84px);
+    font-weight: 200;
+    letter-spacing: 0.08em;
+}
+
+.overlay h2 {
+    font-weight: 300;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+}
+
+.lede {
+    margin: 0 auto 30px;
+    max-width: 430px;
+    font-size: 17px;
+    line-height: 1.55;
+    color: rgba(255, 255, 255, 0.78);
+}
+
+.museum-button {
+    display: inline-block;
+    padding: 14px 34px;
+    border: 1px solid rgba(255, 255, 255, 0.85);
+    border-radius: 999px;
+    background: #f4f1ea;
+    color: #111;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s, opacity 0.2s;
+}
+
+.museum-button:hover { background: transparent; color: #fff; }
+.museum-button:disabled { opacity: 0.5; cursor: wait; }
+
+.museum-button.secondary {
+    background: transparent;
+    color: #fff;
+}
+
+.museum-button.secondary:hover { background: #f4f1ea; color: #111; }
+
+.status {
+    min-height: 1.2em;
+    margin: 18px 0 0;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.55);
+}
+
+.controls {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px 20px;
+    margin-top: 26px;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.65);
+}
+
+kbd {
+    display: inline-block;
+    min-width: 1.4em;
+    margin-right: 3px;
+    padding: 2px 5px;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 11px;
+}
+
+.overlay-links {
+    display: flex;
+    justify-content: center;
+    gap: 22px;
+    margin-top: 30px;
+    font-size: 13px;
+}
+
+.overlay-links a {
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.overlay-links a:hover { color: #fff; }
+
+.panel-card {
+    position: relative;
+    display: flex;
+    gap: 28px;
+    align-items: center;
+    max-width: 980px;
+    width: 100%;
+    padding: 26px;
+    border-radius: 14px;
+    background: rgba(16, 16, 20, 0.92);
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+}
+
+.panel-card img {
+    max-width: 58%;
+    max-height: 74vh;
+    border-radius: 4px;
+    object-fit: contain;
+}
+
+.panel-text h2 {
+    margin: 0 0 8px;
+    font-size: 28px;
+    font-weight: 500;
+    letter-spacing: 0;
+    text-transform: none;
+    word-break: break-word;
+}
+
+.panel-text p {
+    margin: 4px 0;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.panel-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.panel-close {
+    position: absolute;
+    top: 10px;
+    right: 14px;
+    border: none;
+    background: none;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 30px;
+    cursor: pointer;
+}
+
+@media (max-width: 760px) {
+    .panel-card {
+        flex-direction: column;
+        max-height: 92vh;
+        overflow-y: auto;
+    }
+
+    .panel-card img { max-width: 100%; max-height: 50vh; }
+    .museum-button { padding: 12px 24px; }
+}
