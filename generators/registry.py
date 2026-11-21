@@ -2,16 +2,16 @@
 
 from .expressionist_style import ExpressionistStyleGenerator
 from .impressionist_style import ImpressionistStyleGenerator
-from .watercolor_style import WatercolorStyleGenerator
 from .psychedelic_style import PsychedelicStyleGenerator
 from .constellation_style import ConstellationStyleGenerator
-from .data_style import DeStijlStyleGenerator, GardenStyleGenerator, PixelCityStyleGenerator
+from .data_style import (DeStijlStyleGenerator, GardenStyleGenerator, PixelCityStyleGenerator,
+                         WatercolourStyleGenerator)
 
 # Registry of all available art styles
 STYLE_REGISTRY = {
     'expressionist': ExpressionistStyleGenerator,
     'impressionist': ImpressionistStyleGenerator,
-    'watercolor': WatercolorStyleGenerator,
+    'watercolor': WatercolourStyleGenerator,
     'psychedelic': PsychedelicStyleGenerator,
     'constellation': ConstellationStyleGenerator,
     'pixel_city': PixelCityStyleGenerator,

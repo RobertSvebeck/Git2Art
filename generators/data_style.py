@@ -36,3 +36,9 @@ class GardenStyleGenerator(DataStyleGenerator):
     STYLE_KEY = 'garden'
     STYLE_NAME = "Garden"
     STYLE_DESCRIPTION = "Botanical plate: folders grow as plants, files as leaves, busy files flower, contributors are butterflies"
+
+
+class WatercolourStyleGenerator(DataStyleGenerator):
+    STYLE_KEY = 'watercolor'
+    STYLE_NAME = "Watercolour"
+    STYLE_DESCRIPTION = "Layered transparent glazes on cold-press paper: folders as washes, files as glazes, an ink sketch of the tree"

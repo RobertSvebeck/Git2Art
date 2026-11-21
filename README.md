@@ -17,7 +17,7 @@ Git2Art offers eight distinct art styles to visualize your code:
 
 - **Expressionist** - Bold strokes, vibrant colors, organic shapes inspired by abstract expressionism (default)
 - **Impressionist** - Soft brush dabs, pastel colors, luminous atmosphere inspired by Monet and Renoir
-- **Watercolor** - Transparent washes, flowing blends, soft edges with watercolor painting techniques
+- **Watercolour** - Layered transparent glazes on cold-press paper: folders as washes, files as glazes, an ink sketch of the folder tree
 - **De Stijl** - A Mondrian-style composition that maps the code exactly: folders divide the canvas by size, line weight follows depth, primary colours mark the main languages where the code is heaviest or busiest
 - **Pixel City** - The repository as an isometric 8-bit city: folders are districts, files are buildings (height from size, colour from language), documentation is parkland, and the time of day shows how recently the project was active
 - **Garden** - A botanical plate: folders grow as plants, files are leaves, the busiest files flower in their language colour, contributors are butterflies
