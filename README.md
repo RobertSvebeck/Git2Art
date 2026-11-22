@@ -211,26 +211,17 @@ Then open http://localhost:5001 in your browser.
 
 ## Deployment on Oderland (LiteSpeed, cPanel Python app)
 
-The account allows 30 simultaneous requests (entry processes) in total, and every request that reaches Python holds one. Static files must therefore be served by LiteSpeed, not Flask:
+App root `~/git2art`, document root `~/git2art.dabidao.com`. The account allows 30 simultaneous requests (entry processes) in total, and every request that reaches Python holds one, so LiteSpeed must serve the static files. Done on 2026-11-22 with a symlink:
 
 ```bash
-# once, over SSH: find the subdomain's document root in cPanel > Domains
-ln -s ~/repositories/Git2Art/static ~/git2art.dabidao.com/static
+ln -sfn ~/git2art/static ~/git2art.dabidao.com/static
+readlink -f ~/git2art.dabidao.com/static     # must print /home/bravoose/git2art/static
 curl -sI https://git2art.dabidao.com/static/css/style.css | grep -i etag
 ```
 
-Before the link the ETag looks like Werkzeug's `"1795337846.69-10556-1675563099"` (served by Python); afterwards it is LiteSpeed's own format. To let browsers keep pictures, add to the document root's `.htaccess`, above the CloudLinux block:
+A Werkzeug-style ETag such as `"1795337846.69-10556-1675563099"` means Python is still serving the file (wrong or missing symlink target). LiteSpeed sends no ETag and gives images and CSS a 7-day `Expires`, so templates add `?v=<mtime>` to static URLs (`app.py`) and changed files are fetched again after a deploy. 3D museum modules imported from other modules have no version; they carry no cache header and are revalidated by the browser.
 
-```apache
-<IfModule mod_expires.c>
-    ExpiresActive On
-    ExpiresByType image/webp "access plus 7 days"
-    ExpiresByType image/png "access plus 7 days"
-    ExpiresByType application/json "access plus 1 day"
-</IfModule>
-```
-
-The app also limits itself: the 2D museum loads only the open room's pictures, both museums fetch at most 4 files at a time per visitor, Flask lets browsers cache pictures and repo data for a week, and each worker keeps the `/museum` page for two minutes.
+The app also limits itself: the 2D museum loads only the open room's pictures, both museums fetch at most 4 files at a time per visitor, and each worker keeps the `/museum` page for two minutes.
 
 ## How It Works
 

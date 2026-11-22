@@ -36,6 +36,17 @@ def create_app():
     os.makedirs(app.config['GENERATED_IMAGES_DIR'], exist_ok=True)
     os.makedirs(app.config['TEMP_REPOS_DIR'], exist_ok=True)
 
+    @app.url_defaults
+    def version_static_files(endpoint, values):
+        """Add ?v=<mtime> to static URLs: LiteSpeed lets browsers keep them for
+        a week, so a changed file needs a new address to be fetched again."""
+        if endpoint != 'static' or 'v' in values or 'filename' not in values:
+            return
+        try:
+            values['v'] = int(os.path.getmtime(os.path.join(app.static_folder, values['filename'])))
+        except OSError:
+            pass
+
     # Register routes
     from routes import main_routes
     app.register_blueprint(main_routes.bp)
