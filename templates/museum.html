@@ -56,7 +56,7 @@
                 <a class="m2-profile" href="{{ room.artist.profile }}" target="_blank" rel="noopener">github.com/{{ room.artist.owner }}</a>
                 <ul class="m2-repos">
                     {% for repo in room.artist.repos %}
-                    <li><a href="{{ repo.url }}" target="_blank" rel="noopener"><span>{{ repo.title }}</span><span class="m2-star">&#9733; Star{% if repo.stars is not none %} &middot; {{ format_stars(repo.stars) }}{% endif %}</span></a></li>
+                    <li><a href="{{ repo.url }}" target="_blank" rel="noopener"><span>{{ repo.title }}</span><span class="m2-star">&#9733; Star{% if repo.stars %} &middot; {{ format_stars(repo.stars) }}{% endif %}</span></a></li>
                     {% endfor %}
                 </ul>
                 {% endif %}

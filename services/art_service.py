@@ -7,7 +7,7 @@ from datetime import datetime
 from services.git_service import clone_repo, extract_repo_name, cleanup_repo
 from utils.watermark import add_watermark
 from models.artwork import Artwork
-from services.github_info import update_stars
+from services.github_info import avatar_url, format_stars, load_info, profile_url, repo_owner, update_stars
 from services.museum_service import make_museum_image, save_repo_data, REPO_DATA_SUBDIR
 
 
@@ -204,8 +204,10 @@ def get_all_gallery_artworks(images_dir, page=1, per_page=30, art_style=None, se
             cursor.execute(query, params)
             paginated_artworks = cursor.fetchall()
 
+        github = load_info(os.path.join(images_dir, REPO_DATA_SUBDIR))
         for artwork in paginated_artworks:
             repo_url = artwork['repo_url']
+            owner = repo_owner(repo_url)
             repo_name = artwork['repo_name']
             art_style_val = artwork.get('art_style', 'expressionist')
             version_count = artwork.get('version_count', 1)
@@ -218,6 +220,11 @@ def get_all_gallery_artworks(images_dir, page=1, per_page=30, art_style=None, se
                 'id': artwork['id'],
                 'repo_name': repo_name,
                 'repo_url': repo_url,
+                'owner': owner,
+                'owner_avatar': avatar_url(owner, 48),
+                'owner_profile': profile_url(owner),
+                'owner_room': f'artist-{owner.lower()}' if owner else None,
+                'stars': format_stars(github.get(repo_url, {}).get('stars')),
                 'image_url': artwork['image_path'],
                 'image_filename': artwork['image_filename'],
                 'commit_hash': artwork['commit_hash'],

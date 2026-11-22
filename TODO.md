@@ -141,7 +141,7 @@
 - ✅ About page rewritten for the museums and new styles
 - ✅ Celebrating the artists: owner, avatar, contributors and star count on every work; star buttons; an artist room per owner in both museums (teleport in 3D, `?artist=owner`); artist card on the artwork page; "Code is a shared art" copy on home and about
 - [ ] Artists: run `scripts/refresh_github_info.py` from cron (or set GITHUB_TOKEN) so star counts stay fresh
-- [ ] Artists: show the owner on /gallery cards too
+- ✅ Artists: owner, star button and artist-room link on /gallery cards (search finds owners)
 - ✅ Server: `static` symlinked into the document root, LiteSpeed serves it (2026-11-22); static URLs versioned with `?v=<mtime>`
 - [ ] cPanel Hotlink Protection: tick "Allow direct requests" (PNG without referer gets 403, breaks og:image previews)
 - ✅ Load limits in the app: 2D museum loads only the open room, max 4 parallel downloads per visitor, week-long browser cache for pictures, /museum page cached per worker

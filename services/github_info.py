@@ -109,7 +109,7 @@ def stars_for(data_dir, repo_url):
 
 
 def format_stars(stars):
-    if stars is None:
+    if not stars:
         return ''
     if stars >= 1000:
         return f'{stars / 1000:.1f}k'.replace('.0k', 'k')

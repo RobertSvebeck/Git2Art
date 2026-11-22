@@ -50,7 +50,7 @@
                     type="text"
                     id="search-input"
                     class="search-field"
-                    placeholder="Search by repo name or commit hash..."
+                    placeholder="Search by repo, artist or commit hash..."
                     aria-label="Search repositories"
                 >
                 <select id="style-filter" class="style-filter" aria-label="Filter by art style">
@@ -84,6 +84,15 @@
                                 {{ artwork.repo_name }}
                                 {% endif %}
                             </h3>
+                            {% if artwork.owner %}
+                            <p class="card-artist">
+                                <a class="card-owner" href="{{ artwork.owner_profile }}" target="_blank" rel="noopener" title="{{ artwork.owner }} on GitHub">
+                                    <img loading="lazy" src="{{ artwork.owner_avatar }}" alt="" width="20" height="20">by {{ artwork.owner }}
+                                </a>
+                                <a class="card-star" href="{{ artwork.repo_url }}" target="_blank" rel="noopener" title="Star {{ artwork.repo_name }} on GitHub">&#9733;{% if artwork.stars %} {{ artwork.stars }}{% else %} Star{% endif %}</a>
+                                <a class="card-room" href="{{ url_for('main.museum') }}#{{ artwork.owner_room }}" title="The artist's room in the museum">Room</a>
+                            </p>
+                            {% endif %}
                             <span class="art-style-badge" data-style="{{ artwork.art_style }}">{{ artwork.art_style_name }}</span>
                             <p class="commit-hash">Commit: {{ artwork.commit_hash[:8] }}</p>
                             <p class="created-date">{{ artwork.created_at_formatted }}</p>

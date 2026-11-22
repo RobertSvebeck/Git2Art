@@ -183,6 +183,44 @@ main {
     color: var(--accent-sage);
 }
 
+.card-artist {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 10px;
+    margin: 0 0 10px 0;
+    font-size: 0.8em;
+}
+
+.card-artist a { text-decoration: none; }
+
+.card-owner {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--soft-black);
+}
+
+.card-owner img { border-radius: 50%; background: rgba(0, 0, 0, 0.06); }
+.card-owner:hover { color: var(--accent-sage); }
+
+.card-star {
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: #ffd23f;
+    color: #14182b;
+    font-weight: 600;
+}
+
+.card-star:hover { background: #ffe27a; }
+
+.card-room {
+    color: var(--mid-grey);
+    border-bottom: 1px solid currentColor;
+}
+
+.card-room:hover { color: var(--soft-black); }
+
 .commit-hash {
     font-size: 0.75em;
     color: var(--mid-grey);
