@@ -52,6 +52,13 @@
             </section>
 
             <section class="about-section">
+                <h3>The Artists</h3>
+                <p>The real artists here are the people who write code and share it with the world. A public repository is a gift: years of thought, care and craft, given away so that anyone can read it, learn from it and build on it. That deserves an audience.</p>
+                <p>So who is the artist when an AI writes much of the code? Our answer: no single person, and that was always true. A repository is a joint creation of many: its owner, every contributor, the maintainers of the libraries underneath, the people who reported bugs and reviewed changes, and now the AI models they work with. The final result comes from collaboration, and the museum celebrates all of it.</p>
+                <p>That is why every work carries the name and portrait of the account behind it and how many people contributed. Every artist has a room of their own in the <a href="{{ url_for('main.museum') }}">museum</a>, and in the <a href="{{ url_for('main.gallery3d') }}">3D museum</a> you can teleport there from any painting. If a picture speaks to you, star the code. In open source, a star is the applause.</p>
+            </section>
+
+            <section class="about-section">
                 <h3>How It Works</h3>
                 <p>Git2Art reads a repository and paints what it finds:</p>
                 <ul>
@@ -79,6 +86,10 @@
                         <p>An endless museum you walk through in your browser: spotlit canvases, repositories as glowing sculptures that replay their history, and dark rooms where a project's commits rise around you as light.</p>
                     </div>
                     <div class="feature-card">
+                        <h4>⭐ Celebrating the Artists</h4>
+                        <p>Every work names the people behind it, links to their GitHub profile and invites you to star the code. Each artist has a room of their own, one click or one teleport away.</p>
+                    </div>
+                    <div class="feature-card">
                         <h4>🖼️ Hang Your Own</h4>
                         <p>Paste a public repository on the home page, or click an invitation on the museum wall, and your code is painted and hung within moments.</p>
                     </div>
@@ -101,6 +112,7 @@
                     <li><strong><a href="{{ url_for('main.gallery3d') }}">3D Museum</a></strong> - an endless, walkable building with a door in every wall. North and west lie the Painting Galleries, south the Sculpture Court, east the Light Installations</li>
                     <li><strong>Sculpture Court</strong> - each repository as a sculpture: files are glowing beads, folders are bronze branches, and it grows again commit by commit while you stand in the room</li>
                     <li><strong>Light Installations</strong> - a project's whole history as a spiral of lights you walk through, with a pulse travelling from the first commit to today</li>
+                    <li><strong>The Artists</strong> - a room for every account whose code hangs in the museum, with their portrait, their repositories and a star button for each. In 3D, open any painting and teleport straight to its artist's room</li>
                 </ul>
             </section>
 
@@ -196,7 +208,7 @@
 
             <section class="about-section cta-section">
                 <h3>Ready to see your code as art?</h3>
-                <p>Transform any GitHub repository into a unique artwork, then find it in the museum.</p>
+                <p>Transform any GitHub repository into a unique artwork, then find it in the museum, in a room with the name of the people who made it.</p>
                 <a href="{{ url_for('main.index') }}" class="btn btn-primary">Generate Your Art</a>
                 <a href="{{ url_for('main.gallery3d') }}" class="btn btn-primary">Visit the 3D Museum</a>
             </section>

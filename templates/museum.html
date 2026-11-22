@@ -37,7 +37,7 @@
     <p class="m2-empty">The museum is closed for rehanging. Please come back soon.</p>
     {% endif %}
     {% for room in rooms %}
-    <section class="m2-room {{ mood_class(room) }}" id="{{ room.id }}" data-wing="{{ room.wing }}" data-name="{{ room.name }}" data-kind="{{ room.kind }}" aria-label="{{ room.wing }}: {{ room.name }}">
+    <section class="m2-room {{ mood_class(room) }}" id="{{ room.id }}" data-wing="{{ room.wing }}" data-name="{{ room.name }}"{% if room.artist %} data-owner="{{ room.artist.owner }}"{% endif %} data-kind="{{ room.kind }}" aria-label="{{ room.wing }}: {{ room.name }}">
         <div class="m2-wall">
             {% if room.prev %}
             <a class="m2-door m2-door-back {{ mood_class(room.prev) }}" href="#{{ room.prev.id }}" data-item>
@@ -45,17 +45,29 @@
                 <span class="m2-door-label">Back to<br><strong>{{ room.prev.name }}</strong></span>
             </a>
             {% endif %}
-            <div class="m2-room-label" data-item>
+            <div class="m2-room-label{% if room.artist %} m2-artist-label{% endif %}" data-item>
                 <p class="m2-wing-name">{{ room.wing }}</p>
+                {% if room.artist %}
+                <img class="m2-avatar" src="{{ room.artist.avatar }}" alt="{{ room.artist.owner }} on GitHub" loading="lazy" width="96" height="96">
+                {% endif %}
                 <h2>{{ room.name }}</h2>
                 {% if room.intro %}<p class="m2-intro">{{ room.intro }}</p>{% endif %}
+                {% if room.artist %}
+                <a class="m2-profile" href="{{ room.artist.profile }}" target="_blank" rel="noopener">github.com/{{ room.artist.owner }}</a>
+                <ul class="m2-repos">
+                    {% for repo in room.artist.repos %}
+                    <li><a href="{{ repo.url }}" target="_blank" rel="noopener"><span>{{ repo.title }}</span><span class="m2-star">&#9733; Star{% if repo.stars is not none %} &middot; {{ format_stars(repo.stars) }}{% endif %}</span></a></li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
                 <p class="m2-count">{{ room.works | length }} {{ 'work' if room.works | length == 1 else 'works' }}</p>
             </div>
             {% for work in room.works %}
             <figure class="m2-work{% if room.kind == 'sculpture' %} m2-sculpture{% elif room.kind == 'light' %} m2-light{% endif %}" data-item
                     data-id="{{ work.id }}" data-title="{{ work.title }}" data-repo="{{ work.repo_url }}"
                     data-style="{{ style_labels.get(work.style, work.style) }}" data-likes="{{ work.likes }}"
-                    data-image="{{ work.image }}"{% if work.data %} data-data="{{ work.data }}"{% endif %}>
+                    data-image="{{ work.image }}" data-owner="{{ work.owner or '' }}" data-avatar="{{ work.avatar or '' }}"
+                    data-profile="{{ work.profile or '' }}" data-contributors="{{ work.contributors or 0 }}" data-stars="{{ format_stars(work.stars) }}"{% if work.data %} data-data="{{ work.data }}"{% endif %}>
                 {% if room.kind == 'light' %}
                 <div class="m2-lightbox">
                     <canvas width="720" height="480" aria-label="Light installation of the {{ work.title }} repository history"></canvas>
@@ -72,6 +84,7 @@
                 <figcaption class="m2-plaque">
                     <strong>{{ work.title }}</strong>
                     <span>{{ style_labels.get(work.style, work.style) }}</span>
+                    {% if work.owner and not room.artist %}<em>by {{ work.owner }}</em>{% endif %}
                 </figcaption>
             </figure>
             {% endfor %}
@@ -99,7 +112,7 @@
         <h2>Floor plan</h2>
         <div class="m2-plan-wings">
             {% for wing in wings %}
-            <div class="m2-plan-wing">
+            <div class="m2-plan-wing m2-plan-wing-{{ wing.id }}">
                 <h3>{{ wing.name }}</h3>
                 {% for room in wing.rooms %}
                 <a href="#{{ room.id }}" class="m2-plan-room {{ mood_class(room) }}" data-room="{{ room.id }}">
@@ -121,9 +134,14 @@
             <p id="m2-panel-style"></p>
             <p id="m2-panel-stats" hidden></p>
             <p id="m2-panel-likes"></p>
+            <a id="m2-panel-artist" class="m2-artist" href="#" target="_blank" rel="noopener" hidden>
+                <img id="m2-panel-avatar" alt="" width="44" height="44">
+                <span>by <strong id="m2-panel-owner"></strong><small id="m2-panel-crew">GitHub profile</small></span>
+            </a>
             <div class="m2-panel-actions">
                 <a id="m2-panel-view" class="m2-button" href="#">View artwork</a>
-                <a id="m2-panel-repo" class="m2-button secondary" href="#" target="_blank" rel="noopener">Repository</a>
+                <a id="m2-panel-repo" class="m2-button star" href="#" target="_blank" rel="noopener">&#9733; Star on GitHub</a>
+                <a id="m2-panel-room" class="m2-button secondary" href="#" hidden>Visit the artist's room</a>
             </div>
         </div>
     </div>

@@ -2,7 +2,7 @@
 
 {% block title %}Git2Art - Transform Your Code into Beautiful Abstract Art{% endblock %}
 
-{% block meta_description %}Transform any GitHub repository into stunning, unique abstract artwork. Deterministic art generation based on code metrics, file structure, and commit history. Free and instant.{% endblock %}
+{% block meta_description %}Every repository is a work of art. Git2Art paints public GitHub repositories from their structure and history and hangs them in a museum that celebrates the people who share their code.{% endblock %}
 
 {% block meta_keywords %}github repository art, generative art, code visualization, git visualization, abstract art generator, open source art, deterministic art{% endblock %}
 
@@ -48,7 +48,7 @@
 <div class="container">
         <header>
             <h1>Git2Art</h1>
-            <p class="tagline">Transform your GitHub repositories into beautiful abstract art</p>
+            <p class="tagline">Every repository is a work of art. We paint it and hang it in a museum, with the names of the people who made it on the wall.</p>
             <nav class="header-nav">
                 <a href="{{ url_for('main.about') }}" class="nav-link">About</a>
                 <a href="{{ url_for('main.gallery') }}" class="nav-link">Gallery</a>
@@ -104,6 +104,12 @@
                     <a id="downloadBtn" class="btn btn-primary" download>Download Artwork</a>
                     <button id="newArtBtn" class="btn btn-secondary">Generate Another</button>
                 </div>
+            </section>
+
+            <section class="artists-note">
+                <h2>Code is a shared art</h2>
+                <p>Behind every public repository are people who chose to share their work: the owner, every contributor, the authors of the libraries it builds on, and these days often an AI working alongside them. So who is the artist? We think it is all of them. Good software has always been made together, and Git2Art paints that collaboration.</p>
+                <p>Every work in the <a href="{{ url_for('main.museum') }}">museum</a> carries the name of the people behind it, links to their profile, and leads to a room of their own. If a picture moves you, go and star the code. In open source, a star is the applause.</p>
             </section>
         </main>
 

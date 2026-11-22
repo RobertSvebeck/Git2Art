@@ -5,6 +5,7 @@ import os
 
 from PIL import Image
 
+from services.github_info import avatar_url, load_info, profile_url, repo_owner
 from scene.repodata import build_repo_data, repo_data_path, write_repo_data
 from utils.db import get_db_cursor
 
@@ -46,20 +47,22 @@ def save_repo_data(repo_path, repo_url, repo_name, data_dir):
         return None
 
 
-_commit_cache = {}
+_stats_cache = {}
 
 
-def _commit_count(data_file):
+def _repo_stats(data_file):
+    """(commits, contributors) from the repo data file, cached by mtime."""
     if not os.path.exists(data_file):
-        return 0
+        return 0, 0
     mtime = os.path.getmtime(data_file)
-    cached = _commit_cache.get(data_file)
+    cached = _stats_cache.get(data_file)
     if cached and cached[0] == mtime:
         return cached[1]
     with open(data_file, encoding='utf-8') as handle:
-        count = json.load(handle).get('commits', 0)
-    _commit_cache[data_file] = (mtime, count)
-    return count
+        data = json.load(handle)
+    stats = (data.get('commits', 0), data.get('authors', 0))
+    _stats_cache[data_file] = (mtime, stats)
+    return stats
 
 
 def _image_size(path):
@@ -92,6 +95,7 @@ def get_museum_artworks(images_dir):
         """)
         rows = cursor.fetchall()
 
+    github = load_info(os.path.join(images_dir, REPO_DATA_SUBDIR))
     artworks = []
     for row in rows:
         original = os.path.join(images_dir, row['image_filename'])
@@ -103,18 +107,25 @@ def get_museum_artworks(images_dir):
         else:
             url = f'/static/generated/{row["image_filename"]}'
         width, height = _image_size(original)
+        owner = repo_owner(row['repo_url'])
         data_file = repo_data_path(os.path.join(images_dir, REPO_DATA_SUBDIR), row['repo_url'])
+        commits, contributors = _repo_stats(data_file)
         artworks.append({
             'id': row['id'],
             'title': row['repo_name'],
             'repo_url': row['repo_url'],
             'style': row['art_style'],
             'likes': row['like_count'],
+            'owner': owner,
+            'avatar': avatar_url(owner),
+            'profile': profile_url(owner),
+            'stars': github.get(row['repo_url'], {}).get('stars'),
             'added': row['created_at'].isoformat() if row['created_at'] else '',
             'image': url,
             'aspect': round(width / height, 4),
             'data': f'/static/generated/{REPO_DATA_SUBDIR}/{os.path.basename(data_file)}'
                     if os.path.exists(data_file) else None,
-            'commits': _commit_count(data_file),
+            'commits': commits,
+            'contributors': contributors,
         })
     return artworks

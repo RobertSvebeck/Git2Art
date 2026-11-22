@@ -277,3 +277,25 @@ export function softShadow() {
     ctx.filter = 'none';
   }, false);
 }
+
+// Lettering above a door: spaced capitals, dark on light walls, light on dark.
+export function signTexture(text, lightWall) {
+  const c = document.createElement('canvas');
+  c.width = 1024; c.height = 128;
+  const ctx = c.getContext('2d');
+  const spaced = text.toUpperCase().split('').join(' ');
+  let size = 76;
+  do {
+    ctx.font = `500 ${size}px "Helvetica Neue", Arial, sans-serif`;
+    size -= 4;
+  } while (ctx.measureText(spaced).width > 980 && size > 24);
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = lightWall ? 'rgba(25, 23, 20, 1)' : 'rgba(255, 255, 255, 0.95)';
+  ctx.shadowColor = lightWall ? 'transparent' : 'rgba(0, 0, 0, 0.6)';
+  ctx.shadowBlur = lightWall ? 0 : 12;
+  ctx.fillText(spaced, 512, 66);
+  const texture = new THREE.CanvasTexture(c);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
+}

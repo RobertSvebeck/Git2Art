@@ -149,6 +149,26 @@ async function start() {
     composer.setSize(window.innerWidth, window.innerHeight);
   });
 
+  const teleport = (owner) => {
+    const target = world.prepareArtistRoom(owner);
+    walker.position.set(target.x, 1.65, target.z);
+    walker.velocity.set(0, 0);
+    walker.yaw = target.yaw;
+    walker.pitch = 0.18;
+    const flash = document.getElementById('teleport-flash');
+    flash.classList.remove('active');
+    void flash.offsetWidth;
+    flash.classList.add('active');
+    const params = new URLSearchParams(window.location.search);
+    params.set('artist', owner);
+    params.set('seed', worldSeed);
+    history.replaceState(null, '', `${window.location.pathname}?${params}`);
+  };
+  ui.onTeleport = teleport;
+  ui.canTeleport = (owner) => world.hasArtist(owner) && world.currentArtist() !== owner.toLowerCase();
+  const startArtist = new URLSearchParams(window.location.search).get('artist');
+  if (startArtist && world.hasArtist(startArtist)) teleport(startArtist);
+
   const entered = world.update(walker.position);
   if (entered) lighting.focus(entered);
   ui.ready(artworks.length, worldSeed, touchDevice);

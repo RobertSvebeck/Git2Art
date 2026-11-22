@@ -3,8 +3,9 @@
 from flask import Blueprint, render_template, request, jsonify, send_file, current_app, session, Response
 from services.art_service import generate_art_from_github, get_all_gallery_artworks
 from services.git_service import validate_github_url
-from services.museum_service import get_museum_artworks
+from services.museum_service import REPO_DATA_SUBDIR, get_museum_artworks
 from services.museum_layout import build_museum
+from services.github_info import avatar_url, format_stars, profile_url, repo_owner, stars_for
 from utils.image_io import to_png_bytes
 from models.artwork import ArtworkLike, Artwork
 from models import ArtStyle
@@ -105,7 +106,8 @@ def museum():
     for index, room in enumerate(rooms):
         room['prev'] = rooms[index - 1] if index > 0 else None
         room['next'] = rooms[index + 1] if index < len(rooms) - 1 else None
-    return render_template('museum.html', wings=wings, rooms=rooms, style_labels=STYLE_LABELS)
+    return render_template('museum.html', wings=wings, rooms=rooms, style_labels=STYLE_LABELS,
+                           format_stars=format_stars)
 
 
 @bp.route('/api/museum/artworks', methods=['GET'])
@@ -148,6 +150,16 @@ def artwork_view(artwork_id):
         'art_style_name': art_style_name,
         'created_at_formatted': artwork['created_at'].strftime('%B %d, %Y') if artwork.get('created_at') else 'Unknown'
     }
+    owner = repo_owner(artwork['repo_url'])
+    if owner:
+        data_dir = os.path.join(current_app.config['GENERATED_IMAGES_DIR'], REPO_DATA_SUBDIR)
+        artwork_data['artist'] = {
+            'owner': owner,
+            'avatar': avatar_url(owner, 120),
+            'profile': profile_url(owner),
+            'stars': format_stars(stars_for(data_dir, artwork['repo_url'])),
+            'room': f'artist-{owner.lower()}',
+        }
 
     return render_template('artwork_view.html', artwork=artwork_data)
 

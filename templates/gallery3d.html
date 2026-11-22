@@ -84,6 +84,8 @@
     </div>
 </section>
 
+<div id="teleport-flash" aria-hidden="true"></div>
+
 <aside id="panel" class="overlay" hidden>
     <div class="panel-card">
         <button id="panel-close" class="panel-close" aria-label="Close">&times;</button>
@@ -93,9 +95,14 @@
             <p id="panel-style"></p>
             <p id="panel-stats" hidden></p>
             <p id="panel-likes"></p>
+            <a id="panel-artist" class="panel-artist" href="#" target="_blank" rel="noopener" hidden>
+                <img id="panel-avatar" alt="" width="44" height="44">
+                <span>by <strong id="panel-owner"></strong><small id="panel-crew">GitHub profile</small></span>
+            </a>
             <div class="panel-actions">
                 <a id="panel-view" class="museum-button" href="#">View artwork</a>
-                <a id="panel-repo" class="museum-button secondary" href="#" target="_blank" rel="noopener">Repository</a>
+                <a id="panel-repo" class="museum-button star" href="#" target="_blank" rel="noopener">&#9733; Star on GitHub</a>
+                <button id="panel-teleport" class="museum-button secondary" type="button" hidden>Teleport to the artist's room</button>
             </div>
         </div>
     </div>

@@ -139,6 +139,9 @@
 - ✅ 3D museum: canvases with depth (gallery wrap or wooden panel), linen weave, brushstroke relief, varnish, wall shadows
 - ✅ 3D museum invitations ("Your repository could hang here") in the entrance and ~30% of painting rooms; in-museum submit form hangs the result in place
 - ✅ About page rewritten for the museums and new styles
+- ✅ Celebrating the artists: owner, avatar, contributors and star count on every work; star buttons; an artist room per owner in both museums (teleport in 3D, `?artist=owner`); artist card on the artwork page; "Code is a shared art" copy on home and about
+- [ ] Artists: run `scripts/refresh_github_info.py` from cron (or set GITHUB_TOKEN) so star counts stay fresh
+- [ ] Artists: show the owner on /gallery cards too
 - [ ] On the server after pulling: `python scripts/render_data_style.py <style>` for each style (or `apply_style_rework.py --yes --render`), then `python scripts/cleanup_artworks.py --superseded --retired --yes`
 
 ## Completed ✅

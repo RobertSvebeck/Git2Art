@@ -194,6 +194,8 @@ Then open http://localhost:5001 in your browser.
 - `?seed=N` reproduces a museum layout; the intro screen links to the current one
 - Uses web-sized WebP copies in `static/generated/museum/`; create them for existing artworks with `python scripts/make_museum_images.py` (new artworks get one automatically)
 - Sculptures need per-repository data in `static/generated/repodata/`: create it for existing repositories with `python scripts/make_repo_data.py` (clones each repository, reads the database only); new artworks get it automatically
+- The Artists: every work names its repository owner (portrait from GitHub), the number of contributors and the star count, with a star button. Each owner has a room in both museums; in 3D, "Teleport to the artist's room" from any painting, or open `/gallery3d?artist=<owner>`
+- Star counts are cached in `static/generated/repodata/github.json`: new artworks fetch their own; refresh the rest with `python scripts/refresh_github_info.py` (40 per run without a token; set `GITHUB_TOKEN` in `.env` for more)
 
 **Database Integration**
 - MariaDB backend for persistent storage

@@ -256,6 +256,14 @@ Rewrite of `/gallery3d` as a walkable, procedurally generated museum (three.js 0
 - `poster.js` + `submit.js`: invitation lightboxes (`plan.poster`: entrance always, ~30% of painting rooms via a separate hash so room layouts are unchanged); form posts to `/generate`, then `room.hangArtwork` swaps the sign for the new canvas and the work joins the deck; walker ignores keys typed into form fields
 - Local testing: the local DB is production but images live on the server, so headless tests intercept `/api/museum/artworks` with a fixture built from local images and mock `/generate`
 
+### Celebrating the Artists (Session 20, 2026-11-22)
+- `services/github_info.py`: owner from the repo URL, avatar via avatars.githubusercontent.com (sends CORS headers, so WebGL can texture it; github.com/<owner>.png redirects without them), star counts cached in `repodata/github.json`, fetched once per painting and by `scripts/refresh_github_info.py` (unauthenticated limit is 60 requests an hour)
+- Museum catalogue adds owner, avatar, profile, stars and contributors (git authors from repodata); New Acquisitions sorts by date added, one work per repository
+- 2D: "The Artists" wing (a room per owner, most-starred first), artist line and star button in the panel, "Visit the artist's room"
+- 3D: `plan.reserveArtistRoom` turns a far north-west cell (`artistCell(owner)`) into the owner's room (portrait roundel and name over the north and south doors, `artist.js`); `world.prepareArtistRoom` deals the owner's works round-robin across repositories; teleport from the panel, `?artist=` on load
+- Restore of dates after the re-render: `scripts/restore_artwork_dates.py` with `artwork_dates.csv`; `render_data_style.py` now keeps a repository's first-added date
+- Lesson: while pointer lock is active every click goes to the locked canvas, so overlays must exit pointer lock before they open (the museum does; a test that skipped it saw dead buttons)
+
 ## Technical Architecture
 
 ### Color System

@@ -31,6 +31,8 @@ function openRoom(index, focusAt = null, push = true) {
   document.title = `${room.dataset.name} | Git2Art Museum`;
   document.querySelectorAll('.m2-plan-room').forEach((el) => el.classList.toggle('current', el.dataset.room === room.id));
   if (push && location.hash !== `#${room.id}`) history.pushState(null, '', `#${room.id}`);
+  const walk3d = document.querySelector('.m2-3d');
+  walk3d.href = room.dataset.owner ? `${walk3d.pathname}?artist=${encodeURIComponent(room.dataset.owner)}` : walk3d.pathname;
   wakeSculptures(room);
   setFocus(focusAt === 'end' ? items(room).length - 1 : focusAt ?? labelIndex(room), 'auto');
 }
@@ -79,6 +81,19 @@ async function showWork(figure) {
   $('m2-panel-view').href = `/artwork/${d.id}`;
   $('m2-panel-view').textContent = figure.classList.contains('m2-sculpture') || figure.classList.contains('m2-light') ? 'View painting' : 'View artwork';
   $('m2-panel-repo').href = d.repo;
+  $('m2-panel-repo').innerHTML = `&#9733; Star on GitHub${d.stars ? ` &middot; ${d.stars}` : ''}`;
+  $('m2-panel-artist').hidden = !d.owner;
+  if (d.owner) {
+    $('m2-panel-artist').href = d.profile;
+    $('m2-panel-avatar').src = d.avatar;
+    $('m2-panel-owner').textContent = d.owner;
+    const crew = Number(d.contributors);
+    $('m2-panel-crew').textContent = crew > 1 ? `${crew} contributors  |  GitHub profile` : 'GitHub profile';
+  }
+  const artistRoom = d.owner ? `artist-${d.owner.toLowerCase()}` : '';
+  const showRoom = artistRoom && rooms.some((r) => r.id === artistRoom) && rooms[current].id !== artistRoom;
+  $('m2-panel-room').hidden = !showRoom;
+  $('m2-panel-room').href = `#${artistRoom}`;
   $('m2-panel-stats').hidden = true;
   const living = figure.classList.contains('m2-sculpture') || figure.classList.contains('m2-light');
   if (living && d.data) {
@@ -169,6 +184,11 @@ for (const room of rooms) {
 
 document.querySelectorAll('[data-close]').forEach((b) => b.addEventListener('click', closeOverlays));
 document.querySelectorAll('.m2-overlay').forEach((o) => o.addEventListener('click', (e) => { if (e.target === o) closeOverlays(); }));
+$('m2-panel-room').addEventListener('click', (e) => {
+  e.preventDefault();
+  closeOverlays();
+  openRoom(rooms.findIndex((r) => `#${r.id}` === $('m2-panel-room').getAttribute('href')));
+});
 $('m2-plan-button').addEventListener('click', () => { $('m2-plan').hidden = false; });
 document.querySelectorAll('.m2-plan-room').forEach((a) => a.addEventListener('click', (e) => {
   e.preventDefault();

@@ -1,6 +1,6 @@
 // Streams rooms around the visitor and hangs art from a shuffled deck.
 
-import { cellKey, cellOf, planRoom } from './plan.js';
+import { CELL, artistCell, cellKey, cellOf, planRoom, reserveArtistRoom } from './plan.js';
 import { buildRoom } from './room.js';
 import { Rng, hashInts } from './rng.js';
 
@@ -38,14 +38,22 @@ export class World {
     this.worldSeed = worldSeed;
     this.deck = new ArtDeck(artworks, hashInts(worldSeed, 99));
     this.byRepo = new Map();
+    this.byOwner = new Map();
     for (const artwork of artworks) {
       if (!this.byRepo.has(artwork.repo_url)) this.byRepo.set(artwork.repo_url, []);
       this.byRepo.get(artwork.repo_url).push(artwork);
+      if (!artwork.owner) continue;
+      const owner = artwork.owner.toLowerCase();
+      if (!this.byOwner.has(owner)) this.byOwner.set(owner, []);
+      this.byOwner.get(owner).push(artwork);
     }
     const sculptures = [...this.byRepo.values()]
       .map((works) => works.find((w) => w.data))
       .filter(Boolean)
-      .map((w) => ({ id: w.id, title: w.title, repo_url: w.repo_url, data: w.data, image: w.image, likes: w.likes }));
+      .map((w) => ({
+        id: w.id, title: w.title, repo_url: w.repo_url, data: w.data, image: w.image, likes: w.likes,
+        owner: w.owner, avatar: w.avatar, profile: w.profile, stars: w.stars, contributors: w.contributors,
+      }));
     this.sculptureDeck = new ArtDeck(sculptures, hashInts(worldSeed, 77));
     this.installationDeck = new ArtDeck(sculptures, hashInts(worldSeed, 55));
     this.hung = new Map();
@@ -53,6 +61,58 @@ export class World {
     this.queue = [];
     this.visited = new Set();
     this.current = null;
+  }
+
+  hasArtist(owner) {
+    return Boolean(owner) && this.byOwner.has(owner.toLowerCase());
+  }
+
+  // Each repository in turn, so every one of the artist's repos is on the walls.
+  artistWorks(owner) {
+    const repos = new Map();
+    for (const work of this.byOwner.get(owner.toLowerCase()) || []) {
+      if (!repos.has(work.repo_url)) repos.set(work.repo_url, []);
+      repos.get(work.repo_url).push(work);
+    }
+    const queues = [...repos.values()];
+    const works = [];
+    for (let i = 0; works.length < queues.reduce((n, q) => n + q.length, 0); i++) {
+      for (const queue of queues) if (queue[i]) works.push(queue[i]);
+    }
+    return works;
+  }
+
+  currentArtist() {
+    const room = this.current && this.rooms.get(this.current.key);
+    return room?.plan.artist?.owner.toLowerCase() || null;
+  }
+
+  // Reserve the artist's room and return where the visitor should stand.
+  prepareArtistRoom(owner) {
+    const works = this.artistWorks(owner);
+    const first = works[0];
+    const [cx, cz] = artistCell(owner);
+    const key = cellKey(cx, cz);
+    const existing = this.rooms.get(key);
+    if (!existing || !existing.plan.artist) {
+      if (existing) {
+        this.scene.remove(existing.group);
+        existing.dispose();
+        this.rooms.delete(key);
+      }
+      this.hung.delete(key);
+      const stars = new Map(works.map((w) => [w.repo_url, w.stars || 0]));
+      reserveArtistRoom(cx, cz, {
+        owner: first.owner,
+        avatar: first.avatar,
+        profile: first.profile,
+        works: works.length,
+        repos: stars.size,
+        stars: [...stars.values()].reduce((a, b) => a + b, 0),
+      });
+    }
+    const plan = planRoom(this.worldSeed, cx, cz);
+    return { x: cx * CELL, z: cz * CELL + plan.depth / 2 - 2.6, yaw: 0 };
   }
 
   roomAt(x, z) {
@@ -113,6 +173,7 @@ export class World {
   }
 
   dealFor(plan) {
+    if (plan.artist) return { paintings: this.artistWorks(plan.artist.owner).slice(0, plan.slots.length), sculptures: [] };
     if (plan.wing === 'light') return { paintings: [], sculptures: [], installation: this.installationDeck.draw(1)[0] };
     if (plan.wing !== 'sculpture') return { paintings: this.deck.draw(plan.slots.length), sculptures: [] };
     const plinthCount = plan.furniture.filter((f) => f.type === 'plinth').length;

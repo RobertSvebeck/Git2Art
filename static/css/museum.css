@@ -287,7 +287,7 @@ kbd {
     box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
 }
 
-.panel-card img {
+.panel-card > img {
     max-width: 58%;
     max-height: 74vh;
     border-radius: 4px;
@@ -307,6 +307,21 @@ kbd {
     margin: 4px 0;
     color: rgba(255, 255, 255, 0.7);
 }
+
+.museum-button.star { background: #ffd23f; border-color: #ffd23f; color: #14182b; }
+.museum-button.star:hover { background: transparent; color: #ffd23f; }
+
+.panel-artist {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 16px;
+    color: #fff;
+    text-decoration: none;
+}
+.panel-artist img { border-radius: 50%; background: rgba(255, 255, 255, 0.1); }
+.panel-artist small { display: block; font-size: 12px; color: rgba(255, 255, 255, 0.55); }
+.panel-artist:hover strong { text-decoration: underline; }
 
 .panel-actions {
     display: flex;
@@ -333,7 +348,7 @@ kbd {
         overflow-y: auto;
     }
 
-    .panel-card img { max-width: 100%; max-height: 50vh; }
+    .panel-card > img { max-width: 100%; max-height: 50vh; }
     .museum-button { padding: 12px 24px; }
 }
 
@@ -372,3 +387,15 @@ kbd {
 .submit-card .museum-button:hover { background: transparent; color: #fff; }
 .submit-card .panel-actions .museum-button { width: auto; }
 .submit-card .panel-actions .museum-button.secondary { background: transparent; color: #fff; }
+
+/* A soft white-out when the visitor teleports to an artist's room. */
+#teleport-flash {
+    position: fixed;
+    inset: 0;
+    z-index: 30;
+    background: #fff8ea;
+    opacity: 0;
+    pointer-events: none;
+}
+#teleport-flash.active { animation: teleport-flash 1.1s ease-out; }
+@keyframes teleport-flash { 0% { opacity: 1; } 100% { opacity: 0; } }

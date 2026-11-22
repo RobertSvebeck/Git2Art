@@ -35,6 +35,21 @@
                 <p class="artwork-commit">Commit: {{ artwork.commit_hash[:8] }}</p>
                 <p class="artwork-date">{{ artwork.created_at_formatted }}</p>
 
+                {% if artwork.artist %}
+                <div class="artist-card">
+                    <a class="artist-who" href="{{ artwork.artist.profile }}" target="_blank" rel="noopener">
+                        <img src="{{ artwork.artist.avatar }}" alt="{{ artwork.artist.owner }} on GitHub" width="56" height="56">
+                        <span>The artist<strong>{{ artwork.artist.owner }}</strong></span>
+                    </a>
+                    <p>This picture is painted from code that {{ artwork.artist.owner }} and the project's contributors chose to share. The code is the original work: give it a star.</p>
+                    <div class="artist-links">
+                        <a class="btn btn-star" href="{{ artwork.repo_url }}" target="_blank" rel="noopener">&#9733; Star on GitHub{% if artwork.artist.stars %} &middot; {{ artwork.artist.stars }}{% endif %}</a>
+                        <a class="btn btn-room" href="{{ url_for('main.museum') }}#{{ artwork.artist.room }}">The artist's room</a>
+                        <a class="btn btn-room" href="{{ url_for('main.gallery3d') }}?artist={{ artwork.artist.owner | urlencode }}">In 3D</a>
+                    </div>
+                </div>
+                {% endif %}
+
                 <div class="artwork-actions">
                     <button class="btn btn-like" data-artwork-id="{{ artwork.id }}" onclick="toggleLike({{ artwork.id }})">
                         <span class="like-icon">♡</span>

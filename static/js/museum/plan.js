@@ -26,6 +26,21 @@ export const WALLS = [
 ];
 
 const planCache = new Map();
+const artistCells = new Map();
+
+// Artist rooms sit far out in the painting galleries (north-west), one cell
+// per owner, so a teleport lands in a room of its own with ordinary rooms
+// beyond its doors.
+export function artistCell(owner) {
+  const h = hashInts(...[...owner.toLowerCase()].map((c) => c.charCodeAt(0)));
+  return [-40 - (h % 900), -40 - ((h >>> 10) % 900)];
+}
+
+export function reserveArtistRoom(cx, cz, artist) {
+  const key = cellKey(cx, cz);
+  artistCells.set(key, artist);
+  planCache.delete(key);
+}
 
 export function cellKey(cx, cz) {
   return `${cx},${cz}`;
@@ -40,18 +55,20 @@ export function planRoom(worldSeed, cx, cz) {
   if (planCache.has(key)) return planCache.get(key);
   const rng = new Rng(hashInts(worldSeed, cx, cz));
   const isEntrance = cx === 0 && cz === 0;
+  const artist = artistCells.get(key) || null;
   const wing = wingOf(cx, cz);
   const isCourt = wing === 'sculpture';
   const isLight = wing === 'light';
 
   const mood = isLight ? VOID_MOOD : MOODS[isCourt ? courtMoodIndex(cx, cz) : moodIndex(worldSeed, cx, cz)];
-  const width = round2(rng.range(13, 19));
-  const depth = round2(rng.range(13, 19));
-  const height = round2(rng.range(5.2, 7.6));
+  const width = artist ? 14 : round2(rng.range(13, 19));
+  const depth = artist ? 13 : round2(rng.range(13, 19));
+  const height = artist ? 7.6 : round2(rng.range(5.2, 7.6));
   const ceiling = rng.pick(mood.ceilings);
   const frame = rng.pick(mood.frames);
   const wallTint = rng.range(-0.05, 0.05);
-  const pieceCount = isLight ? 0 : isCourt ? rng.int(4, 6) : rng.int(5, 10);
+  const randomCount = isLight ? 0 : isCourt ? rng.int(4, 6) : rng.int(5, 10);
+  const pieceCount = artist ? Math.max(4, Math.min(10, artist.works)) : randomCount;
   const pieceHeight = Math.min(2.7, height * 0.4) * rng.range(0.85, 1.0);
 
   const furniture = [];
@@ -61,6 +78,8 @@ export function planRoom(worldSeed, cx, cz) {
     }
   } else if (isLight) {
     // nothing to bump into: the installation is walked through
+  } else if (artist) {
+    furniture.push(bench(0, 0, true));
   } else if (!isEntrance && rng.chance(0.4)) {
     furniture.push({ type: 'abstract', x: 0, z: 0, half: [0.7, 0.7], shape: rng.int(0, 3), spin: rng.range(0.1, 0.3) });
     if (rng.chance(0.6)) {
@@ -74,11 +93,11 @@ export function planRoom(worldSeed, cx, cz) {
   }
 
   const plan = {
-    cx, cz, key, wing, mood, width, depth, height, ceiling, frame, wallTint,
+    cx, cz, key, wing, artist, mood, width, depth, height, ceiling, frame, wallTint,
     accent: mood.accent, furniture,
     slots: planSlots(rng, width, depth, pieceCount, pieceHeight),
     seed: hashInts(worldSeed, cx, cz, 7),
-    poster: isEntrance || (wing === 'paintings' && hashInts(worldSeed, cx, cz, 13) % 10 < 3),
+    poster: !artist && (isEntrance || (wing === 'paintings' && hashInts(worldSeed, cx, cz, 13) % 10 < 3)),
   };
   planCache.set(key, plan);
   return plan;

@@ -109,6 +109,50 @@
     gap: 15px;
 }
 
+/* The person behind the repository. */
+.artist-card {
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.artist-who {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    color: inherit;
+    text-decoration: none;
+}
+
+.artist-who img { border-radius: 50%; }
+
+.artist-who span {
+    font-size: 0.8em;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--mid-grey);
+}
+
+.artist-who strong {
+    display: block;
+    font-size: 1.6em;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--charcoal, #222);
+}
+
+.artist-who:hover strong { text-decoration: underline; }
+
+.artist-card p {
+    margin: 12px 0 14px;
+    line-height: 1.5;
+    color: var(--mid-grey);
+}
+
+.artist-links { display: flex; flex-wrap: wrap; gap: 10px; }
+.btn-star { background: #ffd23f; color: #14182b; }
+.btn-room { background: transparent; border: 1px solid currentColor; color: inherit; }
+
 @media (max-width: 768px) {
     .artwork-frame {
         padding: 20px;

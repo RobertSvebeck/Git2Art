@@ -125,7 +125,7 @@ function buildPiece(room, slot, artwork, spec, materials, track) {
   }).catch(() => {});
   room.releases.push(() => releaseArt(artwork.image));
 
-  const plaqueTex = track(plaqueTexture(artwork.title, `${styleLabel(artwork.style)}  |  git2art`));
+  const plaqueTex = track(plaqueTexture(artwork.title, artwork.owner ? `by ${artwork.owner}  |  ${styleLabel(artwork.style)}` : `${styleLabel(artwork.style)}  |  git2art`));
   const plaque = new THREE.Mesh(
     track(new THREE.PlaneGeometry(PLAQUE_W, PLAQUE_H)),
     track(new THREE.MeshStandardMaterial({ map: plaqueTex, roughness: 0.7 })),

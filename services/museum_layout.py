@@ -19,6 +19,8 @@ STYLE_ROOMS = {
     'constellation': ('Constellations', 'The directory tree drawn as a star map: every star a file, every branch a folder.', 'Nocturne'),
 }
 
+ARTIST_MOODS = ['Salon', 'Sandstone', 'Blush', 'White Cube', 'Verdigris', 'Graphite']
+
 ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X']
 
 
@@ -85,9 +87,40 @@ def build_museum(artworks):
               'Void', chunk, kind='light')
         for i, chunk in enumerate(light_chunks)]}
 
+    artists = {'id': 'artists', 'name': 'The Artists', 'rooms': artist_rooms(artworks)}
+
     loved = sorted((a for a in artworks if a['likes'] > 0), key=lambda a: (-a['likes'], a['id']))[:ROOM_SIZE]
-    wings = [entrance, paintings, court, light]
+    wings = [entrance, paintings, court, light, artists]
     if loved:
         wings.append({'id': 'loved', 'name': 'Most Loved', 'rooms': [_room(
             'most-loved', 'Most Loved', 'The works visitors have liked most.', 'Salon', loved)]})
     return [wing for wing in wings if wing['rooms']]
+
+
+def artist_id(owner):
+    return f'artist-{owner.lower()}'
+
+
+def artist_rooms(artworks):
+    """One room per repository owner, the most-starred first."""
+    by_owner = {}
+    for artwork in artworks:
+        if artwork.get('owner'):
+            by_owner.setdefault(artwork['owner'], []).append(artwork)
+    rooms = []
+    for owner, works in by_owner.items():
+        repos = {}
+        for work in works:
+            repos.setdefault(work['repo_url'], {'title': work['title'], 'url': work['repo_url'], 'stars': work.get('stars')})
+        repos = sorted(repos.values(), key=lambda r: (-(r['stars'] or 0), r['title'].lower()))
+        count = len(repos)
+        intro = (f"Works painted from {count} {'repository' if count == 1 else 'repositories'} shared by {owner}. "
+                 'The code is the original; if you like what you see, give it a star.')
+        room = _room(artist_id(owner), owner, intro, '', sorted(works, key=lambda w: (w['title'].lower(), w['style'])))
+        room['artist'] = {'owner': owner, 'avatar': works[0].get('avatar'), 'profile': works[0].get('profile'),
+                          'repos': repos, 'stars': sum(r['stars'] or 0 for r in repos)}
+        rooms.append(room)
+    rooms.sort(key=lambda r: (-r['artist']['stars'], r['name'].lower()))
+    for index, room in enumerate(rooms):
+        room['mood'] = ARTIST_MOODS[index % len(ARTIST_MOODS)]
+    return rooms
