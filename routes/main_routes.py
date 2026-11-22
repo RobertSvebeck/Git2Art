@@ -11,6 +11,7 @@ from models.artwork import ArtworkLike, Artwork
 from models import ArtStyle
 from datetime import datetime
 import os
+import time
 import hashlib
 import base64
 
@@ -94,9 +95,19 @@ STYLE_LABELS = {
 }
 
 
+MUSEUM_PAGE_SECONDS = 120
+_museum_page = {'html': None, 'at': 0.0}
+
+
 @bp.route('/museum')
 def museum():
-    """The museum in 2D: works on any device, no WebGL needed."""
+    """The museum in 2D: works on any device, no WebGL needed.
+
+    The page holds every room and takes most of a second to build, so each
+    worker keeps the finished HTML for two minutes.
+    """
+    if _museum_page['html'] and time.time() - _museum_page['at'] < MUSEUM_PAGE_SECONDS:
+        return _museum_page['html']
     try:
         wings = build_museum(get_museum_artworks(current_app.config['GENERATED_IMAGES_DIR']))
     except Exception as e:
@@ -106,8 +117,11 @@ def museum():
     for index, room in enumerate(rooms):
         room['prev'] = rooms[index - 1] if index > 0 else None
         room['next'] = rooms[index + 1] if index < len(rooms) - 1 else None
-    return render_template('museum.html', wings=wings, rooms=rooms, style_labels=STYLE_LABELS,
+    html = render_template('museum.html', wings=wings, rooms=rooms, style_labels=STYLE_LABELS,
                            format_stars=format_stars)
+    if wings:
+        _museum_page.update(html=html, at=time.time())
+    return html
 
 
 @bp.route('/api/museum/artworks', methods=['GET'])

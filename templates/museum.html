@@ -48,7 +48,7 @@
             <div class="m2-room-label{% if room.artist %} m2-artist-label{% endif %}" data-item>
                 <p class="m2-wing-name">{{ room.wing }}</p>
                 {% if room.artist %}
-                <img class="m2-avatar" src="{{ room.artist.avatar }}" alt="{{ room.artist.owner }} on GitHub" loading="lazy" width="96" height="96">
+                <img class="m2-avatar" data-src="{{ room.artist.avatar }}" alt="{{ room.artist.owner }} on GitHub" loading="lazy" width="96" height="96">
                 {% endif %}
                 <h2>{{ room.name }}</h2>
                 {% if room.intro %}<p class="m2-intro">{{ room.intro }}</p>{% endif %}
@@ -78,7 +78,7 @@
                 </div>
                 {% else %}
                 <div class="m2-frame">
-                    <img src="{{ work.image }}" alt="{{ work.title }}, {{ style_labels.get(work.style, work.style) }} style" loading="lazy" style="aspect-ratio: {{ work.aspect }}">
+                    <img data-src="{{ work.image }}" alt="{{ work.title }}, {{ style_labels.get(work.style, work.style) }} style" style="aspect-ratio: {{ work.aspect }}">
                 </div>
                 {% endif %}
                 <figcaption class="m2-plaque">
@@ -147,5 +147,6 @@
     </div>
 </div>
 
+<noscript><p class="m2-empty">The museum needs JavaScript to hang its pictures. The <a href="{{ url_for('main.gallery') }}">gallery</a> works without it.</p></noscript>
 <script type="module" src="{{ url_for('static', filename='js/museum2d/main.js') }}"></script>
 {% endblock %}

@@ -3,10 +3,28 @@
 from flask import Flask
 import os
 
+ONE_WEEK = 7 * 24 * 3600
+CACHED_EXTENSIONS = ('.webp', '.png', '.jpg', '.jpeg', '.json', '.ico', '.svg')
+
+
+class Git2ArtFlask(Flask):
+    """Lets browsers keep pictures and repo data for a week.
+
+    Every request that reaches Python holds one of the hosting account's 30
+    entry processes, so a revalidation per picture per visit adds up. Scripts
+    and stylesheets still revalidate (no-cache), so a deploy never mixes old
+    and new 3D museum modules.
+    """
+
+    def get_send_file_max_age(self, filename):
+        if filename and filename.lower().endswith(CACHED_EXTENSIONS):
+            return ONE_WEEK
+        return super().get_send_file_max_age(filename)
+
 
 def create_app():
     """Create and configure the Flask application."""
-    app = Flask(__name__)
+    app = Git2ArtFlask(__name__)
 
     # Configuration
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-key-change-in-production')

@@ -209,6 +209,29 @@ Then open http://localhost:5001 in your browser.
 - Error handling and user feedback
 - Mobile-friendly design
 
+## Deployment on Oderland (LiteSpeed, cPanel Python app)
+
+The account allows 30 simultaneous requests (entry processes) in total, and every request that reaches Python holds one. Static files must therefore be served by LiteSpeed, not Flask:
+
+```bash
+# once, over SSH: find the subdomain's document root in cPanel > Domains
+ln -s ~/repositories/Git2Art/static ~/git2art.dabidao.com/static
+curl -sI https://git2art.dabidao.com/static/css/style.css | grep -i etag
+```
+
+Before the link the ETag looks like Werkzeug's `"1795337846.69-10556-1675563099"` (served by Python); afterwards it is LiteSpeed's own format. To let browsers keep pictures, add to the document root's `.htaccess`, above the CloudLinux block:
+
+```apache
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/webp "access plus 7 days"
+    ExpiresByType image/png "access plus 7 days"
+    ExpiresByType application/json "access plus 1 day"
+</IfModule>
+```
+
+The app also limits itself: the 2D museum loads only the open room's pictures, both museums fetch at most 4 files at a time per visitor, Flask lets browsers cache pictures and repo data for a week, and each worker keeps the `/museum` page for two minutes.
+
 ## How It Works
 
 1. **Reads the repository**: every tracked file at HEAD with its size, the commit in which it first appeared and how often it has changed, plus languages and a commit timeline (`scene/repodata.py`). A blobless clone is enough.

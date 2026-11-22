@@ -1,6 +1,7 @@
 // Procedural surface textures (canvas) and a reference-counted artwork texture cache.
 
 import * as THREE from 'three';
+import { throttled } from '../shared/throttle.js';
 import { Rng } from './rng.js';
 
 const SIZE = 1024;
@@ -203,7 +204,7 @@ export function acquireArt(url) {
   let entry = artCache.get(url);
   if (!entry) {
     entry = { refs: 0, texture: null, promise: null };
-    entry.promise = loader.loadAsync(url).then((texture) => {
+    entry.promise = throttled(() => loader.loadAsync(url)).then((texture) => {
       texture.colorSpace = THREE.SRGBColorSpace;
       texture.anisotropy = maxAnisotropy;
       if (uploader) uploader.initTexture(texture);

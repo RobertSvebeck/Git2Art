@@ -3,6 +3,7 @@
 // uProgress uniform decides what exists.
 
 import * as THREE from 'three';
+import { throttled } from '../shared/throttle.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { buildForm } from '../shared/repoform.js';
 
@@ -14,7 +15,7 @@ const dataCache = new Map();
 
 export function loadRepoData(url) {
   if (!dataCache.has(url)) {
-    dataCache.set(url, fetch(url).then((r) => {
+    dataCache.set(url, throttled(() => fetch(url)).then((r) => {
       if (!r.ok) throw new Error(`repo data ${r.status}`);
       return r.json();
     }));

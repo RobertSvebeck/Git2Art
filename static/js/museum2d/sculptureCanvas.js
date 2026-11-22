@@ -1,6 +1,7 @@
 // Draws a repository sculpture on a 2D canvas (no WebGL needed).
 
 import { buildForm } from '../shared/repoform.js';
+import { throttled } from '../shared/throttle.js';
 
 const CAMERA_DISTANCE = 4.2;
 const GROW_SECONDS = 7;
@@ -9,7 +10,7 @@ const HOLD_SECONDS = 3;
 const dataCache = new Map();
 
 export function loadData(url) {
-  if (!dataCache.has(url)) dataCache.set(url, fetch(url).then((r) => (r.ok ? r.json() : Promise.reject(r.status))));
+  if (!dataCache.has(url)) dataCache.set(url, throttled(() => fetch(url)).then((r) => (r.ok ? r.json() : Promise.reject(r.status))));
   return dataCache.get(url);
 }
 

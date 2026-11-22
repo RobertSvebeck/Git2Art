@@ -142,6 +142,8 @@
 - ✅ Celebrating the artists: owner, avatar, contributors and star count on every work; star buttons; an artist room per owner in both museums (teleport in 3D, `?artist=owner`); artist card on the artwork page; "Code is a shared art" copy on home and about
 - [ ] Artists: run `scripts/refresh_github_info.py` from cron (or set GITHUB_TOKEN) so star counts stay fresh
 - [ ] Artists: show the owner on /gallery cards too
+- [ ] Server: symlink `static` into the subdomain's document root so LiteSpeed serves it (README, "Deployment on Oderland"); measured 2026-11-22: one 2D museum visit put 307 requests through Python, against EP 30
+- ✅ Load limits in the app: 2D museum loads only the open room, max 4 parallel downloads per visitor, week-long browser cache for pictures, /museum page cached per worker
 - [ ] On the server after pulling: `python scripts/render_data_style.py <style>` for each style (or `apply_style_rework.py --yes --render`), then `python scripts/cleanup_artworks.py --superseded --retired --yes`
 
 ## Completed ✅

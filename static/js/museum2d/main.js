@@ -3,6 +3,7 @@
 import { loadData, SculptureCanvas } from './sculptureCanvas.js';
 import { LightCanvas } from './lightCanvas.js';
 import { sculptureLines } from '../shared/repoform.js';
+import { throttled } from '../shared/throttle.js';
 
 const $ = (id) => document.getElementById(id);
 const rooms = [...document.querySelectorAll('.m2-room')];
@@ -20,6 +21,27 @@ function labelIndex(room) {
   return items(room).findIndex((el) => el.classList.contains('m2-room-label'));
 }
 
+// Pictures load only when their room (or the next one) is opened, a few at
+// a time: all rooms are in the page, and loading them all at once would tie
+// up the server.
+function hangPictures(room) {
+  if (!room || room.dataset.hung) return;
+  room.dataset.hung = '1';
+  room.querySelectorAll('img[data-src]').forEach((img) => {
+    const src = img.dataset.src;
+    img.removeAttribute('data-src');
+    if (!src.startsWith('/')) {
+      img.src = src;
+      return;
+    }
+    throttled(() => new Promise((resolve) => {
+      img.onload = resolve;
+      img.onerror = resolve;
+      img.src = src;
+    }));
+  });
+}
+
 function openRoom(index, focusAt = null, push = true) {
   if (index < 0 || index >= rooms.length) return;
   if (current >= 0) rooms[current].classList.remove('active');
@@ -33,6 +55,8 @@ function openRoom(index, focusAt = null, push = true) {
   if (push && location.hash !== `#${room.id}`) history.pushState(null, '', `#${room.id}`);
   const walk3d = document.querySelector('.m2-3d');
   walk3d.href = room.dataset.owner ? `${walk3d.pathname}?artist=${encodeURIComponent(room.dataset.owner)}` : walk3d.pathname;
+  hangPictures(room);
+  hangPictures(rooms[current + 1]);
   wakeSculptures(room);
   setFocus(focusAt === 'end' ? items(room).length - 1 : focusAt ?? labelIndex(room), 'auto');
 }
