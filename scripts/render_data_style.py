@@ -1,7 +1,9 @@
 """Render a repository-data style for every repository with a repodata file.
 
 No cloning: works from static/generated/repodata/*.json. Each image is
-watermarked, gets a museum WebP copy and an artworks row. --dry-run renders
+watermarked, gets a museum WebP copy and an artworks row. A new row takes the
+date the repository was first added, so a re-render does not make every
+artwork of this style look brand new. --dry-run renders
 into a temporary folder instead and touches neither static/generated nor the DB.
 
 Usage: python scripts/render_data_style.py pixel_city [--dry-run] [--size 1600]
@@ -42,8 +44,13 @@ def main():
     size = int(sys.argv[sys.argv.index('--size') + 1]) if '--size' in sys.argv else 1600
     render = DATA_STYLES[style]
     out_dir = tempfile.mkdtemp(prefix=f'git2art_{style}_') if dry_run else IMAGES_DIR
+    first_added = {}
     if not dry_run:
         from models.artwork import Artwork
+        from utils.db import get_db_cursor
+        with get_db_cursor(commit=False) as cursor:
+            cursor.execute('SELECT repo_url, MIN(created_at) AS first FROM artworks GROUP BY repo_url')
+            first_added = {row['repo_url']: row['first'] for row in cursor.fetchall()}
 
     data_dir = os.path.join(IMAGES_DIR, REPO_DATA_SUBDIR)
     names = sorted(f for f in os.listdir(data_dir) if f.endswith('.json'))
@@ -60,6 +67,11 @@ def main():
         if not dry_run:
             make_museum_image(IMAGES_DIR, filename, overwrite=True)
             Artwork.create(repo_url, repo_name, head, f'/static/generated/{filename}', filename, style)
+            if first_added.get(repo_url):
+                with get_db_cursor(commit=True) as cursor:
+                    cursor.execute('UPDATE artworks SET created_at = %s WHERE repo_url = %s AND commit_hash = %s'
+                                   ' AND art_style = %s AND created_at > %s',
+                                   (first_added[repo_url], repo_url, head, style, first_added[repo_url]))
         print(f'[{index}/{len(names)}] {repo_name} {width}x{height} {time.time() - started:.1f}s'
               + (' (dry run)' if dry_run else ''))
     if dry_run:
