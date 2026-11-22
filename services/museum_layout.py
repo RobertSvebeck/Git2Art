@@ -40,7 +40,11 @@ def _commit_count(artwork):
 
 def build_museum(artworks):
     """Return wings -> rooms -> works, in walking order."""
-    newest = sorted(artworks, key=lambda a: -a['id'])[:ROOM_SIZE]
+    newest, seen = [], set()
+    for artwork in sorted(artworks, key=lambda a: (a.get('added', ''), a['id']), reverse=True):
+        if artwork['repo_url'] not in seen and len(newest) < ROOM_SIZE:
+            seen.add(artwork['repo_url'])
+            newest.append(artwork)
     entrance = {'id': 'entrance', 'name': 'Entrance Hall', 'rooms': [_room(
         'new-acquisitions', 'New Acquisitions',
         'The most recent works in the collection, freshly generated from public repositories.',

@@ -77,7 +77,7 @@ def get_museum_artworks(images_dir):
     """Latest artwork per (repository, style), skipping images missing on disk."""
     with get_db_cursor(commit=False) as cursor:
         cursor.execute("""
-            SELECT a.id, a.repo_name, a.repo_url, a.art_style, a.image_filename, a.like_count
+            SELECT a.id, a.repo_name, a.repo_url, a.art_style, a.image_filename, a.like_count, a.created_at
             FROM artworks a
             INNER JOIN (
                 SELECT repo_url, art_style, MAX(created_at) AS max_created_at
@@ -110,6 +110,7 @@ def get_museum_artworks(images_dir):
             'repo_url': row['repo_url'],
             'style': row['art_style'],
             'likes': row['like_count'],
+            'added': row['created_at'].isoformat() if row['created_at'] else '',
             'image': url,
             'aspect': round(width / height, 4),
             'data': f'/static/generated/{REPO_DATA_SUBDIR}/{os.path.basename(data_file)}'
