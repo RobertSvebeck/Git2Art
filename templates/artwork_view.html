@@ -4,6 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ artwork.repo_name }} - Git2Art</title>
+    {% set title = artwork.repo_name ~ ' in ' ~ artwork.art_style_name ~ ' style' %}
+    {% set description = 'Art generated from the GitHub repository ' ~ artwork.repo_name ~ (' by ' ~ artwork.artist.owner if artwork.artist else '') ~ ', in ' ~ artwork.art_style_name ~ ' style.' %}
+    <meta name="description" content="{{ description }}">
+    <link rel="canonical" href="{{ site_url }}{{ request.path }}">
+    <meta property="og:title" content="{{ title }}">
+    <meta property="og:description" content="{{ description }}">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="{{ site_url }}{{ request.path }}">
+    <meta property="og:image" content="{{ site_url }}{{ artwork.image_url | urlencode }}">
+    <meta property="og:image:alt" content="{{ title }}">
+    <meta property="og:site_name" content="Git2Art">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ title }}">
+    <meta name="twitter:description" content="{{ description }}">
+    <meta name="twitter:image" content="{{ site_url }}{{ artwork.image_url | urlencode }}">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/artwork_view.css') }}">
 </head>

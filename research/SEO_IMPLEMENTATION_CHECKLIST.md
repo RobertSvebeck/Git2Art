@@ -72,19 +72,19 @@
 
 - [ ] Set up Google Analytics
   - Go to: https://analytics.google.com
-  - Create property for git2art.com
+  - Create property for git2art.dabidao.com
   - Get tracking ID (format: G-XXXXXXXXXX)
   - Uncomment GA section in `templates/base.html` (line 93-103)
   - Replace `G-XXXXXXXXXX` with your tracking ID
 
 - [ ] Configure Google Search Console
   - Go to: https://search.google.com/search-console
-  - Add property: https://git2art.com
+  - Add property: https://git2art.dabidao.com
   - Choose verification method (meta tag recommended)
   - Copy verification code
   - Uncomment and paste in `templates/base.html` (line 106)
   - Verify ownership
-  - Submit sitemap: https://git2art.com/sitemap.xml
+  - Submit sitemap: https://git2art.dabidao.com/sitemap.xml
 
 ### High Priority (First Month)
 - [ ] Test social sharing previews
@@ -95,7 +95,7 @@
 
 - [ ] Submit to Bing Webmaster Tools
   - Go to: https://www.bing.com/webmaster
-  - Add property: https://git2art.com
+  - Add property: https://git2art.dabidao.com
   - Verify ownership
   - Submit sitemap
 
@@ -186,7 +186,7 @@
 
 ### Branded Keywords (Important)
 - git2art
-- git2art.com
+- git2art.dabidao.com
 - repository art generator
 
 ### Content Keywords (Future blog content)

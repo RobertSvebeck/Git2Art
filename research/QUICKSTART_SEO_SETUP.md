@@ -46,7 +46,7 @@ Example artwork preview in center
 
 [FOOTER]
 Transform Code Into Art
-git2art.com
+git2art.dabidao.com
 ```
 
 ### 2. Add Favicon (3 minutes)
@@ -63,7 +63,7 @@ Files are already referenced in base.html, just need the images.
 
 **Steps:**
 1. Go to [Google Analytics](https://analytics.google.com)
-2. Create an account for git2art.com
+2. Create an account for git2art.dabidao.com
 3. Get your Tracking ID (format: G-XXXXXXXXXX)
 4. Open `templates/base.html`
 5. Uncomment the Google Analytics section and replace `G-XXXXXXXXXX` with your ID
@@ -85,7 +85,7 @@ Files are already referenced in base.html, just need the images.
 **Steps:**
 1. Go to [Google Search Console](https://search.google.com/search-console)
 2. Click "Add property"
-3. Enter: https://git2art.com
+3. Enter: https://git2art.dabidao.com
 4. Choose verification method:
    - **Recommended**: Add meta tag to `base.html`
    - Or: Add DNS record to your domain
@@ -99,23 +99,23 @@ Files are already referenced in base.html, just need the images.
 9. In Search Console, click "Verify"
 10. Once verified, submit your sitemap:
     - Click "Sitemaps" in left menu
-    - Enter: `https://git2art.com/sitemap.xml`
+    - Enter: `https://git2art.dabidao.com/sitemap.xml`
     - Click "Submit"
 
 ### 5. Test Social Media Sharing (5 minutes)
 
 **Test with:**
 1. **Twitter**: [Card Validator](https://cards-dev.twitter.com/validator)
-   - Paste: https://git2art.com/
+   - Paste: https://git2art.dabidao.com/
    - Verify image and text display correctly
 
 2. **Facebook**: [Sharing Debugger](https://developers.facebook.com/tools/debug/)
-   - Paste: https://git2art.com/
+   - Paste: https://git2art.dabidao.com/
    - Click "Scrape Again"
    - Verify image and description
 
 3. **LinkedIn**: [Post Inspector](https://www.linkedin.com/post-inspector/)
-   - Paste: https://git2art.com/
+   - Paste: https://git2art.dabidao.com/
    - Check preview
 
 ### 6. Monitor Analytics (Ongoing)
@@ -139,9 +139,9 @@ Files are already referenced in base.html, just need the images.
 
 **Bing Webmaster Tools** (5 minutes):
 1. Go to [Bing Webmaster Tools](https://www.bing.com/webmaster)
-2. Add site: https://git2art.com
+2. Add site: https://git2art.dabidao.com
 3. Verify ownership
-4. Submit sitemap: https://git2art.com/sitemap.xml
+4. Submit sitemap: https://git2art.dabidao.com/sitemap.xml
 
 **Yandex** (if targeting Russia):
 1. Go to [Yandex Webmaster](https://webmaster.yandex.com/)

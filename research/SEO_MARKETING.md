@@ -192,7 +192,7 @@ Add your Google Analytics ID to `base.html`:
 
 ### Steps to Implement
 1. Go to https://search.google.com/search-console
-2. Add property for git2art.com
+2. Add property for git2art.dabidao.com
 3. Verify ownership (add verification meta tag)
 4. Submit sitemap.xml
 5. Monitor:

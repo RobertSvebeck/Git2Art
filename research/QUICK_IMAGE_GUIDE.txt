@@ -53,7 +53,7 @@ Features:
 - Top: Bold "Git2Art" in white text
 - Center: Colorful abstract art with geometric shapes, flowing curves,
   vibrant blues, purples, oranges, yellows
-- Bottom: "Transform Code Into Art" in white text, "git2art.com"
+- Bottom: "Transform Code Into Art" in white text, "git2art.dabidao.com"
 - Background: Purple gradient (#667eea to #764ba2)
 - Style: Modern, bold, abstract expressionism, professional, gallery-quality
 - Include subtle code elements or technical-looking forms
@@ -254,17 +254,17 @@ TESTING YOUR IMAGES (After adding files):
 
 2. Test OG Image on Twitter:
    - Go to: https://cards-dev.twitter.com/validator
-   - Paste: https://git2art.com
+   - Paste: https://git2art.dabidao.com
    - Verify your image displays correctly
 
 3. Test OG Image on Facebook:
    - Go to: https://developers.facebook.com/tools/debug/
-   - Paste: https://git2art.com
+   - Paste: https://git2art.dabidao.com
    - Verify your image displays
 
 4. Test OG Image on LinkedIn:
    - Go to: https://www.linkedin.com/post-inspector/
-   - Paste: https://git2art.com
+   - Paste: https://git2art.dabidao.com
    - Verify your image displays
 
 

@@ -75,7 +75,7 @@ def generate_art_from_github(github_url, temp_dir, images_dir, force=False, art_
                 timeout=PAINT_TIMEOUT_SECONDS
             )
             # Log the output for debugging aspect ratio detection
-            debug_log = os.path.join(images_dir, 'debug.log')
+            debug_log = os.path.join(temp_dir, 'debug.log')
             with open(debug_log, 'a') as f:
                 f.write(f"\n=== Generation for {repo_name} at {datetime.now()} ===\n")
                 f.write(f"Command: python3 git2art.py --repo {repo_path} --output {output_path} --size 1600 --aspect auto\n")
@@ -87,7 +87,7 @@ def generate_art_from_github(github_url, temp_dir, images_dir, force=False, art_
         except subprocess.TimeoutExpired:
             raise Exception("Painting took too long. The repository may be too large.")
         except subprocess.CalledProcessError as e:
-            debug_log = os.path.join(images_dir, 'debug.log')
+            debug_log = os.path.join(temp_dir, 'debug.log')
             with open(debug_log, 'a') as f:
                 f.write(f"\n=== ERROR for {repo_name} at {datetime.now()} ===\n")
                 f.write(f"stderr: {e.stderr}\n")

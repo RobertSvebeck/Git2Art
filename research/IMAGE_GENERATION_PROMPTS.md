@@ -23,7 +23,7 @@ Design specifications:
 - Include geometric shapes, curves, and vibrant colors (blues, purples, oranges, yellows)
 - Top section: Bold "Git2Art" text in white, sans-serif, modern font
 - Subtitle: "Transform Code Into Art" in smaller white text
-- Bottom right: "git2art.com" in subtle white text
+- Bottom right: "git2art.dabidao.com" in subtle white text
 - Style: Bold, expressive, abstract expressionism inspired by De Kooning
 - Artistic elements: Include flowing brushstrokes, organic shapes, and layered color blocks
 - Professional appearance: Clean composition, well-balanced, gallery-worthy
@@ -69,7 +69,7 @@ GitHub repositories into abstract art. The image should feature:
 - Colors: Vibrant mix of blues, purples, oranges, yellows
 - Text: Large "Git2Art" heading in bold white sans-serif
 - Secondary text: "Transform Code Into Art" in white
-- Website: "git2art.com" in bottom corner
+- Website: "git2art.dabidao.com" in bottom corner
 - Style: Modern, professional, creative, expressive
 - Aesthetic: Abstract expressionism, gallery-worthy quality
 - Elements: Include subtle code-like elements, brushstrokes, color blocks

@@ -3,6 +3,7 @@
 from flask import Flask
 import os
 
+SITE_URL = 'https://git2art.dabidao.com'
 ONE_WEEK = 7 * 24 * 3600
 CACHED_EXTENSIONS = ('.webp', '.png', '.jpg', '.jpeg', '.json', '.ico', '.svg')
 
@@ -33,6 +34,8 @@ def create_app():
     app.config['TEMP_REPOS_DIR'] = os.path.join(app.root_path, 'temp_repos')
     app.config['PAGE_CACHE_DIR'] = os.path.join(app.root_path, 'page_cache')
 
+    app.config['SITE_URL'] = SITE_URL
+
     # Ensure directories exist
     os.makedirs(app.config['GENERATED_IMAGES_DIR'], exist_ok=True)
     os.makedirs(app.config['TEMP_REPOS_DIR'], exist_ok=True)
@@ -48,6 +51,10 @@ def create_app():
             values['v'] = int(os.path.getmtime(os.path.join(app.static_folder, values['filename'])))
         except OSError:
             pass
+
+    @app.context_processor
+    def site_address():
+        return {'site_url': SITE_URL}
 
     # Register routes
     from routes import main_routes

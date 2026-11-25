@@ -143,6 +143,9 @@
 - [ ] Artists: run `scripts/refresh_github_info.py` from cron (or set GITHUB_TOKEN) so star counts stay fresh
 - ✅ Artists: owner, star button and artist-room link on /gallery cards (search finds owners)
 - ✅ Server: `static` symlinked into the document root, LiteSpeed serves it (2026-11-22); static URLs versioned with `?v=<mtime>`
+- ✅ Worker limit (LSAPI_CHILDREN): likes sent with the gallery page, shared museum page cache, painting limit and timeouts, robots.txt served at the root, PNG downloads fixed (2026-11-25)
+- ✅ Only domain is git2art.dabidao.com (`SITE_URL` in app.py); real canonical tags, artwork pages with social tags, museums and artworks in the sitemap; downloads limited to images, debug log out of the public folder (2026-11-25)
+- [ ] Server: delete the old public `static/generated/debug.log`
 - [ ] cPanel Hotlink Protection: tick "Allow direct requests" (PNG without referer gets 403, breaks og:image previews)
 - ✅ Load limits in the app: 2D museum loads only the open room, max 4 parallel downloads per visitor, week-long browser cache for pictures, /museum page cached per worker
 - [ ] On the server after pulling: `python scripts/render_data_style.py <style>` for each style (or `apply_style_rework.py --yes --render`), then `python scripts/cleanup_artworks.py --superseded --retired --yes`

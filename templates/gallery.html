@@ -10,11 +10,9 @@
 
 {% block og_description %}Browse stunning artwork generated from open source GitHub repositories.{% endblock %}
 
-{% block og_url %}/gallery{% endblock %}
+{% block canonical_path %}{{ request.path }}{% if pagination.page > 1 %}?page={{ pagination.page }}{% endif %}{% endblock %}
 
 {% block twitter_title %}Git2Art Gallery - See Beautiful Code Art{% endblock %}
-
-{% block canonical_url %}/gallery{% endblock %}
 
 {% block extra_css %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/gallery.css') }}">
@@ -27,7 +25,7 @@
         "@type": "CollectionPage",
         "name": "Git2Art Gallery",
         "description": "Gallery of artwork generated from GitHub repositories",
-        "url": "https://git2art.com/gallery"
+        "url": "{{ site_url }}/gallery"
     }
     </script>
 {% endblock %}

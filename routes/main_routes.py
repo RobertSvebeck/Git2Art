@@ -5,13 +5,13 @@ from services.art_service import generate_art_from_github, get_all_gallery_artwo
 from services.git_service import validate_github_url
 from services.museum_service import REPO_DATA_SUBDIR, get_museum_artworks
 from services.museum_layout import build_museum
+from services.sitemap import build_sitemap
 from services.github_info import avatar_url, format_stars, profile_url, repo_owner, stars_for
 from utils.image_io import to_png_bytes
 from utils.file_lock import lock_slot
 from utils.page_cache import cached_text
 from models.artwork import ArtworkLike, Artwork
 from models import ArtStyle
-from datetime import datetime
 import os
 import hashlib
 import json
@@ -138,13 +138,17 @@ def render_museum(wings):
 def museum_artworks():
     """Catalogue for the 3D museum: latest artwork per repository and style."""
     try:
-        catalogue = cached_text(museum_cache_path('catalogue.json'), MUSEUM_CACHE_SECONDS, build_catalogue)
+        catalogue = museum_catalogue()
     except Exception as e:
         print(f"Error: museum catalogue failed: {e}")
         return jsonify({'error': 'Could not load artworks'}), 500
     response = Response(catalogue, mimetype='application/json')
     response.headers['Cache-Control'] = 'public, max-age=300'
     return response
+
+
+def museum_catalogue():
+    return cached_text(museum_cache_path('catalogue.json'), MUSEUM_CACHE_SECONDS, build_catalogue)
 
 
 def build_catalogue():
@@ -241,12 +245,16 @@ def generate():
         return jsonify({'error': str(e)}), 500
 
 
+DOWNLOAD_EXTENSIONS = ('.webp', '.png', '.jpg', '.jpeg')
+
+
 @bp.route('/download/<filename>')
 def download(filename):
     """Download a generated artwork."""
     filepath = os.path.join(current_app.config['GENERATED_IMAGES_DIR'], filename)
 
-    if os.path.basename(filename) != filename or not os.path.exists(filepath):
+    is_artwork = os.path.basename(filename) == filename and filename.lower().endswith(DOWNLOAD_EXTENSIONS)
+    if not is_artwork or not os.path.isfile(filepath):
         return jsonify({'error': 'File not found'}), 404
 
     if filename.lower().endswith('.webp'):
@@ -342,39 +350,11 @@ def robots():
 
 @bp.route('/sitemap.xml', methods=['GET'])
 def sitemap():
-    """Generate sitemap.xml for search engines."""
-    pages = [
-        {
-            'loc': 'https://git2art.com/',
-            'lastmod': datetime.now().strftime('%Y-%m-%d'),
-            'changefreq': 'daily',
-            'priority': '1.0'
-        },
-        {
-            'loc': 'https://git2art.com/about',
-            'lastmod': datetime.now().strftime('%Y-%m-%d'),
-            'changefreq': 'weekly',
-            'priority': '0.8'
-        },
-        {
-            'loc': 'https://git2art.com/gallery',
-            'lastmod': datetime.now().strftime('%Y-%m-%d'),
-            'changefreq': 'daily',
-            'priority': '0.9'
-        }
-    ]
-
-    sitemap_xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
-    sitemap_xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-
-    for page in pages:
-        sitemap_xml += '  <url>\n'
-        sitemap_xml += f'    <loc>{page["loc"]}</loc>\n'
-        sitemap_xml += f'    <lastmod>{page["lastmod"]}</lastmod>\n'
-        sitemap_xml += f'    <changefreq>{page["changefreq"]}</changefreq>\n'
-        sitemap_xml += f'    <priority>{page["priority"]}</priority>\n'
-        sitemap_xml += '  </url>\n'
-
-    sitemap_xml += '</urlset>'
-
-    return Response(sitemap_xml, mimetype='application/xml')
+    """Every page and artwork, for search engines."""
+    try:
+        artworks = json.loads(museum_catalogue())['artworks']
+    except Exception as e:
+        print(f"Warning: sitemap without artworks: {e}")
+        artworks = []
+    xml = build_sitemap(current_app.config['SITE_URL'], artworks)
+    return Response(xml, mimetype='application/xml')

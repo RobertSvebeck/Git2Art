@@ -29,7 +29,7 @@
    │                                                          │
    │  BOTTOM SECTION (20%)                                    │
    │  "Transform Code Into Art"                               │
-   │  "git2art.com" (small, subtle)                           │
+   │  "git2art.dabidao.com" (small, subtle)                   │
    └──────────────────────────────────────────────────────────┘
 
 
@@ -115,7 +115,7 @@
 │  ║         "Transform Code Into Art"                              ║  │
 │  ║         (20-25px font size, white)                             ║  │
 │  ║                                                                ║  │
-│  ║                              git2art.com                      ║  │
+│  ║                              git2art.dabidao.com              ║  │
 │  ║                              (12-15px, subtle white)           ║  │
 │  ╚════════════════════════════════════════════════════════════════╝  │
 │                                                                        │
@@ -214,7 +214,7 @@ The favicon and touch icon are already referenced in your `templates/base.html`:
 
 The OG image is referenced in meta tags:
 ```html
-<meta property="og:image" content="https://git2art.com/static/images/og-image.png">
+<meta property="og:image" content="https://git2art.dabidao.com/static/images/og-image.png">
 ```
 
 **Just add your images to these locations:**
@@ -231,12 +231,12 @@ The OG image is referenced in meta tags:
 Facebook Share Preview:
 ┌──────────────────────┐
 │  ┌──────────────────┐│
-│  │  [OG Image]      ││ When someone shares git2art.com
+│  │  [OG Image]      ││ When someone shares git2art.dabidao.com
 │  │  1200x630        ││ on Facebook
 │  └──────────────────┘│
 │  Git2Art             │
 │  Transform Code...   │
-│  git2art.com         │
+│  git2art.dabidao.com │
 └──────────────────────┘
 
 Twitter/X Tweet:
@@ -268,13 +268,13 @@ Bookmarks Bar:
 
 Browser History:
 ┌─────────┐
-│ [Fav] │ git2art.com - Transform Code Into Art
+│ [Fav] │ git2art.dabidao.com - Transform Code Into Art
 └─────────┘
 
 Tab Preview (Hover):
 ┌──────────────────────┐
 │ [Favicon]           │
-│ git2art.com         │
+│ git2art.dabidao.com │
 └──────────────────────┘
 ```
 
@@ -374,7 +374,7 @@ Before downloading/using your images:
    ```
    Tool: Twitter Card Validator
    URL: https://cards-dev.twitter.com/validator
-   Test: https://git2art.com
+   Test: https://git2art.dabidao.com
    ```
 
 2. **Test Favicon in Browser:**

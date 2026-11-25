@@ -10,11 +10,7 @@
 
 {% block og_description %}Transform your GitHub repositories into unique abstract artwork based on code metrics and structure.{% endblock %}
 
-{% block og_url %}/{% endblock %}
-
 {% block twitter_title %}Git2Art - Code to Art in Seconds{% endblock %}
-
-{% block canonical_url %}/{% endblock %}
 
 {% block extra_css %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/gallery.css') }}">
@@ -27,8 +23,8 @@
         "@type": "WebApplication",
         "name": "Git2Art",
         "description": "Transform GitHub repositories into beautiful abstract art",
-        "url": "https://git2art.com",
-        "image": "https://git2art.com/static/images/og-image.png",
+        "url": "{{ site_url }}",
+        "image": "{{ site_url }}/static/images/og-image.png",
         "applicationCategory": "Utilities",
         "offers": {
             "@type": "Offer",

@@ -21,4 +21,4 @@ Disallow: /temp_repos/
 Crawl-delay: 10
 
 # Sitemap location
-Sitemap: https://git2art.com/sitemap.xml
+Sitemap: https://git2art.dabidao.com/sitemap.xml
