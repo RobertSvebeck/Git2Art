@@ -7,12 +7,14 @@ from services.museum_service import REPO_DATA_SUBDIR, get_museum_artworks
 from services.museum_layout import build_museum
 from services.github_info import avatar_url, format_stars, profile_url, repo_owner, stars_for
 from utils.image_io import to_png_bytes
+from utils.file_lock import lock_slot
+from utils.page_cache import cached_text
 from models.artwork import ArtworkLike, Artwork
 from models import ArtStyle
 from datetime import datetime
 import os
-import time
 import hashlib
+import json
 import base64
 
 bp = Blueprint('main', __name__)
@@ -67,6 +69,7 @@ def gallery():
     return render_template(
         'gallery.html',
         artworks=gallery_data['artworks'],
+        liked_ids=liked_by_visitor([artwork['id'] for artwork in gallery_data['artworks']]),
         pagination={
             'page': gallery_data['page'],
             'per_page': gallery_data['per_page'],
@@ -95,46 +98,57 @@ STYLE_LABELS = {
 }
 
 
-MUSEUM_PAGE_SECONDS = 120
-_museum_page = {'html': None, 'at': 0.0}
+MUSEUM_CACHE_SECONDS = 120
+
+
+def museum_cache_path(filename):
+    return os.path.join(current_app.config['PAGE_CACHE_DIR'], filename)
 
 
 @bp.route('/museum')
 def museum():
     """The museum in 2D: works on any device, no WebGL needed.
 
-    The page holds every room and takes most of a second to build, so each
-    worker keeps the finished HTML for two minutes.
+    The page holds every room and takes up to two seconds to build, so all
+    workers share the finished HTML for two minutes.
     """
-    if _museum_page['html'] and time.time() - _museum_page['at'] < MUSEUM_PAGE_SECONDS:
-        return _museum_page['html']
     try:
-        wings = build_museum(get_museum_artworks(current_app.config['GENERATED_IMAGES_DIR']))
+        html = cached_text(museum_cache_path('museum.html'), MUSEUM_CACHE_SECONDS, build_museum_page)
     except Exception as e:
         print(f"Error: museum failed: {e}")
-        wings = []
+        html = None
+    return html or render_museum([])
+
+
+def build_museum_page():
+    wings = build_museum(get_museum_artworks(current_app.config['GENERATED_IMAGES_DIR']))
+    return render_museum(wings) if wings else None
+
+
+def render_museum(wings):
     rooms = [dict(room, wing=wing['name'], wing_id=wing['id']) for wing in wings for room in wing['rooms']]
     for index, room in enumerate(rooms):
         room['prev'] = rooms[index - 1] if index > 0 else None
         room['next'] = rooms[index + 1] if index < len(rooms) - 1 else None
-    html = render_template('museum.html', wings=wings, rooms=rooms, style_labels=STYLE_LABELS,
+    return render_template('museum.html', wings=wings, rooms=rooms, style_labels=STYLE_LABELS,
                            format_stars=format_stars)
-    if wings:
-        _museum_page.update(html=html, at=time.time())
-    return html
 
 
 @bp.route('/api/museum/artworks', methods=['GET'])
 def museum_artworks():
     """Catalogue for the 3D museum: latest artwork per repository and style."""
     try:
-        artworks = get_museum_artworks(current_app.config['GENERATED_IMAGES_DIR'])
+        catalogue = cached_text(museum_cache_path('catalogue.json'), MUSEUM_CACHE_SECONDS, build_catalogue)
     except Exception as e:
         print(f"Error: museum catalogue failed: {e}")
         return jsonify({'error': 'Could not load artworks'}), 500
-    response = jsonify({'artworks': artworks})
+    response = Response(catalogue, mimetype='application/json')
     response.headers['Cache-Control'] = 'public, max-age=300'
     return response
+
+
+def build_catalogue():
+    return json.dumps({'artworks': get_museum_artworks(current_app.config['GENERATED_IMAGES_DIR'])})
 
 
 @bp.route('/artwork/<int:artwork_id>')
@@ -160,6 +174,7 @@ def artwork_view(artwork_id):
         'image_url': image_url,
         'image_filename': artwork['image_filename'],
         'like_count': artwork['like_count'],
+        'liked': artwork_id in liked_by_visitor([artwork_id]),
         'art_style': art_style,
         'art_style_name': art_style_name,
         'created_at_formatted': artwork['created_at'].strftime('%B %d, %Y') if artwork.get('created_at') else 'Unknown'
@@ -176,6 +191,10 @@ def artwork_view(artwork_id):
         }
 
     return render_template('artwork_view.html', artwork=artwork_data)
+
+
+# Each painting holds a worker process for up to minutes; the account has 35 in total
+MAX_PAINTINGS = 4
 
 
 @bp.route('/generate', methods=['POST'])
@@ -198,14 +217,16 @@ def generate():
         return jsonify({'error': f'Invalid or inactive art style: {art_style}'}), 400
 
     try:
-        # Generate artwork
-        result = generate_art_from_github(
-            github_url,
-            current_app.config['TEMP_REPOS_DIR'],
-            current_app.config['GENERATED_IMAGES_DIR'],
-            force=force_regenerate,
-            art_style=art_style
-        )
+        with lock_slot(current_app.config['TEMP_REPOS_DIR'], 'painting', MAX_PAINTINGS) as free:
+            if not free:
+                return jsonify({'error': 'The studio is busy with other paintings. Please try again in a minute.'}), 503
+            result = generate_art_from_github(
+                github_url,
+                current_app.config['TEMP_REPOS_DIR'],
+                current_app.config['GENERATED_IMAGES_DIR'],
+                force=force_regenerate,
+                art_style=art_style
+            )
 
         return jsonify({
             'success': True,
@@ -230,7 +251,10 @@ def download(filename):
 
     if filename.lower().endswith('.webp'):
         png_name = os.path.splitext(filename)[0] + '.png'
-        return send_file(to_png_bytes(filepath), mimetype='image/png', as_attachment=True, download_name=png_name)
+        # Plain bytes: LiteSpeed's file wrapper needs a real file and answers 500 for a BytesIO
+        response = Response(to_png_bytes(filepath), mimetype='image/png')
+        response.headers.set('Content-Disposition', 'attachment', filename=png_name)
+        return response
     return send_file(filepath, as_attachment=True)
 
 
@@ -239,6 +263,15 @@ def get_user_identifier():
     if 'user_id' not in session:
         session['user_id'] = hashlib.md5(os.urandom(32)).hexdigest()
     return session['user_id']
+
+
+def liked_by_visitor(artwork_ids):
+    """Liked artworks, sent with the page so it needs no request per artwork."""
+    try:
+        return ArtworkLike.liked_ids(artwork_ids, session.get('user_id'))
+    except Exception as e:
+        print(f"Warning: could not load likes: {e}")
+        return set()
 
 
 @bp.route('/api/artwork/<int:artwork_id>/like', methods=['POST'])
@@ -265,18 +298,6 @@ def like_artwork(artwork_id):
             'like_count': artwork['like_count'] if artwork else 0
         })
 
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-
-@bp.route('/api/artwork/<int:artwork_id>/has_liked', methods=['GET'])
-def check_has_liked(artwork_id):
-    """Check if current user has liked an artwork."""
-    user_id = get_user_identifier()
-
-    try:
-        has_liked = ArtworkLike.has_liked(artwork_id, user_id)
-        return jsonify({'has_liked': has_liked})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -312,6 +333,11 @@ def get_versions(repo_url_encoded):
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+@bp.route('/robots.txt')
+def robots():
+    return current_app.send_static_file('robots.txt')
 
 
 @bp.route('/sitemap.xml', methods=['GET'])

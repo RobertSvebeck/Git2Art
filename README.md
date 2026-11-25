@@ -221,7 +221,9 @@ curl -sI https://git2art.dabidao.com/static/css/style.css | grep -i etag
 
 A Werkzeug-style ETag such as `"1795337846.69-10556-1675563099"` means Python is still serving the file (wrong or missing symlink target). LiteSpeed sends no ETag and gives images and CSS a 7-day `Expires`, so templates add `?v=<mtime>` to static URLs (`app.py`) and changed files are fetched again after a deploy. 3D museum modules imported from other modules have no version; they carry no cache header and are revalidated by the browser.
 
-The app also limits itself: the 2D museum loads only the open room's pictures, both museums fetch at most 4 files at a time per visitor, and each worker keeps the `/museum` page for two minutes.
+The app also limits itself: the 2D museum loads only the open room's pictures, both museums fetch at most 4 files at a time per visitor, liked artworks are sent with the page (the gallery used to make 30 simultaneous requests per view), at most 4 paintings run at once, and all workers share the `/museum` page and catalogue on disk for two minutes (`page_cache/`).
+
+`Reached max children process limit: 35, extra: 11, current: 46` in `stderr.log` means all 46 workers were running when another request arrived; each line is one 100 ms wait, so a hundred lines is about ten seconds of full load. The lines carry no timestamp: empty the log after a deploy (`: > stderr.log`) and compare with the access log if new ones appear.
 
 ## How It Works
 

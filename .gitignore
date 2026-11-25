@@ -24,6 +24,7 @@ ENV/
 # Flask
 static/generated/
 temp_repos/
+page_cache/
 *.json
 
 # IDE

@@ -10,6 +10,8 @@ from models.artwork import Artwork
 from services.github_info import avatar_url, format_stars, load_info, profile_url, repo_owner, update_stars
 from services.museum_service import make_museum_image, save_repo_data, REPO_DATA_SUBDIR
 
+PAINT_TIMEOUT_SECONDS = 180
+
 
 def generate_art_from_github(github_url, temp_dir, images_dir, force=False, art_style='expressionist'):
     """
@@ -69,7 +71,8 @@ def generate_art_from_github(github_url, temp_dir, images_dir, force=False, art_
                 ],
                 capture_output=True,
                 text=True,
-                check=True
+                check=True,
+                timeout=PAINT_TIMEOUT_SECONDS
             )
             # Log the output for debugging aspect ratio detection
             debug_log = os.path.join(images_dir, 'debug.log')
@@ -81,6 +84,8 @@ def generate_art_from_github(github_url, temp_dir, images_dir, force=False, art_
                 f.write("\n=== STDERR ===\n")
                 f.write(result.stderr)
                 f.write("\n")
+        except subprocess.TimeoutExpired:
+            raise Exception("Painting took too long. The repository may be too large.")
         except subprocess.CalledProcessError as e:
             debug_log = os.path.join(images_dir, 'debug.log')
             with open(debug_log, 'a') as f:

@@ -51,31 +51,17 @@
                 {% endif %}
 
                 <div class="artwork-actions">
-                    <button class="btn btn-like" data-artwork-id="{{ artwork.id }}" onclick="toggleLike({{ artwork.id }})">
-                        <span class="like-icon">♡</span>
+                    <button class="btn btn-like{% if artwork.liked %} liked{% endif %}" data-artwork-id="{{ artwork.id }}" onclick="toggleLike({{ artwork.id }})">
+                        <span class="like-icon">{{ "♥" if artwork.liked else "♡" }}</span>
                         <span class="like-count">{{ artwork.like_count }}</span>
                     </button>
-                    <a href="{{ url_for('main.download', filename=artwork.image_filename) }}" class="btn btn-download">Download</a>
+                    <a href="{{ url_for('main.download', filename=artwork.image_filename) }}" class="btn btn-download" rel="nofollow">Download</a>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        async function checkHasLiked(artworkId) {
-            try {
-                const response = await fetch(`/api/artwork/${artworkId}/has_liked`);
-                const data = await response.json();
-                const button = document.querySelector(`[data-artwork-id="${artworkId}"]`);
-                if (button && data.has_liked) {
-                    button.classList.add('liked');
-                    button.querySelector('.like-icon').textContent = '♥';
-                }
-            } catch (error) {
-                console.error('Error checking like status:', error);
-            }
-        }
-
         async function toggleLike(artworkId) {
             const button = document.querySelector(`[data-artwork-id="${artworkId}"]`);
             if (!button) return;
@@ -121,8 +107,6 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            const artworkId = {{ artwork.id }};
-            checkHasLiked(artworkId);
             setupBackToGalleryLink();
         });
     </script>

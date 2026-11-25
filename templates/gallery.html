@@ -101,7 +101,7 @@
                             {% endif %}
                             <div class="card-actions">
                                 {% if artwork.id %}
-                                <button class="btn btn-like" data-artwork-id="{{ artwork.id }}" onclick="toggleLike({{ artwork.id }})">
+                                <button class="btn btn-like{% if artwork.id in liked_ids %} liked{% endif %}" data-artwork-id="{{ artwork.id }}" onclick="toggleLike({{ artwork.id }})">
                                     <span class="like-count">{{ artwork.like_count }}</span> Likes
                                 </button>
                                 <a href="{{ url_for('main.artwork_view', artwork_id=artwork.id) }}" class="btn btn-view">View Full Size</a>
@@ -391,19 +391,6 @@
                     }
                 });
             });
-
-            // Initialize like states (check unique artwork IDs only once)
-            setTimeout(() => {
-                const seenIds = new Set();
-                const likeButtons = document.querySelectorAll('.btn-like');
-                likeButtons.forEach(button => {
-                    const artworkId = button.dataset.artworkId;
-                    if (artworkId && !seenIds.has(artworkId)) {
-                        seenIds.add(artworkId);
-                        checkHasLiked(artworkId);
-                    }
-                });
-            }, 100);
 
             cardEventListenersAttached = true;
         }
@@ -699,22 +686,6 @@
                 resizeTimeout = setTimeout(updateMasonryDisplay, 250);
             });
         });
-
-        async function checkHasLiked(artworkId) {
-            try {
-                const response = await fetch(`/api/artwork/${artworkId}/has_liked`);
-                const data = await response.json();
-                // Update all buttons with this artwork ID (both hidden source and visible clones)
-                const buttons = document.querySelectorAll(`[data-artwork-id="${artworkId}"]`);
-                buttons.forEach(button => {
-                    if (data.has_liked) {
-                        button.classList.add('liked');
-                    }
-                });
-            } catch (error) {
-                console.error('Error checking like status:', error);
-            }
-        }
 
         async function toggleLike(artworkId) {
             // Find all buttons with this artwork ID (both hidden source and visible clones)

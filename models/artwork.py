@@ -257,6 +257,19 @@ class ArtworkLike:
             return result['count'] > 0
 
     @staticmethod
+    def liked_ids(artwork_ids, user_identifier):
+        """Which of these artworks the user has liked, in one query."""
+        if not artwork_ids or not user_identifier:
+            return set()
+        placeholders = ', '.join(['%s'] * len(artwork_ids))
+        with get_db_cursor(commit=False) as cursor:
+            cursor.execute(f"""
+                SELECT artwork_id FROM artwork_likes
+                WHERE user_identifier = %s AND artwork_id IN ({placeholders})
+            """, (user_identifier, *artwork_ids))
+            return {row['artwork_id'] for row in cursor.fetchall()}
+
+    @staticmethod
     def get_likes_for_artwork(artwork_id):
         """Get all likes for an artwork."""
         with get_db_cursor(commit=False) as cursor:

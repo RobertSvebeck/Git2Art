@@ -10,10 +10,15 @@ Allow: /static/
 # Disallow admin and private areas
 Disallow: /admin/
 Disallow: /api/
+Disallow: /download/
+Disallow: /generate
+# Filter combinations of the same works: each one is a new page to crawl
+Disallow: /gallery?*search=
+Disallow: /gallery?*style=
 Disallow: /temp_repos/
 
 # Crawl delay and request rate (in seconds)
-Crawl-delay: 1
+Crawl-delay: 10
 
 # Sitemap location
 Sitemap: https://git2art.com/sitemap.xml

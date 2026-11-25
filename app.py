@@ -31,10 +31,12 @@ def create_app():
     app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max request size
     app.config['GENERATED_IMAGES_DIR'] = os.path.join(app.root_path, 'static', 'generated')
     app.config['TEMP_REPOS_DIR'] = os.path.join(app.root_path, 'temp_repos')
+    app.config['PAGE_CACHE_DIR'] = os.path.join(app.root_path, 'page_cache')
 
     # Ensure directories exist
     os.makedirs(app.config['GENERATED_IMAGES_DIR'], exist_ok=True)
     os.makedirs(app.config['TEMP_REPOS_DIR'], exist_ok=True)
+    os.makedirs(app.config['PAGE_CACHE_DIR'], exist_ok=True)
 
     @app.url_defaults
     def version_static_files(endpoint, values):

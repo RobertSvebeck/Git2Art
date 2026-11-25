@@ -29,5 +29,4 @@ def to_png_bytes(path):
     buffer = io.BytesIO()
     with Image.open(path) as image:
         image.convert('RGB').save(buffer, 'PNG', optimize=False)
-    buffer.seek(0)
-    return buffer
+    return buffer.getvalue()
